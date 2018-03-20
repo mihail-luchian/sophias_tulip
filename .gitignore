@@ -99,3 +99,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# the exports folder
+exports/
+
+# the PyCharm IDE folder
+.idea/
