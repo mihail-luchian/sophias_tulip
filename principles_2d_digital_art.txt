@@ -1,0 +1,9 @@
+Remark!!! - I do not posses the correct vocabulary on how to speak about aesthetics, so I will just write it how I see it.
+
+If we were to compare digital art to traditional art, I would say that it is a lot harder to make something digital look good. Why does simply using a blur filter on an image suck and why does a gaussian blur look better than a box blur. Why do the photoshop filters look horrible?
+
+In my view, here are some principles that help explain why some digital filters look horrible, uninteresting, while other looks absolutely delicious.
+	1. The brain of the watcher should not be able to find the pattern on how the pixels are modified.
+		Examples: transparency filter, rotations, constant offsets, simple gradients, bulge effects. The 	brain can easily find the pattern behind these transformations.
+	2.
+
