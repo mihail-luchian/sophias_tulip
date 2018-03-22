@@ -1,9 +1,10 @@
-Remark!!! - I do not posses the correct vocabulary on how to speak about aesthetics, so I will just write it how I see it.
+Remark!!! - I do not posses the correct vocabulary on how to speak about aesthetics, neurophysiology, psychology, so I will just explain the topic how I see it.
 
-If we were to compare digital art to traditional art, I would say that it is a lot harder to make something digital look good. Why does simply using a blur filter on an image suck and why does a gaussian blur look better than a box blur. Why do the photoshop filters look horrible?
+If we were to compare the look of digital art to the look of traditional ( as in real, physical ) art, I would say that the traditional has certain qualities that are not present by default in the digital art. For some reason, traditional art looks "organic", "pleasing to eye". Unless specifically intended by the artist, traditional art does not posse by itself properties like "acidic","bland" etc. I believe there are certain perception principles, that can make digital art look extremely unpleasant. A simple example: why does an image filtered with box blur look horrible and why does a gaussian blur look better. Why do the old photoshop filters look horrible?
 
-In my view, here are some principles that help explain why some digital filters look horrible, uninteresting, while other looks absolutely delicious.
-	1. The brain of the watcher should not be able to find the pattern on how the pixels are modified.
-		Examples: transparency filter, rotations, constant offsets, simple gradients, bulge effects. The 	brain can easily find the pattern behind these transformations.
-	2.
+Here are some perception principles that help explain why some digital filters look horrible, uninteresting, while other looks absolutely delicious.
+	1. The brain of should not be able to deduce the pattern on how the pixels were transformed.
+		Examples: transparency filter, rotations, constant offsets, simple gradients, bulge effects. The brain can easily find the pattern behind these transformations.
+	2. Overused filters, become boring and uninteresting to the eye.
+	3. The designers of the filter did not take into consideration optical illusions and the filter produces unwanted visual "side effects".
 
