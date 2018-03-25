@@ -16,9 +16,9 @@ def shuffle_image_with_indices(img,indices):
     if last_dim == 3:
         r = img[ indices_flatten[:,0],indices_flatten[:,1],indices_flatten[:,2] ]
     elif last_dim == 2:
-        print(indices_flatten[:,0].shape)
+        # print(indices_flatten[:,0].shape)
         r = img[ indices_flatten[:,0],indices_flatten[:,1] ]
-    print(r.shape)
+    # print(r.shape)
     return r.reshape( img.shape )
 
 
