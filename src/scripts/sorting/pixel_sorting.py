@@ -65,6 +65,11 @@ SORTING_METHOD = EACH_LINE_SMALL_TO_BIG
 # THRESHOLD = 256 => sort everything
 THRESHOLD = 180
 
+### NON SCRIPT SPECIFIC OPTIONS ##########################################
+
+# concat the input with the output for comparison purposes
+BEFORE_AFTER_COMPARISON = YES
+
 # Name of the export file. By specifying an extension you also specify the format of the export
 EXPORT_NAME = '22.jpg'
 
@@ -144,7 +149,7 @@ print(features_mean.shape)
 print(features_pixel_thresholded.shape)
 features_pixel_thresholded[features_mean >= THRESHOLD] = sorting_constant
 features_sorted = np.argsort(features_pixel_thresholded, kind='mergesort')
-if SORTING_METHOD == BIG_TO_SMALL:
+if SORTING_METHOD == EACH_LINE_BIG_TO_SMALL:
     features_sorted = np.flip(features_sorted, axis=1)
 
 
@@ -155,7 +160,7 @@ block_range = np.arange(BLOCK_SIZE_X)
 for y in range(new_y):
     mask = np.repeat(features_mean[y] < THRESHOLD,BLOCK_SIZE_X)
     mask_inverse = np.logical_not(mask)
-    if SORTING_METHOD == BIG_TO_SMALL:
+    if SORTING_METHOD == EACH_LINE_BIG_TO_SMALL:
         mask_pos = np.repeat(features_mean[y] >= 0,BLOCK_SIZE_X)
         mask = np.logical_and(mask_pos,mask)
     upper_limit = np.sum(mask)//BLOCK_SIZE_X
@@ -164,9 +169,6 @@ for y in range(new_y):
     for j in range(BLOCK_SIZE_Y):
         index_y = y*BLOCK_SIZE_Y+j
         indices_x = np.repeat(features_sorted[y, :upper_limit]*BLOCK_SIZE_X,BLOCK_SIZE_X)
-        # print((indices_x+offset)[0:30])
-        # print(indices.shape)
-        # print(offset.shape)
 
         indices[index_y, mask ] = np.stack((
             np.ones(upper_limit*BLOCK_SIZE_X) * index_y,
@@ -177,9 +179,11 @@ for y in range(new_y):
             np.arange(size_x)[mask_inverse]
         )).T
 
-# print(indices[0:16,0:16])
-
 image_sorted = shuffle_image_with_indices(image_loaded,indices)
-export_image(EXPORT_NAME, image_sorted)
+image_final = image_sorted
+if BEFORE_AFTER_COMPARISON == YES:
+    image_final = np.append(image_loaded, image_final,axis=1)
+
+export_image(EXPORT_NAME, image_final)
 print('DONE')
 
