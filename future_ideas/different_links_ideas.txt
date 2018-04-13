@@ -1,0 +1,2 @@
+Recursive Wang Tiles for Real-Time Blue Noise
+    http://johanneskopf.de/publications/blue_noise/
