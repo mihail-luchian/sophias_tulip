@@ -25,18 +25,18 @@ PROCESSING_MODE = SIMPLE
 # SHADOWS    : sorts the dark pixels of the image
 
 # the size of the region that is treated as a single unit during sorting and processing
-BLOCK_SIZE_X = 48
-BLOCK_SIZE_Y = 48
+BLOCK_SIZE_X = 4
+BLOCK_SIZE_Y = 2592
 
 # each block is collapsed to a feature vector of RGB
-FEATURE_BLOCKS = MAX
+FEATURE_BLOCKS = AVERAGE
 # AVERAGE       : for each channel, the average of all the channel values is taken
 # MIN           : for each channel, the min of all the channel values is taken
 # MAX           : for each channel, the max of all the channel values is taken
 
 
 # the feature that is associated to each pixel during sorting
-FEATURE_PIXELS = AVERAGE
+FEATURE_PIXELS = CHANNEL_BLUE
 # CHANNEL_RED   : the red channel is taken as the basis for the comparison
 # CHANNEL_GREEN : the green channel is taken as the basis for the comparison
 # CHANNEL_BLUE  : the blue channel is taken as the basis for the comparison
@@ -63,7 +63,7 @@ SORTING_METHOD = EACH_LINE_SMALL_TO_BIG
 # Adjustable value that decides the value where the sorting ends
 # THRESHOLD = 0 => no sorting
 # THRESHOLD = 256 => sort everything
-THRESHOLD = 180
+THRESHOLD = 256
 
 ### NON SCRIPT SPECIFIC OPTIONS ##########################################
 
