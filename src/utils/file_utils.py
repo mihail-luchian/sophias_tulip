@@ -17,5 +17,11 @@ def export_image(file_name,img):
 def load_tulip():
     return load_image(C.PATH_FILE_TULIP)
 
+def load_tulip_low():
+    return load_image(C.PATH_FILE_TULIP_LOW)
+
 def load_keukenhof():
     return load_image(C.PATH_FILE_KEUKENHOF)
+
+def load_keukenhof_low():
+    return load_image(C.PATH_FILE_KEUKENHOF_LOW)
