@@ -1,7 +1,7 @@
 import numpy as np
 from utils.generate_utils import *
 from utils.file_utils import *
-from utils.image_utils import  *
+from utils.data_utils import  *
 from properties import *
 
 ##########################################################################
