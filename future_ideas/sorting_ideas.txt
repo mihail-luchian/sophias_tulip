@@ -1,3 +1,0 @@
-uniqueness - sorts by the "distance" of the pixel from the average color of the band
-min <integer> - minimum length of bandwidth to sort, 1 to infinity--by default is infinity. Don't pass infinity manually, as @pixelsorter doesn't accept a string for this param
-min <integer> - maximum length of bandwidth to sort, 1 to infinity--by default is infinity. Don't pass infinity manually, as @pixelsorter doesn't accept a string for this param

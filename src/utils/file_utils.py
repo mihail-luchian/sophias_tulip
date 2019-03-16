@@ -5,11 +5,14 @@ import os.path
 def load_image(path):
     return imageio.imread(path)
 
-def save_image(path,img):
-    imageio.imsave(path,img)
+def save_image(path,img,format='jpg',**kwargs):
+    imageio.imsave(path+'.'+format,img,format,**kwargs)
 
-def export_image(file_name,img):
-    imageio.imsave(os.path.join(C.PATH_FOLDER_EXPORTS,file_name),img)
+def export_image(file_name,img,format='jpg',**kwargs):
+    save_image(
+        os.path.join(C.PATH_FOLDER_EXPORTS,file_name),
+        img,
+        format,**kwargs)
 
 def export_animation(file_name,animation,loop = 1):
     writer = imageio.get_writer(os.path.join(C.PATH_FOLDER_EXPORTS,file_name), fps=25)
