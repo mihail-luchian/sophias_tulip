@@ -22,7 +22,6 @@ def export_animation(file_name,animation,loop = 1):
     writer.close()
 
 
-
 # simple functions to load images that come with the scripts
 def load_tulip():
     return load_image(C.PATH_FILE_TULIP)

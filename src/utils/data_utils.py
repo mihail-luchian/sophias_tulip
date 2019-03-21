@@ -14,15 +14,18 @@ def upscale_nearest( x, n = 3 ):
     return x_prime
 
 
-def normalize_tensor(t):
+def normalize_tensor(t,use_negative = False):
     mn = t.min()
     mx = t.max()
     if mn == mx:
-        return np.zeros_like(t)
+        return np.zeros_like(t,dtype='float32')
     else:
-        result = np.copy(t).astype('float64')
+        result = np.copy(t).astype('float32')
         result -= mn
         result /= (mx-mn)
+
+        if use_negative is True:
+            result = (result - 0.5)*2
 
         return result
 
