@@ -91,11 +91,14 @@ def replace_indices_with_colors(img,dict_colors):
     return new_img
 
 
-first_color = np.array([255, 208, 0])
-second_color = np.array([255, 80, 0])
-third_color = np.array([242, 38, 76])
-accent_1 = np.array([41, 110, 188])
-accent_2 = np.array([ 11, 143, 189])
+
+
+
+first_color = np.array([ 0, 158, 73])
+second_color = np.array([255, 255, 0])
+third_color = np.array([255, 255, 255])
+accent_1 = np.array([181, 0, 0])
+accent_2 = np.array([ 0, 0, 0])
 
 color_dict = {
     1:first_color,

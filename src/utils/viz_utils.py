@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import numpy as np
+import utils.data_utils as data
 
 def show_animation(data):
     fig = plt.figure()
@@ -13,5 +15,7 @@ def show_animation(data):
     plt.show()
 
 def show_image(img):
+    if np.max(img) > 1:
+        img = data.normalize_tensor(img)
     plt.imshow(img)
     plt.show()
