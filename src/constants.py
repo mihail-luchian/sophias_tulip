@@ -17,9 +17,11 @@ PATH_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), GO_BACK)
 FOLDER_DATA = 'data'
 FOLDER_IMGS = 'imgs'
 FOLDER_EXPORT = 'exports'
+FOLDER_DUMP = 'dump'
 PATH_FOLDER_DATA = os.path.join(PATH_ROOT, FOLDER_DATA)
 PATH_FOLDER_IMGS = os.path.join(PATH_FOLDER_DATA,FOLDER_IMGS)
 PATH_FOLDER_EXPORTS = os.path.join(PATH_ROOT, FOLDER_EXPORT)
+PATH_FOLDER_DUMP = os.path.join(PATH_ROOT, FOLDER_DUMP)
 PATH_FOLDER_EXPORTS_NN = os.path.join(PATH_FOLDER_EXPORTS, 'nn')
 
 

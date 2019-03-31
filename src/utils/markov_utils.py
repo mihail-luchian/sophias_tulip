@@ -2,8 +2,11 @@ import numpy as np
 import constants as c
 
 
+def is_listy(thing):
+    return hasattr(thing, "__len__")
+
 def listify(thing):
-    return thing if hasattr(thing, "__len__") else [thing]
+    return thing if is_listy(thing) else [thing]
 
 def simulate_markov_chain(transition_matrix, start_probs, length):
 
@@ -12,7 +15,8 @@ def simulate_markov_chain(transition_matrix, start_probs, length):
     pseudo_simulations = np.zeros((num_elems,length)).astype('int32')
 
     for i in range(num_elems):
-        pseudo_simulations[i] = np.random.choice(r,size=length,p=transition_matrix[i])
+        s = np.random.choice(r,size=length,p=transition_matrix[i])
+        pseudo_simulations[i] = s
 
     start_elem = np.random.choice(r,p=start_probs)
 
@@ -88,14 +92,17 @@ def simulate_markov_hierarchy(node,length=None):
         yield i
 
 
-def gen_img_markov_hierarchy(markov_tree,height,width):
+def paint_linearly_markov_hierarchy(
+        markov_tree,
+        height, width,
+        tile_height = None,
+        tile_width = None):
     full_simulation = simulate_markov_hierarchy(markov_tree)
 
     full_img_len = height * width
     current = 0
     img = np.zeros(height * width)
     for i in full_simulation:
-
         l = i.size
         img_start = current
         img_end = img_start + l
@@ -109,7 +116,23 @@ def gen_img_markov_hierarchy(markov_tree,height,width):
         if current >= full_img_len - 1:
             break
 
-    return img.reshape((height,width))
+    if tile_height is not None and tile_width is not None:
+        img = img.reshape((-1,tile_width))
+        new_img = np.zeros((height,width),dtype=img.dtype)
+        num_tiles_h = height//tile_height
+        num_tiles_w = width//tile_width
+        for i in range(num_tiles_h):
+            for j in range(num_tiles_w):
+                start_h = i*tile_height
+                start_w = j*tile_width
+                s = np.s_[start_h:start_h+tile_height,start_w:start_w+tile_width]
+
+                idx = (i*num_tiles_w + j)*tile_height
+                new_img[s] = img[idx:idx+tile_height,:]
+
+        return new_img
+    else:
+        return img.reshape((height,width))
 
 
 class MarkovModel:
@@ -122,7 +145,6 @@ class MarkovModel:
                  lenghts=None):
 
         l = len(values)
-        self.start_probs = np.ones(l)/l if start_probs is None else start_probs
         self.values = listify(values)
 
         # child_lengths is one way one can deduce if is leaf node or not
@@ -135,6 +157,15 @@ class MarkovModel:
         self.lengths = lenghts
         self.type = c.TYPE_GEN
 
+        if start_probs is None:
+            self.start_probs = np.ones(l)/l
+        elif is_listy(start_probs):
+            self.start_probs = start_probs
+        else:
+            self.start_probs = np.zeros(l)
+            self.start_probs[start_probs] = 1
+
+
     def __init_transition_matrix__(self,preference_matrix):
         self.preference_matrix = preference_matrix
         sums = np.sum(preference_matrix,axis=1)
@@ -146,7 +177,8 @@ class SimpleProgression(MarkovModel):
     def __init__(self,
                  values = None,
                  child_lengths = None,
-                 lengths=None):
+                 lengths=None,
+                 start_probs=None):
 
         values = listify(values)
         l = len(values)
@@ -155,7 +187,7 @@ class SimpleProgression(MarkovModel):
 
         super().__init__(
             preference_matrix=preference_matrix,
-            start_probs=np.ones(l)/l,
+            start_probs=start_probs,
             values=values,
             child_lengths=child_lengths,
             lenghts=lengths)
@@ -167,24 +199,26 @@ class SimplePattern(SimpleProgression):
                  pattern = None,
                  candidates = None,
                  lengths = None,
-                 child_lengths = None):
+                 child_lengths = None,
+                 start_probs=None):
 
         # example of pattern 001100111101234321
 
 
         int_pattern = [int(i) for i in pattern]
         values = [ candidates[i] for i in int_pattern ]
-
         super().__init__(
             values=values,
             child_lengths=child_lengths,
-            lengths=lengths)
+            lengths=lengths,
+            start_probs=start_probs)
 
 
 class FuzzyProgression(MarkovModel):
     def __init__(self,
                  values = None,
                  child_lengths = None,
+                 start_probs = None,
                  positive_shifts = 1,
                  negative_shifts = 0,
                  repeat_factor = 1
@@ -201,7 +235,7 @@ class FuzzyProgression(MarkovModel):
 
         super().__init__(
             preference_matrix=preference_matrix,
-            start_probs=np.ones(l)/l,
+            start_probs=start_probs,
             values=values,
             child_lengths=child_lengths)
 
@@ -211,7 +245,8 @@ class RandomMarkovModel(MarkovModel):
     def __init__(self,
                  values=None,
                  child_lengths=None,
-                 lengths = None):
+                 lengths = None,
+                 start_probs=None):
 
         l = len(values)
         preference_matrix = np.random.choice(
@@ -219,7 +254,7 @@ class RandomMarkovModel(MarkovModel):
 
         super().__init__(
             preference_matrix=preference_matrix,
-            start_probs=np.ones(l)/l,
+            start_probs=start_probs,
             values=values,
             child_lengths=child_lengths,
             lenghts=lengths)

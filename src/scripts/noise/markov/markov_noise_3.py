@@ -46,7 +46,7 @@ print(COLOR_DICT)
 
 ### FUNCTIONS section
 def gen_channel(seed):
-    img = markov.gen_img_markov_hierarchy(
+    img = markov.paint_linearly_markov_hierarchy(
         markov_tree=parent, width=WIDTH, height=HEIGHT, seed=seed)
     img = data.upscale_nearest(img,UPSCALE_FACTOR)
     return img.reshape(HEIGHT*UPSCALE_FACTOR,WIDTH*UPSCALE_FACTOR,1)

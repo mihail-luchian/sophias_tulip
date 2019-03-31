@@ -1,7 +1,7 @@
 print('IMPORTING MODULES')
 import time
-import numpy as np
 import constants as c
+import numpy as np
 import utils.generate_utils as gen
 import utils.file_utils as file
 import utils.data_utils as data
@@ -11,7 +11,6 @@ import utils.viz_utils as viz
 
 ### DATA/INPUT/SHARED by all runs section
 print('PREPARING DATA SECTION')
-
 N = 2
 
 HEIGHT = 100
@@ -106,7 +105,7 @@ def gen_all_possible_permutations(pattern,others):
         s = ''.join( p[i] for i in t )
         all_perms.add(s)
 
-    return list(all_perms)
+    return sorted(list(all_perms))
 
 
 
@@ -115,7 +114,7 @@ print('GENERATE SECTION')
 
 for current_iteration in range(N):
 
-    np.random.seed(10+current_iteration)
+    np.random.seed(0+current_iteration)
 
     combinations = [np.random.choice(5,size=(2,))+1 for i in range(20)]
     basic_tiles = []
@@ -180,7 +179,6 @@ for current_iteration in range(N):
         child_lengths=1)
 
 
-    s = current_iteration*10
     img = gen_channel(parent)[:,:,0]
     print(img.shape)
     print(np.min(img))

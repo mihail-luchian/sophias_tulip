@@ -1,5 +1,5 @@
 import numpy as np
-
+import utils.generate_utils as gen
 
 def upscale_nearest( x, n = 3 ):
     '''
@@ -12,6 +12,36 @@ def upscale_nearest( x, n = 3 ):
     x_prime = np.repeat(x,n,axis=1)
     x_prime = np.repeat(x_prime,n,axis=0)
     return x_prime
+
+
+def upscale_with_circle( x, n = 3, bg = 0):
+    '''
+
+    :param x: a bidimensional image
+    :param n: the upscaling factor
+    :return:
+    '''
+
+    circle = gen.circle((n,n))
+    return upscale_with_shape(x,circle,bg)
+
+
+def upscale_with_shape( x, shape, bg = 0):
+    '''
+
+    :param x: a bidimensional image
+    :param n: the upscaling factor
+    :return:
+    '''
+
+    height,width = x.shape
+    shape_h,shape_w = shape.shape
+    new_img = np.ones((height*shape_h,width*shape_w),dtype=x.dtype)*bg
+    for i in range(height):
+        for j in range(width):
+            new_img[i*shape_h:(i+1)*shape_h,j*shape_w:(j+1)*shape_w] = shape*x[i,j]
+
+    return new_img
 
 
 def normalize_tensor(t,use_negative = False):

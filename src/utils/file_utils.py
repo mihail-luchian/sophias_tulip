@@ -1,6 +1,9 @@
 import constants as C
 import imageio
 import os.path
+import shutil
+import time
+
 
 def load_image(path):
     return imageio.imread(path)
@@ -14,8 +17,8 @@ def export_image(file_name,img,format='jpg',**kwargs):
         img,
         format,**kwargs)
 
-def export_animation(file_name,animation,loop = 1):
-    writer = imageio.get_writer(os.path.join(C.PATH_FOLDER_EXPORTS,file_name), fps=25)
+def export_animation(file_name,animation,loop = 1,fps=25):
+    writer = imageio.get_writer(os.path.join(C.PATH_FOLDER_EXPORTS,file_name), fps=fps)
     for cycle in range(loop):
         for i in range(animation.shape[0]):
             writer.append_data(animation[i])
@@ -34,3 +37,31 @@ def load_keukenhof():
 
 def load_keukenhof_low():
     return load_image(C.PATH_FILE_KEUKENHOF_LOW)
+
+def get_files(path):
+    return [
+        f for f in os.listdir(path)
+        if os.path.isfile(os.path.join(path, f))
+    ]
+
+
+def create_dir_if_necessary(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+
+def move_files_from_to(old_path,new_path,dir_name):
+    files = get_files(old_path)
+    if len(files) > 0:
+        create_dir_if_necessary(os.path.join(new_path,dir_name))
+        files_old_path = [ os.path.join(old_path,file) for file in files ]
+        files_new_path = [ os.path.join(new_path,dir_name,file) for file in files ]
+        [shutil.move(i,j) for i,j in zip(files_old_path,files_new_path)]
+
+def clear_export_dir():
+    print('CLEARING EXPORT DIR')
+    move_files_from_to(
+        C.PATH_FOLDER_EXPORTS,
+        C.PATH_FOLDER_DUMP,
+        str(int(round(time.time() * 1000))))
+    print('DONE CLEARING EXPORT DIR')

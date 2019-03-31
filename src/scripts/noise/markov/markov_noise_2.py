@@ -76,7 +76,7 @@ parent = RandomMarkovModel(
 
 
 def gen_channel(seed):
-    img = gen_img_markov_hierarchy(
+    img = paint_linearly_markov_hierarchy(
         markov_tree=parent, width=WIDTH, height=HEIGHT, seed=seed)
     img = upscale_nearest(img,UPSCALE_FACTOR)
     return img.reshape(HEIGHT*UPSCALE_FACTOR,WIDTH*UPSCALE_FACTOR,1)

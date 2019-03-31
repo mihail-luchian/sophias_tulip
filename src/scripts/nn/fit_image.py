@@ -174,7 +174,7 @@ def gen_coherent_noise(height,width):
         values=[varied, black_white],
         child_lengths=[1, 2])
 
-    img = markov.gen_img_markov_hierarchy(
+    img = markov.paint_linearly_markov_hierarchy(
         markov_tree=parent, width=width, height=height, seed=20)
 
     return img
