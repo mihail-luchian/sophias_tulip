@@ -11,28 +11,31 @@ import utils.viz_utils as viz
 
 ### DATA/INPUT/SHARED by all runs section
 print('PREPARING DATA SECTION')
-N = 2
-
+N = 100
+SEED = 82349532
 HEIGHT = 100
 WIDTH  = HEIGHT
 
 TILE_WIDTH = 10
-TILE_HEIGHT = TILE_WIDTH
+TILE_HEIGHT = TILE_WIDTH*2
 
 UPSCALE_FACTOR = c.INSTA_SIZE // HEIGHT
 
 TILING_OPTIONS = [1,2,3,4,5]
 
 SCHEME_COLORS = {
-    1: color.hex2arr('ffe62b'),
-    2: color.hex2arr('ff4f14'),
-    3: color.hex2arr('ea0042'),
-    4: color.hex2arr('195ed6'),
-    5: color.hex2arr('7c13c6'),
+    1: color.hex2arr('00918e'),
+    2: color.hex2arr('0eaf5c'),
+    3: color.hex2arr('49cc54'),
+    4: color.hex2arr('88f77e')
 }
 
 COLOR_DICT = {
-    0: color.hex2arr('030026'),
+    0: color.hex2arr('000b14'),
+
+    10: color.hex2arr('aef260'),
+    11: color.hex2arr('51cc6e'),
+    12: color.hex2arr('000b33'),
 
     **SCHEME_COLORS
 }
@@ -114,54 +117,41 @@ print('GENERATE SECTION')
 
 for current_iteration in range(N):
 
-    np.random.seed(0+current_iteration)
+    np.random.seed(SEED+current_iteration)
 
-    combinations = [np.random.choice(5,size=(2,))+1 for i in range(20)]
+    combinations = [np.random.choice(4,size=(2,))+1 for i in range(20)]
     basic_tiles = []
     for a,b in combinations:
 
-        # pats = [
-        #     gen_all_possible_permutations('00000',['0','1','2']),
-        #     gen_all_possible_permutations('10001',['0','1','2']),
-        #     gen_all_possible_permutations('10101',['0','1','2']),
-        #     gen_all_possible_permutations('10201',['0','1','2']),
-        #     gen_all_possible_permutations('02120',['0','1','2']),
-        #     gen_all_possible_permutations('00100',['0','1','2']),
-        # ]
-
         pats = [
-            #                              12--|-|--21
-            gen_all_possible_permutations('00000-00000',['0','1','2']),
-            gen_all_possible_permutations('00001-10000',['0','1','2']),
-            gen_all_possible_permutations('00011-11000',['0','1','2']),
-            gen_all_possible_permutations('00111-11100',['0','1','2']),
-            gen_all_possible_permutations('01111-11110',['0','1','2']),
+            gen_all_possible_permutations('10101-01010', ['0', '1', '2']),
+            gen_all_possible_permutations('01010-10101', ['0', '1', '2']),
 
-            gen_all_possible_permutations('01222-22210',['0','1','2']),
-            gen_all_possible_permutations('01122-22110',['0','1','2']),
-            gen_all_possible_permutations('00112-21100',['0','1','2']),
+            gen_all_possible_permutations('11111-00000', ['0', '1', '2']),
+            gen_all_possible_permutations('10000-10000', ['0', '1', '2']),
+            gen_all_possible_permutations('00001-00001', ['0', '1', '2']),
 
-            gen_all_possible_permutations('01100-00110',['0','1','2']),
-            gen_all_possible_permutations('11000-00011',['0','1','2']),
-            gen_all_possible_permutations('01000-00010',['0','1','2']),
-            gen_all_possible_permutations('00010-01000',['0','1','2']),
-            gen_all_possible_permutations('00100-00100',['0','1','2']),
-            gen_all_possible_permutations('01101-10110',['0','1','2']),
-            gen_all_possible_permutations('01110-01110',['0','1','2']),
-            gen_all_possible_permutations('01210-01210',['0','1','2']),
+            gen_all_possible_permutations('01110-00000', ['0', '1', '2']),
+            gen_all_possible_permutations('00000-01110', ['0', '1', '2']),
 
-            gen_all_possible_permutations('00000-10001',['0','1','2']),
-            gen_all_possible_permutations('10001-00000',['0','1','2']),
-            gen_all_possible_permutations('01010-00000',['0','1','2']),
-            gen_all_possible_permutations('00000-01010',['0','1','2']),
+            gen_all_possible_permutations('11100-11100', ['0', '1', '2']),
+            gen_all_possible_permutations('00111-00111', ['0', '1', '2']),
+
+            gen_all_possible_permutations('01122-01122', ['0', '1', '2']),
+            gen_all_possible_permutations('11220-11220', ['0', '1', '2']),
+
+            gen_all_possible_permutations('21200-21200', ['0', '1', '2']),
+            gen_all_possible_permutations('00212-00212', ['0', '1', '2']),
+
+            gen_all_possible_permutations('01000-00220', ['0', '1', '2']),
+            gen_all_possible_permutations('02200-00010', ['0', '1', '2']),
         ]
 
         pats = [j for i in pats for j in i]
-        # print(pats)
 
         pats = [
             m.SimpleProgression(
-                values=m.SimplePattern(pattern=i,candidates=[0]+[int(a),int(b)],start_probs=0   ),
+                values=m.SimplePattern(pattern=i,candidates=[0]+[int(a),int(b)],start_probs=0),
                 child_lengths=TILE_WIDTH)
             for i in pats
         ]
@@ -174,8 +164,23 @@ for current_iteration in range(N):
 
         basic_tiles += [pats]
 
+
+    basic_tiles = m.SimpleProgression(values=basic_tiles,child_lengths=1)
+
+
+    r = [
+        m.SimpleProgression(values=i)
+        for i in [2,3,10,11,12]
+    ]
+    random_tiles = m.Tiler(
+        m.SimpleProgression(
+                values=m.RandomMarkovModel(values=r,child_lengths=[1,2,3,4]),
+                child_lengths=TILE_HEIGHT*TILE_WIDTH//2),
+        num_tiles=1,
+        reduce2multiple=TILE_HEIGHT*TILE_WIDTH)
+
     parent = m.RandomMarkovModel(
-        values=basic_tiles,
+        values=[basic_tiles,random_tiles],
         child_lengths=1)
 
 

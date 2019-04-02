@@ -248,6 +248,8 @@ class RandomMarkovModel(MarkovModel):
                  lengths = None,
                  start_probs=None):
 
+
+        values = listify(values)
         l = len(values)
         preference_matrix = np.random.choice(
             np.arange(100),size=(l,l))
