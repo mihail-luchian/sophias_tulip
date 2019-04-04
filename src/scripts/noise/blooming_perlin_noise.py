@@ -38,8 +38,8 @@ EXPORT_NAME = '0.png'
 np.random.seed(RANDOM_SEED)
 
 def fade(t):
-    return 6 * t**5 - 15 * t**4 + 10 * t**3
     # return 1 / (1 + np.exp(-t*10+5))
+    return 6 * t**5 - 15 * t**4 + 10 * t**3
 
 def exp_fade(grid_x,grid_y,cx,cy,spread):
     return np.exp( -((grid_x-cx)**2 + (grid_y-cy)**2)/spread )

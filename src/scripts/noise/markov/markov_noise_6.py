@@ -24,18 +24,18 @@ UPSCALE_FACTOR = c.INSTA_SIZE // HEIGHT
 TILING_OPTIONS = [1,2,3,4,5]
 
 SCHEME_COLORS = {
-    1: color.hex2arr('00918e'),
-    2: color.hex2arr('0eaf5c'),
-    3: color.hex2arr('49cc54'),
-    4: color.hex2arr('88f77e')
+    1: '00918e',
+    2: '0eaf5c',
+    3: '49cc54',
+    4: '88f77e'
 }
 
 COLOR_DICT = {
-    0: color.hex2arr('000b14'),
+    0: '000b14',
 
-    10: color.hex2arr('aef260'),
-    11: color.hex2arr('51cc6e'),
-    12: color.hex2arr('000b33'),
+    10: 'aef260',
+    11: '51cc6e',
+    12: '000b33',
 
     **SCHEME_COLORS
 }
@@ -133,7 +133,7 @@ for current_iteration in range(N):
     colored_image = colored_image.astype('uint8')
 
     if N==1:
-        viz.start_color_editing_tool(colored_image)
+        viz.start_color_editing_tool(img,COLOR_DICT)
     else:
 
         file.export_image(

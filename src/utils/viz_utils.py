@@ -23,8 +23,7 @@ def show_image(img):
     plt.imshow(img)
     plt.show()
 
-def start_color_editing_tool(img):
+def start_color_editing_tool(img, color_dict):
     app = QApplication(sys.argv)
-    ex = ColorEditingTool(img)
-    ex.show()
+    ex = ColorEditingTool(img, color_dict)
     sys.exit(app.exec_())
