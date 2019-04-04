@@ -8,6 +8,17 @@ def is_listy(thing):
 def listify(thing):
     return thing if is_listy(thing) else [thing]
 
+def markov_model_is_leaf(values):
+    # we examine two cases:
+    # the values might be just a list, then we look only at the first element
+    # the values is a list of list and then we have to look at the first element of the first list
+    if hasattr(values[0],'type'):
+        return False
+    elif is_listy(values[0]) and hasattr(values[0][0],'type'):
+        return False
+    else:
+        return True
+
 def simulate_markov_chain(transition_matrix, start_probs, length):
 
     num_elems = len(transition_matrix)
@@ -35,7 +46,12 @@ def simulate_markov_generator(node, length=None):
 
     breakout = False
     iteration = 0
+    # if length is None, this means we are simulating the parent
+    # if length is -1, this means no length for the children has been specified
+    #   and in this case we use the self_length
     sim_length = 10 if length is None else length
+    if sim_length == -1:
+        sim_length = np.random.choice(node.self_length)
     while breakout == False:
         sim_node = node
         simulation = simulate_markov_chain(
@@ -73,9 +89,8 @@ def simulate_markov_processor(node,length):
 
     vals = np.concatenate(ms)
     total_size = vals.size
-    # if node.reduce2multiple is not None and total_size >= node.reduce2multiple:
-    #     new_len = (total_size//node.reduce2multiple)*node.reduce2multiple
-    #     vals = vals[:new_len]
+    if node.length_limit is not None and total_size >= node.length_limit:
+        vals = vals[:node.length_limit]
 
     reps = np.random.choice(node.num_tiles)
     vals = np.tile(vals, reps)
@@ -141,20 +156,18 @@ class MarkovModel:
                  preference_matrix=None,
                  start_probs=None,
                  values=None,
-                 child_lengths=None,
-                 lenghts=None):
+                 child_lengths=-1,
+                 lenghts=None,
+                 self_length=None):
 
         l = len(values)
         self.values = listify(values)
 
         # child_lengths is one way one can deduce if is leaf node or not
-        if child_lengths is None:
-            self.child_lengths = None
-        else:
-            self.child_lengths = listify(child_lengths)
-        self.leaf = True if self.child_lengths is None else False
+        self.child_lengths = listify(child_lengths)
         self.__init_transition_matrix__(preference_matrix)
         self.lengths = lenghts
+        self.self_length = listify(self_length)
         self.type = c.TYPE_GEN
 
         if start_probs is None:
@@ -165,6 +178,9 @@ class MarkovModel:
             self.start_probs = np.zeros(l)
             self.start_probs[start_probs] = 1
 
+        self.leaf = markov_model_is_leaf(values)
+
+
 
     def __init_transition_matrix__(self,preference_matrix):
         self.preference_matrix = preference_matrix
@@ -174,11 +190,7 @@ class MarkovModel:
 
 class SimpleProgression(MarkovModel):
 
-    def __init__(self,
-                 values = None,
-                 child_lengths = None,
-                 lengths=None,
-                 start_probs=None):
+    def __init__(self, values = None,**kwargs):
 
         values = listify(values)
         l = len(values)
@@ -187,10 +199,8 @@ class SimpleProgression(MarkovModel):
 
         super().__init__(
             preference_matrix=preference_matrix,
-            start_probs=start_probs,
             values=values,
-            child_lengths=child_lengths,
-            lenghts=lengths)
+            **kwargs)
 
 
 class SimplePattern(SimpleProgression):
@@ -198,9 +208,7 @@ class SimplePattern(SimpleProgression):
     def __init__(self,
                  pattern = None,
                  candidates = None,
-                 lengths = None,
-                 child_lengths = None,
-                 start_probs=None):
+                 **kwargs):
 
         # example of pattern 001100111101234321
 
@@ -209,9 +217,7 @@ class SimplePattern(SimpleProgression):
         values = [ candidates[i] for i in int_pattern ]
         super().__init__(
             values=values,
-            child_lengths=child_lengths,
-            lengths=lengths,
-            start_probs=start_probs)
+            **kwargs)
 
 
 class FuzzyProgression(MarkovModel):
@@ -242,11 +248,7 @@ class FuzzyProgression(MarkovModel):
 
 class RandomMarkovModel(MarkovModel):
 
-    def __init__(self,
-                 values=None,
-                 child_lengths=None,
-                 lengths = None,
-                 start_probs=None):
+    def __init__(self, values=None, **kwargs):
 
 
         values = listify(values)
@@ -256,15 +258,13 @@ class RandomMarkovModel(MarkovModel):
 
         super().__init__(
             preference_matrix=preference_matrix,
-            start_probs=start_probs,
             values=values,
-            child_lengths=child_lengths,
-            lenghts=lengths)
+            **kwargs)
 
 
 class Tiler:
-    def __init__(self, node, num_tiles=1, reduce2multiple=None):
+    def __init__(self, node, num_tiles=1, length_limit=None):
         self.node = node
         self.num_tiles = num_tiles if hasattr(num_tiles, "__len__") else [num_tiles]
-        self.reduce2multiple = reduce2multiple
+        self.length_limit = length_limit
         self.type = c.TYPE_PROC

@@ -1,3 +1,9 @@
 # sophias_tulip
 
-Libraries used: scipy, ImageIO, Numpy
+Libraries used: 
+* scipy + numpy
+* sklearn
+* matplotlib
+* ImageIO
+* pyqt5
+* tensorflow

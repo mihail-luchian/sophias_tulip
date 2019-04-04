@@ -177,7 +177,7 @@ for current_iteration in range(N):
                 values=m.RandomMarkovModel(values=r,child_lengths=[1,2,3,4]),
                 child_lengths=TILE_HEIGHT*TILE_WIDTH//2),
         num_tiles=1,
-        reduce2multiple=TILE_HEIGHT*TILE_WIDTH)
+        length_limit=TILE_HEIGHT * TILE_WIDTH)
 
     parent = m.RandomMarkovModel(
         values=[basic_tiles,random_tiles],
