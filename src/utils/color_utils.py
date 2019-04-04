@@ -8,13 +8,15 @@ def hex2arr(s):
         g = only_digits[2:4]
         b = only_digits[4:6]
 
-        r = int(r, 16)
-        g = int(g, 16)
-        b = int(b, 16)
+        try:
+            r = int(r, 16)
+            g = int(g, 16)
+            b = int(b, 16)
+        except ValueError:
+            r = g = b = 0
+
     else:
-        r = 0
-        g = 0
-        b = 0
+        r = g = b = 0
 
     return np.array([r, g, b])
 

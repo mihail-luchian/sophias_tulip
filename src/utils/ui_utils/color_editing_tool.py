@@ -1,6 +1,7 @@
-from AnyQt import QtCore
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QHBoxLayout, QTextEdit, QVBoxLayout
-from PyQt5.QtGui import QIcon, QPixmap, QImage
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QHBoxLayout, QTextEdit, QVBoxLayout, QPushButton, \
+    QColorDialog
+from PyQt5.QtGui import QIcon, QPixmap, QImage, QColor
 import sys
 import utils.color_utils as c
 
@@ -15,9 +16,13 @@ class ColorTextField(QWidget):
       self.textbox.setText(value)
 
       self.label = QLabel(key)
+      self.button = QPushButton('x', self)
+      self.button.setFixedWidth(20)
+
       layout = QHBoxLayout(self)
       layout.addWidget(self.label)
       layout.addWidget(self.textbox)
+      layout.addWidget(self.button)
 
 
 
@@ -42,23 +47,24 @@ class ColorEditingTool(QWidget):
         self.add_color_text_fields()
 
         ### end
-        self.show()
+        self.showMaximized()
 
 
     def add_color_text_fields(self):
 
-        self.list_color_text_fields = []
+        self.color_field_dict = {}
         vertical_layout = QVBoxLayout();
         self.general_layout.addLayout(vertical_layout)
         self.general_layout.setAlignment(vertical_layout, QtCore.Qt.AlignRight)
 
         for key,value in self.color_dict.items():
             color_text_field = ColorTextField(str(key),value)
-            self.list_color_text_fields += [color_text_field]
+            self.color_field_dict[key] = color_text_field
 
             vertical_layout.addWidget(color_text_field)
             vertical_layout.setAlignment(color_text_field, QtCore.Qt.AlignRight)
             color_text_field.textbox.textChanged.connect(self.color_text_changed)
+            color_text_field.button.clicked.connect(lambda state,key=key: self.choose_color(key))
 
         # vertical_layout.setSpacing(0)
         # vertical_layout.setContentsMargins(0,0,0,0)
@@ -78,7 +84,24 @@ class ColorEditingTool(QWidget):
         self.img_label = QLabel()
         pixmap = QPixmap.fromImage(q_img)
         self.img_label.setPixmap(pixmap)
+        self.img_label.mousePressEvent = self.get_pixel_pos
         self.general_layout.addWidget(self.img_label)
+
+    def deselect_all_color_text_fields(self):
+        for i,j in self.color_field_dict.items():
+            j.textbox.deselect()
+
+    def get_pixel_pos(self,event):
+
+        self.deselect_all_color_text_fields()
+
+        x = event.pos().x()
+        y = event.pos().y()
+
+        code = int(self.img_blueprint[y,x])
+        self.color_field_dict[code].textbox.selectAll()
+        self.color_field_dict[code].textbox.setFocus()
+        print(x,y)
 
     def update_image(self,new_color_dict):
         new_img = self.generate_colored_image(new_color_dict)
@@ -90,7 +113,18 @@ class ColorEditingTool(QWidget):
         self.img_label.setPixmap(pixmap)
 
     def color_text_changed(self):
-        new_color_dict = { int(i.label.text()) : i.textbox.text() for i in self.list_color_text_fields }
+        new_color_dict = {i : j.textbox.text() for i,j in self.color_field_dict.items()}
         self.update_image(new_color_dict)
         print('Some values changed')
         print('\t',new_color_dict)
+
+    def choose_color(self,key):
+        color_name = self.color_field_dict[key].textbox.text()
+        current_color = QColor('#'+color_name)
+        dialog = QColorDialog()
+
+
+        color = dialog.getColor(current_color)
+        if color.isValid():
+            print(color.name())
+            self.color_field_dict[key].textbox.setText(color.name()[-6:])

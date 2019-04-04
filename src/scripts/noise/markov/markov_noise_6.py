@@ -23,21 +23,16 @@ UPSCALE_FACTOR = c.INSTA_SIZE // HEIGHT
 
 TILING_OPTIONS = [1,2,3,4,5]
 
-SCHEME_COLORS = {
-    1: '00918e',
-    2: '0eaf5c',
-    3: '49cc54',
-    4: '88f77e'
-}
 
 COLOR_DICT = {
     0: '000b14',
 
-    10: 'aef260',
-    11: '51cc6e',
-    12: '000b33',
+    1: 'ffbfc4',
+    2: 'ffcfbf',
+    3: 'ffe6c4',
+    4: 'fff9bf',
+    5: 'eeffbf',
 
-    **SCHEME_COLORS
 }
 
 print(COLOR_DICT)
@@ -78,25 +73,6 @@ def gen_patterns(length,num_cells,choices,min_length=1):
 def clean_pattern(s):
     return s.replace('-','')
 
-def gen_all_possible_permutations(pattern,others):
-    pattern = clean_pattern(pattern)
-    t = [int(i) for i in pattern]
-
-    cart_product = []
-    for i in others:
-        for j in others:
-            for k in others:
-                if i!=j and i!= k and k!=i:
-                    cart_product += [(i, j, k)]
-
-    all_perms = set()
-    for p in cart_product:
-        s = ''.join( p[i] for i in t )
-        all_perms.add(s)
-
-    return sorted(list(all_perms))
-
-
 
 ### GENERATE SECTION
 print('GENERATE SECTION')
@@ -106,7 +82,7 @@ for current_iteration in range(N):
     np.random.seed(SEED+current_iteration)
 
     p = [
-        gen_patterns(TILE_WIDTH,5,[0,1,2,3,4])
+        gen_patterns(TILE_WIDTH,5,[1,2,3,4,5])
         for i in range(5)
     ]
     print(p)
