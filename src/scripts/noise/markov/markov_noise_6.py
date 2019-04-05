@@ -11,29 +11,21 @@ import utils.viz_utils as viz
 
 ### DATA/INPUT/SHARED by all runs section
 print('PREPARING DATA SECTION')
-N = 1
-SEED = 156894
-HEIGHT = 100
+N = 100
+SEED = 0
+HEIGHT = 400
 WIDTH  = HEIGHT
 
-TILE_WIDTH = 20
-TILE_HEIGHT = TILE_WIDTH
+TILE_WIDTHS  = [10,20,40,50,80]
+TILE_HEIGHTS = [10,20,40,50]
+PORTIONS_HEIGHTS = [1]
 
 UPSCALE_FACTOR = c.INSTA_SIZE // HEIGHT
 
 TILING_OPTIONS = [1,2,3,4,5]
 
 
-COLOR_DICT = {
-    0: '000b14',
-
-    1: 'ffbfc4',
-    2: 'ffcfbf',
-    3: 'ffe6c4',
-    4: 'fff9bf',
-    5: 'eeffbf',
-
-}
+COLOR_DICT = {0: '00103e', 1: 'f96b88', 2: 'ff9e80', 3: 'ffd88c', 4: 'ffffd7', 5: 'cdff9b'}
 
 print(COLOR_DICT)
 
@@ -46,12 +38,11 @@ file.clear_export_dir()
 print('FUNCTIONS SETUP')
 
 
-def gen_channel(parent):
+def gen_portion(parent,height,width,tile_height,tile_width):
     img = m.paint_linearly_markov_hierarchy(
         markov_tree=parent,
-        width=WIDTH, height=HEIGHT)
-    img = data.upscale_nearest(img,UPSCALE_FACTOR)
-    return img.reshape(img.shape[0],img.shape[1],1)
+        width=width, height=height,tile_width=tile_width,tile_height=tile_height)
+    return img.reshape(img.shape[0],img.shape[1])
 
 def gen_patterns(length,num_cells,choices,min_length=1):
 
@@ -81,37 +72,57 @@ for current_iteration in range(N):
 
     np.random.seed(SEED+current_iteration)
 
-    p = [
-        gen_patterns(TILE_WIDTH,5,[1,2,3,4,5])
-        for i in range(5)
-    ]
-    print(p)
+    portions = []
+    current_height = 0
+    while current_height < HEIGHT:
+        current_tile_height = np.random.choice(TILE_HEIGHTS)
+        current_tile_width = np.random.choice(TILE_WIDTHS)
+        l = np.random.choice(PORTIONS_HEIGHTS)
 
-    p = [
-        m.SimpleProgression(
-            values=i['values'],
-            lenghts=i['lengths'],
-            self_length = [5,10,15] )
-        for i in p
-    ]
+        portion_height = current_tile_height*l
+        current_height += portion_height
+        print(current_height,current_tile_width,current_tile_height,l)
 
-    parent = m.RandomMarkovModel(
-        values = p,
-        child_lengths=5
-    )
+        num_segments = current_tile_width//5
+        current_colors = np.random.choice([0,1,2,3,4,5],size=num_segments)
+        p = [
+            gen_patterns(current_tile_width,num_segments,current_colors,min_length=2)
+            for i in range(np.random.choice([2,3]))
+        ]
+        print(p)
+        p = [
+            m.Tiler(
+                m.SimpleProgression(
+                    values=i['values'],
+                    lenghts=i['lengths'],
+                    self_length=num_segments,
+                    start_probs=0),
+                num_tiles=[2,4,5,6,8])
+            for i in p
+        ]
 
-    img = gen_channel(parent)[:,:,0]
-    print(img)
-    print(img.shape)
-    print(np.min(img))
-    print(np.max(img))
-    colored_image = color.replace_indices_with_colors(img, COLOR_DICT)
-    colored_image = colored_image.astype('uint8')
+        parent = m.RandomMarkovModel(values = p)
+
+        img = gen_portion(
+            parent,
+            height=portion_height,width=WIDTH,
+            tile_height=current_tile_height,tile_width=current_tile_width)
+
+        portions += [img]
+        print(img.shape)
+        print(np.min(img))
+        print(np.max(img))
+
+    final_img_prototype = np.vstack(portions)
+    final_img_prototype = final_img_prototype[:HEIGHT,:WIDTH]
+    final_img_prototype = data.upscale_nearest(final_img_prototype,UPSCALE_FACTOR)
+    print(final_img_prototype.shape)
+    colored_img = color.replace_indices_with_colors(
+        final_img_prototype,COLOR_DICT).astype('uint8')
 
     if N==1:
-        viz.start_color_editing_tool(img,COLOR_DICT)
+        viz.start_color_editing_tool(final_img_prototype,COLOR_DICT)
     else:
-
         file.export_image(
             '%d_%d' % (current_iteration,int(round(time.time() * 1000))),
-            colored_image.astype('uint8'),format='png')
+            colored_img.astype('uint8'),format='png')
