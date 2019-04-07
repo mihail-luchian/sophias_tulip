@@ -75,7 +75,7 @@ for current_iteration in range(N):
             markov.SimplePattern(pattern, lengths=lengths, candidates=[11,12,13])
         ]
 
-    base = markov.Tiler(markov.Tiler(
+    base = markov.Processor(markov.Processor(
         markov.RandomMarkovModel(
             values=base_values,
             child_lengths=[WIDTH//10],seed=current_iteration*50),
@@ -83,7 +83,7 @@ for current_iteration in range(N):
 
 
     bg = [
-        markov.Tiler(
+        markov.Processor(
             markov.SimpleProgression(values=[i]),
             num_tiles=WIDTH*3)
         for i in [11,13]
@@ -92,13 +92,13 @@ for current_iteration in range(N):
     bg = markov.RandomMarkovModel(values=bg,child_lengths=[1])
 
     pure = [
-        markov.Tiler(
+        markov.Processor(
             markov.SimpleProgression(values=[i]),
             num_tiles=WIDTH//10)
         for i in [1,2,3,4,5]
     ]
 
-    pure = markov.Tiler(markov.SimpleProgression(
+    pure = markov.Processor(markov.SimpleProgression(
         values = [markov.RandomMarkovModel(
             values=pure, child_lengths=[1,2,3], seed=current_iteration)],
             child_lengths=[5]),

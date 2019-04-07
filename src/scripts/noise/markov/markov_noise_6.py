@@ -91,7 +91,7 @@ for current_iteration in range(N):
         ]
         print(p)
         p = [
-            m.Tiler(
+            m.Processor(
                 m.SimpleProgression(
                     values=i['values'],
                     lenghts=i['lengths'],

@@ -60,6 +60,8 @@ def move_files_from_to(old_path,new_path,dir_name):
 
 def clear_export_dir():
     print('CLEARING EXPORT DIR')
+    create_dir_if_necessary(C.PATH_FOLDER_EXPORTS)
+    create_dir_if_necessary(C.PATH_FOLDER_DUMP)
     move_files_from_to(
         C.PATH_FOLDER_EXPORTS,
         C.PATH_FOLDER_DUMP,

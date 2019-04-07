@@ -85,3 +85,22 @@ def random_cross_line(size,seed=101,horizontal=True):
     return line( size, start_pos=(xs[0],ys[0]),end_pos=(xs[1],ys[1]) )
 
 
+def gen_random_pattern_with_lengths(length, num_cells, choices, min_length=1,shuffle_choices=True):
+
+    ls = np.ones(num_cells)*min_length
+    length_left = length-num_cells*min_length
+
+    for i in range(ls.size-1):
+        if length_left > 0:
+            current_length = np.random.choice(length_left)
+            ls[i] += current_length
+            length_left = length_left - current_length
+        else:
+            break
+    ls[-1] += length_left
+
+    return_choices = np.random.choice(choices,size=(num_cells,)) if shuffle_choices is True else choices
+    return {
+        'values':  return_choices,
+        'lengths': np.random.permutation(ls)
+    }

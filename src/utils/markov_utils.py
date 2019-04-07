@@ -5,21 +5,34 @@ import constants as c
 def is_listy(thing):
     return hasattr(thing, "__len__")
 
+
 def listify(thing):
     return thing if is_listy(thing) else [thing]
+
 
 def markov_model_is_leaf(values):
     # we examine two cases:
     # the values might be just a list, then we look only at the first element
     # the values is a list of list and then we have to look at the first element of the first list
-    if hasattr(values[0],'type'):
+
+    if is_listy(values[0]) and hasattr(values[0][0],'type'):
         return False
-    elif is_listy(values[0]) and hasattr(values[0][0],'type'):
+    elif hasattr(values[0],'type'):
         return False
     else:
         return True
 
-def simulate_markov_chain(transition_matrix, start_probs, length):
+
+def simulate_markov_chain(node,length):
+    if node.update_step is None or node.update_fun is None:
+        return simulate_markov_chain_without_update(
+            transition_matrix=node.transition_matrix,
+            start_probs=node.start_probs,
+            length=length)
+    else:
+        return simulate_markov_chain_with_update(node,length)
+
+def simulate_markov_chain_without_update(transition_matrix, start_probs, length):
 
     num_elems = len(transition_matrix)
     r = np.arange(num_elems)
@@ -42,6 +55,36 @@ def simulate_markov_chain(transition_matrix, start_probs, length):
 
     return simulation.astype('int32')
 
+
+
+def simulate_markov_chain_with_update(node, length):
+
+    current_length = 0
+    first_step = node.update_step - node.simulated_length % node.update_step
+    simulations = []
+    while current_length < length:
+        sim_length = node.update_step if current_length > 0 else first_step
+        current_length += sim_length
+
+        simulations += [ simulate_markov_chain_without_update(
+            node.transition_matrix,node.start_probs,sim_length) ]
+
+        update_node(node)
+
+    simulation = np.concatenate(simulations)[:length]
+    node.simulated_length += length
+    return simulation
+
+
+def update_node(node):
+    new_preference_matrix, new_start_probs = node.update_fun(
+        node.preference_matrix, node.start_probs)
+
+    node.preference_matrix = new_preference_matrix
+    node.transition_matrix = compute_transition_matrix(node.preference_matrix)
+    node.start_probs = new_start_probs / np.sum(new_start_probs)
+
+
 def simulate_markov_generator(node, length=None):
 
     breakout = False
@@ -53,21 +96,17 @@ def simulate_markov_generator(node, length=None):
     if sim_length == -1:
         sim_length = np.random.choice(node.self_length)
     while breakout == False:
-        sim_node = node
-        simulation = simulate_markov_chain(
-            transition_matrix=sim_node.transition_matrix,
-            start_probs=sim_node.start_probs,
-            length=sim_length)
+        simulation = simulate_markov_chain(node=node,length=sim_length)
 
-        if sim_node.lengths is not None:
-            repeats = [ sim_node.lengths[s] for s in simulation  ]
+        if node.lengths is not None:
+            repeats = [ node.lengths[s] for s in simulation  ]
             simulation = np.repeat(simulation,repeats)
-        vals = [sim_node.values[i] for i in simulation]
+        vals = [node.values[i] for i in simulation]
 
 
-        if sim_node.leaf is False:
+        if node.leaf is False:
 
-            child_lens = np.random.choice(sim_node.child_lengths,sim_length)
+            child_lens = np.random.choice(node.child_lengths,sim_length)
             for j,(n,l) in enumerate(zip(vals,child_lens)):
                 m = simulate_markov_hierarchy(n,l)
                 for i in m:
@@ -150,6 +189,10 @@ def paint_linearly_markov_hierarchy(
         return img.reshape((height,width))
 
 
+def compute_transition_matrix(preference_matrix):
+    sums = np.sum(preference_matrix, axis=1)
+    return preference_matrix / sums[:, None]
+
 class MarkovModel:
 
     def __init__(self,
@@ -158,34 +201,36 @@ class MarkovModel:
                  values=None,
                  child_lengths=-1,
                  lenghts=None,
-                 self_length=None):
+                 self_length=None,
+                 update_step=None,
+                 update_fun=None):
 
         l = len(values)
         self.values = listify(values)
 
         # child_lengths is one way one can deduce if is leaf node or not
-        self.child_lengths = listify(child_lengths)
-        self.__init_transition_matrix__(preference_matrix)
-        self.lengths = lenghts
-        self.self_length = listify(self_length)
+        self.child_lengths = np.array(listify(child_lengths)).astype('int32')
+        self.lengths = None if lenghts is None else np.array(lenghts).astype('int32')
+        self.self_length = None if self_length is None else np.array(listify(self_length)).astype('int32')
         self.type = c.TYPE_GEN
 
         if start_probs is None:
             self.start_probs = np.ones(l)/l
-        elif is_listy(start_probs):
-            self.start_probs = start_probs
+        elif is_listy(start_probs) and len(start_probs) == l:
+            self.start_probs = start_probs / np.sum(start_probs)
         else:
             self.start_probs = np.zeros(l)
-            self.start_probs[start_probs] = 1
+            start_probs = listify(start_probs)
+            self.start_probs[start_probs] = 1/len(start_probs)
 
         self.leaf = markov_model_is_leaf(values)
+        self.preference_matrix = np.array(preference_matrix)
+        self.transition_matrix = compute_transition_matrix(self.preference_matrix)
 
+        self.update_step = update_step
+        self.update_fun = update_fun
+        self.simulated_length = 0
 
-
-    def __init_transition_matrix__(self,preference_matrix):
-        self.preference_matrix = preference_matrix
-        sums = np.sum(preference_matrix,axis=1)
-        self.transition_matrix = self.preference_matrix / sums[:,None]
 
 
 class SimpleProgression(MarkovModel):
@@ -262,7 +307,7 @@ class RandomMarkovModel(MarkovModel):
             **kwargs)
 
 
-class Tiler:
+class Processor:
     def __init__(self, node, num_tiles=1, length_limit=None):
         self.node = node
         self.num_tiles = num_tiles if hasattr(num_tiles, "__len__") else [num_tiles]

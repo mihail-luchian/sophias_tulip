@@ -20,6 +20,29 @@ def hex2arr(s):
 
     return np.array([r, g, b])
 
+
+def interpolate_hex_colors(start,end,n):
+    r1,g1,b1 = hex2arr(start)
+    r2,g2,b2 = hex2arr(end)
+
+    def hs(x):
+        s = hex(x)[2:]
+        if len(s) > 1:
+            return s
+        else:
+            return '0'+s
+
+    r_interp = np.linspace(r1,r2,n).astype('uint8')
+    g_interp = np.linspace(g1,g2,n).astype('uint8')
+    b_interp = np.linspace(b1,b2,n).astype('uint8')
+
+    return {
+        i : hs(r_interp[i]) + hs(g_interp[i]) + hs(b_interp[i])
+        for i in range(n)
+    }
+
+
+
 def convert_color_dict_from_hex(color_dict):
     return { i:hex2arr(j) for i,j in color_dict.items() }
 

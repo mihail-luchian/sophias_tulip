@@ -1,6 +1,6 @@
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QHBoxLayout, QTextEdit, QVBoxLayout, QPushButton, \
-    QColorDialog
+    QColorDialog, QScrollArea
 from PyQt5.QtGui import QIcon, QPixmap, QImage, QColor
 import sys
 import utils.color_utils as c
@@ -53,9 +53,18 @@ class ColorEditingTool(QWidget):
     def add_color_text_fields(self):
 
         self.color_field_dict = {}
+        # adding a scroll area in case there are too many colors
+        scroll_area = QScrollArea()
+        scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        scroll_area.setWidgetResizable(True)
+
+        self.general_layout.addWidget(scroll_area)
+
+        # glue to attach the vertical layout to the scroll area
+        glue_widget = QWidget()
         vertical_layout = QVBoxLayout();
-        self.general_layout.addLayout(vertical_layout)
-        self.general_layout.setAlignment(vertical_layout, QtCore.Qt.AlignRight)
+        scroll_area.setWidget(glue_widget)
+        glue_widget.setLayout(vertical_layout)
 
         for key,value in self.color_dict.items():
             color_text_field = ColorTextField(str(key),value)
@@ -65,9 +74,6 @@ class ColorEditingTool(QWidget):
             vertical_layout.setAlignment(color_text_field, QtCore.Qt.AlignRight)
             color_text_field.textbox.textChanged.connect(self.color_text_changed)
             color_text_field.button.clicked.connect(lambda state,key=key: self.choose_color(key))
-
-        # vertical_layout.setSpacing(0)
-        # vertical_layout.setContentsMargins(0,0,0,0)
 
 
     def generate_colored_image(self, color_dict):

@@ -156,7 +156,7 @@ for current_iteration in range(N):
             for i in pats
         ]
 
-        pats = m.Tiler(
+        pats = m.Processor(
             m.SimpleProgression(
                 values=m.RandomMarkovModel(values=pats,child_lengths=1),
                 child_lengths=TILE_HEIGHT),
@@ -172,7 +172,7 @@ for current_iteration in range(N):
         m.SimpleProgression(values=i)
         for i in [2,3,10,11,12]
     ]
-    random_tiles = m.Tiler(
+    random_tiles = m.Processor(
         m.SimpleProgression(
                 values=m.RandomMarkovModel(values=r,child_lengths=[1,2,3,4]),
                 child_lengths=TILE_HEIGHT*TILE_WIDTH//2),
