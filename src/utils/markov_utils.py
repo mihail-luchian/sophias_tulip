@@ -222,7 +222,6 @@ class MarkovModel:
             self.start_probs = np.zeros(l)
             start_probs = listify(start_probs)
             self.start_probs[start_probs] = 1/len(start_probs)
-
         self.leaf = markov_model_is_leaf(values)
         self.preference_matrix = np.array(preference_matrix)
         self.transition_matrix = compute_transition_matrix(self.preference_matrix)

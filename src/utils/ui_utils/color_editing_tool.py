@@ -29,14 +29,14 @@ class ColorTextField(QWidget):
 class ColorEditingTool(QWidget):
 
 
-    def __init__(self, img_blueprint, color_dict):
+    def __init__(self, blueprint, color_dict, downsample = 4, show_max = False):
         super().__init__()
 
         self.title = 'Color Editing Tool'
         self.setWindowTitle(self.title)
         self.general_layout = QHBoxLayout(self);
 
-        self.img_blueprint = img_blueprint[::2, ::2]
+        self.img_blueprint = blueprint[::downsample, ::downsample]
         self.color_dict = color_dict
         height, width = self.img_blueprint.shape
         self.img_width = width
@@ -47,7 +47,10 @@ class ColorEditingTool(QWidget):
         self.add_color_text_fields()
 
         ### end
-        self.showMaximized()
+        if show_max is True:
+            self.showMaximized()
+        else:
+            self.show()
 
 
     def add_color_text_fields(self):

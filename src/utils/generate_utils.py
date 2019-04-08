@@ -85,14 +85,20 @@ def random_cross_line(size,seed=101,horizontal=True):
     return line( size, start_pos=(xs[0],ys[0]),end_pos=(xs[1],ys[1]) )
 
 
-def gen_random_pattern_with_lengths(length, num_cells, choices, min_length=1,shuffle_choices=True):
+def gen_random_pattern_with_lengths(
+        length, num_cells, choices,
+        min_length=1,shuffle_choices=True, max_length=None):
 
     ls = np.ones(num_cells)*min_length
     length_left = length-num_cells*min_length
 
     for i in range(ls.size-1):
         if length_left > 0:
-            current_length = np.random.choice(length_left)
+            if max_length is not None and length_left > max_length:
+                sampling_length = max_length
+            else:
+                sampling_length = length_left
+            current_length = np.random.choice(sampling_length)
             ls[i] += current_length
             length_left = length_left - current_length
         else:

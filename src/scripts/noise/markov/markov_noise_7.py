@@ -11,21 +11,23 @@ import utils.viz_utils as viz
 
 ### DATA/INPUT/SHARED by all runs section
 print('PREPARING DATA SECTION')
-N = 1
-SEED = 587458
+N = 300
+SEED = 0
 HEIGHT = 400
 WIDTH  = HEIGHT
 
 UPSCALE_FACTOR = c.INSTA_SIZE // HEIGHT
 
-NUM_CELLS = 20
-START_COLOR = '000000'
-END_COLOR = 'ffffff'
+NUM_CELLS = 25
+START_COLOR = '00357a'
+END_COLOR = 'bcffb7'
 
 COLOR_DICT = color.interpolate_hex_colors(START_COLOR,END_COLOR,NUM_CELLS)
 COLOR_DICT = {
     **COLOR_DICT,
-    NUM_CELLS+1: '5d4e60'
+    NUM_CELLS+1: 'ff7c30',
+    NUM_CELLS+2: 'ff5842',
+    NUM_CELLS+3: 'cc0489',
 }
 print(COLOR_DICT)
 
@@ -50,28 +52,43 @@ def gen_portion(parent,height,width,tile_height,tile_width):
 print('GENERATE SECTION')
 
 for current_iteration in range(N):
-
+    print('CURRENT_ITERATION:',current_iteration)
     np.random.seed(SEED+current_iteration)
 
-    pat = gen.gen_random_pattern_with_lengths(
-        WIDTH, NUM_CELLS, np.arange(NUM_CELLS), min_length=5)
+    pats = [
+        gen.gen_random_pattern_with_lengths(
+            WIDTH, NUM_CELLS, np.arange(NUM_CELLS), min_length=3, max_length = 230)
+        for i in range(5)
+    ]
 
 
-    num_tiles = np.random.poisson(3,size=5)+1
-    vls = pat['values']
-    zeroes = NUM_CELLS - NUM_CELLS//5
-    vls[ np.random.choice(NUM_CELLS,size=zeroes,replace=False) ] = NUM_CELLS+1
-    lngts = pat['lengths']
-    model = m.Processor(
-        m.SimpleProgression(
-            values=vls,
-            lenghts=lngts,
-            self_length=NUM_CELLS,
-            start_probs=[0,2,4,8,10]),
-        num_tiles=num_tiles
-    )
+    num_tiles = [1,1,2,2,3,4,10,10,20]
+    pattern_models = []
 
-    parent = m.SimpleProgression(values=model)
+
+    for pat in pats:
+        vls = pat['values']
+        zeroes = int(NUM_CELLS/3)
+        mask = np.random.choice([2,3,4], size=zeroes)
+        mask = np.cumsum(mask)
+        mask = mask[mask<NUM_CELLS]
+        vls[mask] = np.random.choice([NUM_CELLS+1,NUM_CELLS+2,NUM_CELLS+3])
+        lngts = pat['lengths']
+        model = m.SimpleProgression(values=m.Processor(
+            m.SimpleProgression(
+                values=vls,
+                lenghts=lngts,
+                self_length=NUM_CELLS,
+                start_probs=[0,1,2,3]),
+            num_tiles=num_tiles),self_length=[5,10,15,20,25])
+        pattern_models += [model]
+
+    def update_fun(preference_matrix,start_probs):
+        return preference_matrix,np.roll(start_probs,shift=1)
+    parent = m.RandomMarkovModel(
+        values=pattern_models,
+        start_probs=0,
+        update_fun=update_fun,update_step=1)
 
     img = gen_portion(
         parent,
@@ -81,7 +98,10 @@ for current_iteration in range(N):
     final_img_prototype = data.upscale_nearest(img,UPSCALE_FACTOR)
     final_img = color.replace_indices_with_colors(final_img_prototype,COLOR_DICT).astype('uint8')
     if N==1:
-        viz.start_color_editing_tool(final_img_prototype,COLOR_DICT)
+        viz.start_color_editing_tool(
+            blueprint=final_img_prototype,
+            color_dict=COLOR_DICT,
+            downsample=2)
     else:
         file.export_image(
             '%d_%d' % (current_iteration,int(round(time.time() * 1000))),
