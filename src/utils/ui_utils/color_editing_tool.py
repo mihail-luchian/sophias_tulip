@@ -29,9 +29,14 @@ class ColorTextField(QWidget):
 class ColorEditingTool(QWidget):
 
 
-    def __init__(self, blueprint, color_dict, downsample = 4, show_max = False):
+    def __init__(self,
+                 blueprint, color_dict,
+                 gen_fun,
+                 downsample = 4, show_max = False):
+
         super().__init__()
 
+        self.gen_fun = gen_fun
         self.title = 'Color Editing Tool'
         self.setWindowTitle(self.title)
         self.general_layout = QHBoxLayout(self);
@@ -79,14 +84,10 @@ class ColorEditingTool(QWidget):
             color_text_field.button.clicked.connect(lambda state,key=key: self.choose_color(key))
 
 
-    def generate_colored_image(self, color_dict):
-        return c.replace_indices_with_colors(self.img_blueprint,color_dict).astype('uint8')
-
-
     def add_image(self):
 
         q_img = QImage(
-            self.generate_colored_image(self.color_dict).tobytes(),
+            self.gen_fun(self.img_blueprint,self.color_dict).tobytes(),
             self.img_height, self.img_width,
             QImage.Format_RGB888)
 
@@ -108,12 +109,13 @@ class ColorEditingTool(QWidget):
         y = event.pos().y()
 
         code = int(self.img_blueprint[y,x])
-        self.color_field_dict[code].textbox.selectAll()
-        self.color_field_dict[code].textbox.setFocus()
+        if code in self.color_field_dict:
+            self.color_field_dict[code].textbox.selectAll()
+            self.color_field_dict[code].textbox.setFocus()
         print(x,y)
 
     def update_image(self,new_color_dict):
-        new_img = self.generate_colored_image(new_color_dict)
+        new_img = self.gen_fun(self.img_blueprint,new_color_dict)
         q_img = QImage(
             new_img.tobytes(),
             self.img_height, self.img_width,

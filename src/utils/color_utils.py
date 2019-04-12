@@ -41,7 +41,6 @@ def clamp_hsv_opencv(a):
 
 def hex2hsv(s):
     r,g,b = hex2rgb(s)
-    print(r/255,g/255,b/255)
     return np.array(colorsys.rgb_to_hsv(r,g,b))*[255,255,1]
 
 def interpolate_hex_colors(start,end,n):

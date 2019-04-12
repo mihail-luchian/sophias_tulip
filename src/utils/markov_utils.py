@@ -6,9 +6,24 @@ def is_listy(thing):
     return hasattr(thing, "__len__")
 
 
+def listify_if_not_none(thing):
+    if thing is None:
+        return None
+    else:
+        return listify(thing)
+
+def array_listify_if_not_none(thing,dtype='int32'):
+    l = listify_if_not_none(thing)
+    if l is None:
+        return None
+    else:
+        return np.array(l).astype(dtype)
+
 def listify(thing):
     return thing if is_listy(thing) else [thing]
 
+def array_listify(thing,dtype='int32'):
+    return np.array(listify(thing)).astype(dtype)
 
 def markov_model_is_leaf(values):
     # we examine two cases:
@@ -128,12 +143,17 @@ def simulate_markov_processor(node,length):
 
     vals = np.concatenate(ms)
     total_size = vals.size
-    if node.length_limit is not None and total_size >= node.length_limit:
-        vals = vals[:node.length_limit]
+    limit = None
+    if node.length_limit is not None:
+        limit = np.random.choice(node.length_limit)
+    if limit is not None and total_size >= limit:
+        vals = vals[:limit]
 
-    reps = np.random.choice(node.num_tiles)
-    vals = np.tile(vals, reps)
-
+    reps = None
+    if node.num_tiles is not None:
+        reps = np.random.choice(node.num_tiles)
+    if reps is not None:
+        vals = np.tile(vals, reps)
     yield vals
 
 
@@ -209,9 +229,9 @@ class MarkovModel:
         self.values = listify(values)
 
         # child_lengths is one way one can deduce if is leaf node or not
-        self.child_lengths = np.array(listify(child_lengths)).astype('int32')
-        self.lengths = None if lenghts is None else np.array(lenghts).astype('int32')
-        self.self_length = None if self_length is None else np.array(listify(self_length)).astype('int32')
+        self.child_lengths = array_listify(child_lengths)
+        self.lengths = array_listify_if_not_none(lenghts)
+        self.self_length = array_listify_if_not_none(self_length)
         self.type = c.TYPE_GEN
 
         if start_probs is None:
@@ -257,7 +277,7 @@ class SimplePattern(SimpleProgression):
         # example of pattern 001100111101234321
 
 
-        int_pattern = [int(i) for i in pattern]
+        int_pattern = [c.PATTERN_STR_INDICES[i] for i in pattern]
         values = [ candidates[i] for i in int_pattern ]
         super().__init__(
             values=values,
@@ -307,8 +327,17 @@ class RandomMarkovModel(MarkovModel):
 
 
 class Processor:
-    def __init__(self, node, num_tiles=1, length_limit=None):
+    def __init__(self, node, num_tiles=None, length_limit=None):
         self.node = node
-        self.num_tiles = num_tiles if hasattr(num_tiles, "__len__") else [num_tiles]
-        self.length_limit = length_limit
+
+        self.num_tiles = listify_if_not_none(num_tiles)
+        self.length_limit = listify_if_not_none(length_limit)
         self.type = c.TYPE_PROC
+
+
+#### SHORTCUTS
+Prcs = Processor
+MM = MarkovModel
+RMM = RandomMarkovModel
+SPt = SimplePattern
+SPr = SimpleProgression

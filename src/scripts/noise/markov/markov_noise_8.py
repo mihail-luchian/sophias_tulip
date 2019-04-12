@@ -12,15 +12,14 @@ import utils.viz_utils as viz
 
 ### DATA/INPUT/SHARED by all runs section
 print('PREPARING DATA SECTION')
-N = 5
-SEED = 4210468
-HEIGHT = 50
+N = 30
+SEED = 0
+HEIGHT = 100
 WIDTH  = HEIGHT
 
 UPSCALE_FACTOR = c.INSTA_SIZE // HEIGHT
 
-START_COLOR = color.hex2hsv('465775')
-print(START_COLOR)
+COLOR_DICT = {0: '6eb9e1', 1: '032b5b'}
 
 
 ### SETUP section
@@ -40,11 +39,6 @@ def gen_portion(parent,height,width,tile_height=None,tile_width=None):
     return img.reshape(img.shape[0],img.shape[1])
 
 
-def gen_walk_pattern(num_candidates,pattern_length):
-    p = np.random.choice(num_candidates,pattern_length,replace=False)
-    s = ''.join([ str(i) for i in p ])
-    s = s+s[::-1]
-    return s
 
 def to_string_pattern(p,values):
     dictionary_pos = {
@@ -57,7 +51,31 @@ def to_string_pattern(p,values):
         for i in p
     ]
 
-    return ''.join(str(i) for i in poss)
+    return ''.join(c.PATTERN_INDICES_STR[i] for i in poss)
+
+
+def gen_img_from_accumulations_blueprint(acums, color_dict):
+
+    start_color = color.hex2hsv(color_dict[0])
+    end_color = color.hex2hsv(color_dict[1])
+
+    hue_distance = end_color[0] - start_color[0]
+    sat_distance = end_color[1] - start_color[1]
+    value_distance = end_color[2] - start_color[2]
+
+    img_height,img_width = acums.shape
+    default_color = np.ones((img_height,img_width,3)) *  start_color
+
+    num_steps = 30
+    layer_hue = acums*(hue_distance/num_steps) + default_color[:, :, 0]
+    layer_saturation = default_color[:, :, 1] + acums*(sat_distance/num_steps)
+    layer_value = default_color[:, :, 2] + acums*(value_distance/num_steps)
+
+    final = np.stack((layer_hue, layer_saturation, layer_value), axis=2)
+    final = color.clamp_hsv_opencv(final)
+    final = cv2.cvtColor(final,cv2.COLOR_HSV2RGB)*255
+
+    return final.astype('uint8')
 
 
 ### GENERATE SECTION
@@ -67,36 +85,56 @@ for current_iteration in range(N):
     print('CURRENT_ITERATION:',current_iteration)
     np.random.seed(SEED+current_iteration)
 
-    skips = [-5,5, -10,10, -15,15, -20,20, 0]
+    skips = [-1,1, -2,2, -3,3, -4,4, -5,5, 0]
 
-
+    base_pattern = [
+            4,-2,
+            -2,2,
+            -3,3,
+            -4,4,
+            -3,3
+        ]
 
     patterns = [
+
         [
-            -5,5,
-            -10,10,
-            -15,15,
-            -10,10,
-            -5,5
-        ],
+            -3, 0,
+            5, 0,
+            -3, 0,
+            5, 0,
+            -2, 0,
+        ], # sum -> 2
+
         [
-            -5,0,0,
-            10,0,0,
-            -5,0,0,0,
-        ],
+            -3, 0,
+            4, 0,
+            -2, 0,
+            4, 0,
+            -2, 0,
+        ], # sum -> 1
         [
-            5,
-            10,
-            15,
-            20,
-            0,0
-            -20,
-            -15,
-            -10,
-            -5,
-        ],
+            -3, 2, 2,
+            -3, 2, 2,
+            -3, 2, 2,
+            0,
+        ], # sum -> 3
+        [
+            -4, 3, 2,
+            -4, 3, 2,
+            -4, 3, 2,
+            0,
+        ], # sum -> 3
+        [
+            -2, 2, 1,
+            -2, 2, 1,
+            -2, 2, 1,
+            0,
+        ], # sum -> 3
     ]
 
+
+
+    base_pattern = to_string_pattern(base_pattern,skips)
     patterns = [
         to_string_pattern(i,skips)
         for i in patterns
@@ -104,30 +142,46 @@ for current_iteration in range(N):
 
     print(patterns)
 
+    base_pattern = m.SimplePattern(
+        pattern=base_pattern,
+        candidates=skips,
+        start_probs=[0,1,2],
+        self_length=[2*WIDTH//10,2*WIDTH//10-1,3*WIDTH//10,3*WIDTH//10-1])
+    base_pattern = m.Prcs(
+        m.SPr(values=base_pattern,self_length=15),
+        num_tiles=[3,6],length_limit=WIDTH)
+
     patterns = [
-        m.SimplePattern(pattern=p,candidates=skips)
+        m.SPt(pattern=p,candidates=skips,start_probs=[0,1])
         for p in patterns
     ]
 
-    child_lengths = [2*WIDTH//5-1,3*WIDTH//5-1]
-    model = m.Processor(
-        m.RandomMarkovModel(values=patterns,child_lengths=child_lengths),
-        num_tiles=[1,2,3], length_limit=WIDTH)
+    child_lengths = [2*WIDTH//10,3*WIDTH//10,4*WIDTH//10]
+    patterns = m.Prcs(
+                m.RMM(values=patterns,child_lengths=child_lengths,self_length=10),
+                length_limit=WIDTH, num_tiles=[1,2,3])
 
-    parent = m.SimpleProgression(values=model,child_lengths=5)
+    patterns = m.SPr(values=patterns,self_length=[1,2,3])
+
+    parent = m.RMM(values=[base_pattern,patterns])
+    # parent = m.RMM(values=[patterns])
 
     img = gen_portion(parent,HEIGHT,WIDTH)
-    default_color = np.ones((HEIGHT,WIDTH,3)) *  START_COLOR
 
     img_acum = np.cumsum(img,axis=1)
-    layer_hue = img_acum + default_color[:, :, 0]
-    layer_saturation = default_color[:, :, 1] - img_acum
-    layer_value = img_acum + default_color[:, :, 2]
+    img_acum = data.upscale_nearest(img_acum,UPSCALE_FACTOR)
 
-    ls = np.stack((layer_hue, layer_saturation, layer_value), axis=2)
-    final_img = data.upscale_nearest(ls,UPSCALE_FACTOR)
-    final_img = color.clamp_hsv_opencv(final_img)
-    final_img = cv2.cvtColor(final_img,cv2.COLOR_HSV2RGB)*255
-    file.export_image(
-        '%d_%d' % (current_iteration,int(round(time.time() * 1000))),
-        final_img.astype('uint8'),format='png')
+
+    final = gen_img_from_accumulations_blueprint(img_acum, COLOR_DICT)
+
+    if N==1:
+        viz.start_color_editing_tool(
+            blueprint=img_acum,
+            color_dict=COLOR_DICT,
+            downsample=2,
+            gen_fun = gen_img_from_accumulations_blueprint)
+    else:
+        final_img = gen_img_from_accumulations_blueprint(img_acum,COLOR_DICT)
+        file.export_image(
+            '%d_%d' % (current_iteration,int(round(time.time() * 1000))),
+            final_img.astype('uint8'),format='png')
