@@ -21,15 +21,15 @@ MAX_HEIGHT = 3
 
 
 BASE_DICT = {
-    1:color.hex2arr('#d1ffe0'),
-    2:color.hex2arr('#d1ffd1'),
-    3:color.hex2arr('#e1ffd1'),
-    4:color.hex2arr('#f3ffcc'),
-    5:color.hex2arr('#fff3cc'),
+    1:color.hex2rgb('#d1ffe0'),
+    2:color.hex2rgb('#d1ffd1'),
+    3:color.hex2rgb('#e1ffd1'),
+    4:color.hex2rgb('#f3ffcc'),
+    5:color.hex2rgb('#fff3cc'),
 }
 
 GRAD_DICT = {
-    i+10+1:color.hex2arr(h)
+    i+10+1:color.hex2rgb(h)
     for i,h in enumerate([
         '6b0030',
         '6ddaff',

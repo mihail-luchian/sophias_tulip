@@ -24,18 +24,18 @@ UPSCALE_FACTOR = c.INSTA_SIZE // HEIGHT
 TILING_OPTIONS = [1,2,3,4,5]
 
 SCHEME_COLORS = {
-    1: color.hex2arr('00918e'),
-    2: color.hex2arr('0eaf5c'),
-    3: color.hex2arr('49cc54'),
-    4: color.hex2arr('88f77e')
+    1: color.hex2rgb('00918e'),
+    2: color.hex2rgb('0eaf5c'),
+    3: color.hex2rgb('49cc54'),
+    4: color.hex2rgb('88f77e')
 }
 
 COLOR_DICT = {
-    0: color.hex2arr('000b14'),
+    0: color.hex2rgb('000b14'),
 
-    10: color.hex2arr('aef260'),
-    11: color.hex2arr('51cc6e'),
-    12: color.hex2arr('000b33'),
+    10: color.hex2rgb('aef260'),
+    11: color.hex2rgb('51cc6e'),
+    12: color.hex2rgb('000b33'),
 
     **SCHEME_COLORS
 }
