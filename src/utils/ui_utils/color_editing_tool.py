@@ -42,6 +42,7 @@ class ColorEditingTool(QWidget):
         self.general_layout = QHBoxLayout(self);
 
         self.img_blueprint = blueprint[::downsample, ::downsample]
+        print(self.img_blueprint.shape)
         self.color_dict = color_dict
         height, width = self.img_blueprint.shape
         self.img_width = width
@@ -86,14 +87,18 @@ class ColorEditingTool(QWidget):
 
     def add_image(self):
 
+        gen_img = self.gen_fun(self.img_blueprint,self.color_dict)
+        print(gen_img.shape)
         q_img = QImage(
-            self.gen_fun(self.img_blueprint,self.color_dict).tobytes(),
-            self.img_height, self.img_width,
+            gen_img.tobytes(),
+            self.img_width, self.img_height,
             QImage.Format_RGB888)
 
         self.img_label = QLabel()
         pixmap = QPixmap.fromImage(q_img)
         self.img_label.setPixmap(pixmap)
+        self.img_label.setFixedWidth(self.img_width)
+        self.img_label.setFixedHeight(self.img_height)
         self.img_label.mousePressEvent = self.get_pixel_pos
         self.general_layout.addWidget(self.img_label)
 
@@ -107,18 +112,19 @@ class ColorEditingTool(QWidget):
 
         x = event.pos().x()
         y = event.pos().y()
+        print('Clicked image on coords',x,y)
 
         code = int(self.img_blueprint[y,x])
         if code in self.color_field_dict:
             self.color_field_dict[code].textbox.selectAll()
             self.color_field_dict[code].textbox.setFocus()
-        print(x,y)
 
     def update_image(self,new_color_dict):
         new_img = self.gen_fun(self.img_blueprint,new_color_dict)
+        print('NEW IMAGE')
         q_img = QImage(
             new_img.tobytes(),
-            self.img_height, self.img_width,
+            self.img_width, self.img_height,
             QImage.Format_RGB888)
         pixmap = QPixmap.fromImage(q_img)
         self.img_label.setPixmap(pixmap)

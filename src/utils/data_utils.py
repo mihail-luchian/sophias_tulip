@@ -1,16 +1,21 @@
 import numpy as np
 import utils.generate_utils as gen
 
-def upscale_nearest( x, n = 3 ):
+def upscale_nearest(x, ny = 3, nx = None):
     '''
 
     :param x: a bidimensional image
-    :param n: the upscaling factor
+    :param ny: the upscaling factor
     :return:
     '''
 
-    x_prime = np.repeat(x,n,axis=1)
-    x_prime = np.repeat(x_prime,n,axis=0)
+    if nx is None and ny is not None:
+        nx = ny
+    if ny is None and nx is not None:
+        ny = nx
+
+    x_prime = np.repeat(x, nx, axis=1) # on the x axis
+    x_prime = np.repeat(x_prime, ny, axis=0)
     return x_prime
 
 

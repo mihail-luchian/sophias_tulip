@@ -77,4 +77,4 @@ def replace_indices_with_colors(img, color_dict):
         mask = img == key
         new_img[mask] = item
 
-    return new_img
+    return new_img.astype('uint8')
