@@ -13,6 +13,7 @@ dict_generators = {}
 # this function must be called first, to properly setup the default random number generator
 def init_def_generator(seed):
     global default_generator
+    global num_generators
     default_generator = np.random.RandomState(seed)
     dict_generators[KEY_DEFAULT_GENERATOR] = default_generator
     num_generators += 1
