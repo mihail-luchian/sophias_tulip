@@ -7,3 +7,4 @@ Libraries used:
 * ImageIO
 * pyqt5
 * tensorflow
+* colorspacious

@@ -1,5 +1,25 @@
 import numpy as np
 import colorsys
+import colorspacious as cs
+
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# This is done to make sure that the colour library works only with values between 0 and 1
+# colour.set_domain_range_scale('1')
+
+def linspace_hue(start,end,num_steps):
+    diff = start - end
+    diff_1 = np.abs(diff) # this represents direct interpolation
+    diff_2 = np.abs(diff - np.sign(diff)*360) # this represents going around the circle
+    if diff_1 < diff_2:
+        l = np.linspace(start, end, num_steps)
+    else:
+        l = np.linspace(start,end + np.sign(diff)*360,num_steps)
+
+    l[l>=360] -= 360
+    l[l<0] += 360
+    return l
+
+
 
 def hex2rgb(s):
 
@@ -20,6 +40,28 @@ def hex2rgb(s):
         r = g = b = 0
 
     return np.array([r, g, b])
+
+
+def srgb2cam02(rgb):
+    return cs.cspace_convert(rgb, "sRGB255", "JCh")
+
+def cam022srgb(cam02):
+    return cs.cspace_convert(cam02, "JCh", "sRGB255")
+
+def srgb2cam02ucs(rgb):
+    return cs.cspace_convert(rgb, "sRGB255", cs.CAM02UCS)
+
+def cam02ucs2srgb(cam02):
+    return cs.cspace_convert(cam02, cs.CAM02UCS, "sRGB255")
+
+
+def srgb2lab(rgb):
+    return cs.cspace_convert(rgb,'sRGB255','CIELab')
+
+def lab2srgb(lab):
+    return cs.cspace_convert(lab,'CIELab','sRGB255')
+
+
 
 def clamp_hsv_opencv(a):
 
