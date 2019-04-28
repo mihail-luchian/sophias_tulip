@@ -5,6 +5,7 @@ import script_config as config
 import numpy as np
 import cv2
 import utils.generate_utils as gen
+import random_manager as r
 import utils.file_utils as file
 import utils.data_utils as data
 import utils.markov_utils as m
@@ -13,7 +14,7 @@ import utils.viz_utils as viz
 
 ### DATA/INPUT/SHARED by all runs section
 print('PREPARING DATA SECTION')
-N = 200
+N = 1
 SEED = config.get('seed',0)
 HEIGHT = 100
 WIDTH  = HEIGHT
@@ -115,14 +116,14 @@ print('GENERATE SECTION')
 
 for current_iteration in range(N):
     print('CURRENT_ITERATION:',current_iteration)
-    np.random.seed(SEED+current_iteration)
+    r.init_def_generator(SEED+current_iteration)
 
 
     # GENERATING THE COLORS FIRST
 
     length_choices = [1,2]
-    lengths_1 = np.random.choice(length_choices,size=5)
-    lengths_2 = np.random.choice(length_choices,size=5)
+    lengths_1 = r.choice(length_choices,size=5)
+    lengths_2 = r.choice(length_choices,size=5)
 
     color_row_1 = m.Processor(
         m.RMM(values=[0,1,2,3,4],self_length=WIDTH,lenghts=lengths_1),
