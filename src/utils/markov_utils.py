@@ -116,7 +116,10 @@ def simulate_markov_generator(node, length=None):
         simulation = simulate_markov_chain(node=node,length=sim_length)
 
         if node.lengths is not None:
-            repeats = [ node.lengths[s] for s in simulation  ]
+            if len(node.lengths) == 1:
+                repeats = [ node.lengths[0] for _ in simulation  ]
+            else:
+                repeats = [ node.lengths[s] for s in simulation  ]
             simulation = np.repeat(simulation,repeats)
         vals = [node.values[i] for i in simulation]
 
@@ -343,8 +346,8 @@ class Processor:
 
 
 #### SHORTCUTS
-Prcs = Processor
+Proc = Processor
 MM = MarkovModel
 RMM = RandomMarkovModel
-SPt = SimplePattern
-SPr = SimpleProgression
+SPat = SimplePattern
+SProg = SimpleProgression

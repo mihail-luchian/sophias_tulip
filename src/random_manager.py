@@ -28,7 +28,7 @@ def choice_from(key,*args,**kwargs):
 def bind_generator():
     global num_generators
 
-    seed = default_generator.randint(0,ui32.max)
+    seed = default_generator.randint(0,ui32.max//2)
     generator = np.random.RandomState(seed)
 
     key = num_generators

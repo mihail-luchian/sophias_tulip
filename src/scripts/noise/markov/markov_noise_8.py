@@ -131,7 +131,7 @@ for current_iteration in range(N):
     color_row_2 = m.Processor(
         m.RMM(values=[10, 11, 12, 13, 14], self_length=WIDTH, lenghts=lengths_2),
         length_limit=WIDTH)
-    color_parent = m.SPr(values=[color_row_1,color_row_2],start_probs=0)
+    color_parent = m.SProg(values=[color_row_1, color_row_2], start_probs=0)
     colors = gen_portion(color_parent,2,WIDTH)
 
     print(colors[:,:30])
@@ -163,21 +163,21 @@ for current_iteration in range(N):
         candidates=skips,
         start_probs=[0,1,2,3],
         self_length=[WIDTH//10,WIDTH//10-1,2*WIDTH//10,2*WIDTH//10-1,3*WIDTH//10,3*WIDTH//10-1])
-    base_pattern = m.Prcs(
-        m.SPr(values=base_pattern,self_length=25),
+    base_pattern = m.Proc(
+        m.SProg(values=base_pattern, self_length=25),
         num_tiles=[3],length_limit=WIDTH)
 
     patterns = [
-        m.SPt(pattern=p,candidates=skips,start_probs=[0,1])
+        m.SPat(pattern=p, candidates=skips, start_probs=[0, 1])
         for p in patterns
     ]
 
     child_lengths = [2*WIDTH//10,3*WIDTH//10,4*WIDTH//10]
-    patterns = m.Prcs(
+    patterns = m.Proc(
                 m.RMM(values=patterns,child_lengths=child_lengths,self_length=15),
                 length_limit=WIDTH, num_tiles=[2,3])
 
-    patterns = m.SPr(values=patterns,self_length=[1,2,3])
+    patterns = m.SProg(values=patterns, self_length=[1, 2, 3])
 
     parent = m.RMM(values=[base_pattern,patterns])
 
