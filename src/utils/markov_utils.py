@@ -169,30 +169,94 @@ def simulate_markov_hierarchy(node,length=None):
     for i in sim:
         yield i
 
+def sample_markov_hierarchy(markov_tree,sample_size):
+
+    # this is the generator for the markov_tree
+    full_simulation = simulate_markov_hierarchy(markov_tree)
+
+    current = 0
+    sample = np.zeros(sample_size)
+    # we sample from the generator, taking care we sample only as much as required
+    for i in full_simulation:
+        l = i.size
+        start = current
+        end = start + l
+        sampled_end = l
+        if end >= sample_size:
+            end = sample_size
+            sampled_end = end - start
+
+        sample[start:end] = i[:sampled_end]
+        current = end
+        if current >= sample_size - 1:
+            break
+
+    return sample
+
+
+def sample_markov_hierarchy_with_cumsum_limit(markov_tree, limit):
+
+    # this is the generator for the markov_tree
+    full_simulation = simulate_markov_hierarchy(markov_tree)
+
+    sum = 0
+    list_samples = []
+    # we sample from the generator, until we reach the desired value
+    # at the end, this value is appended to the sample
+    for sample in full_simulation:
+        sample_sum = np.sum(sample)
+        if sum+sample_sum < limit:
+            list_samples.append(sample)
+            sum += sample_sum
+        else:
+            left = limit - sum
+            sample_cum = np.cumsum(sample)
+            usable_sample = sample[sample_cum<left]
+            list_samples.append(usable_sample)
+
+            # appending what remains
+            sum += np.sum(usable_sample)
+            list_samples.append(np.array([limit - sum]))
+            break
+
+    sample = np.concatenate(list_samples)
+    return sample
+
+
+def paint_linearly_markov_hierarchy_with_grid(markov_tree,gridy,gridx):
+    height = gridy[-1]
+    width = gridx[-1]
+
+    sample = sample_markov_hierarchy(markov_tree,height*width)
+    img = np.zeros((height, width))
+
+    startx = 0
+    starty = 0
+    sample_index = 0
+    for y in np.append(gridy, height):
+        endy = y
+        for x in np.append(gridx, width):
+            endx = x
+            gridsize = (endx-startx)*(endy-starty)
+            img[starty:endy, startx:endx] = sample[sample_index,sample_index+gridsize]
+
+            sample_index += gridsize
+            startx = endx
+
+        startx = 0
+        starty = endy
+
+    return img
+
 
 def paint_linearly_markov_hierarchy(
         markov_tree,
         height, width,
         tile_height = None,
         tile_width = None):
-    full_simulation = simulate_markov_hierarchy(markov_tree)
 
-    full_img_len = height * width
-    current = 0
-    img = np.zeros(height * width)
-    for i in full_simulation:
-        l = i.size
-        img_start = current
-        img_end = img_start + l
-        gen_end = l
-        if img_end >= full_img_len:
-            img_end = full_img_len
-            gen_end = img_end - img_start
-
-        img[img_start:img_end] = i[:gen_end]
-        current = img_end
-        if current >= full_img_len - 1:
-            break
+    sample_size = height*width;
+    img = sample_markov_hierarchy(markov_tree,sample_size)
 
     if tile_height is not None and tile_width is not None:
         img = img.reshape((-1,tile_width))
@@ -223,12 +287,22 @@ class MarkovModel:
                  preference_matrix=None,
                  start_probs=None,
                  values=None,
+                 vs=None,
                  child_lengths=-1,
                  lenghts=None,
                  self_length=None,
                  update_step=None,
                  update_fun=None):
 
+
+        ## checking all the received inputs
+        if vs is not None and values is not None:
+            raise Exception('You have to use either "v" or "values" to pass values. Both is not possible')
+
+        if values is None and vs is not None:
+            values = vs
+
+        ## initializing everything
         l = len(values)
         self.values = listify(values)
 

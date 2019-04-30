@@ -11,9 +11,11 @@ default_generator = None
 dict_generators = {}
 
 # this function must be called first, to properly setup the default random number generator
+# if you call the function again, all the previous generators are discarded
 def init_def_generator(seed):
     global default_generator
     global num_generators
+    dict_generators.clear()
     default_generator = np.random.RandomState(seed)
     dict_generators[KEY_DEFAULT_GENERATOR] = default_generator
     num_generators += 1
