@@ -1,0 +1,5 @@
+This tool was taken from
+    https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Colors/Color_picker_tool
+
+I customized the tool so that is fits more organically with my workflow.
+Support the Mozilla Foundation!
