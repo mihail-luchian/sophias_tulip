@@ -1,5 +1,6 @@
 'use strict';
 
+
 var UIColorPicker = (function UIColorPicker() {
 
 	function getElemById(id) {
@@ -19,6 +20,7 @@ var UIColorPicker = (function UIColorPicker() {
 	 * @param lightness		0-100
 	 */
 
+    // Color constructor
 	function Color(color) {
 
 		if(color instanceof Color === true) {
@@ -37,6 +39,7 @@ var UIColorPicker = (function UIColorPicker() {
 		this.format = 'HSV';
 	}
 
+    // Different types of color constructors
 	function RGBColor(r, g, b) {
 		var color = new Color();
 		color.setRGBA(r, g, b, 1);
@@ -75,6 +78,7 @@ var UIColorPicker = (function UIColorPicker() {
 		return color;
 	}
 
+    // Copy functionality
 	Color.prototype.copy = function copy(obj) {
 		if(obj instanceof Color !== true) {
 			console.log('Typeof parameter not Color');
@@ -1175,6 +1179,8 @@ window.addEventListener("load", function() {
 	ColorPickerTool.init();
 });
 
+// this is the middle part of the UI
+// the color sampling and management
 var ColorPickerTool = (function ColorPickerTool() {
 
 	/*========== Get DOM Element By ID ==========*/
@@ -1294,6 +1300,8 @@ var ColorPickerTool = (function ColorPickerTool() {
 	/**
 	 * ColorPalette
 	 */
+	// There are the things on top
+	// the color pallettes on top, generated from the color in the ColorPicker area
 	var ColorPalette = (function ColorPalette() {
 
 		var samples = [];
@@ -1311,6 +1319,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 			this.uid = samples.length;
 			this.node = node;
 			this.color = new Color();
+			this.was_active = false;
 
 			node.setAttribute('sample-id', this.uid);
 			node.setAttribute('draggable', 'true');
@@ -1395,6 +1404,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 			e.dataTransfer.setData('location', 'palette-samples');
 		};
 
+        // this is the general class for the palette on top
 		var Palette = function Palette(text, size) {
 			this.samples = [];
 			this.locked = false;
@@ -1433,14 +1443,15 @@ var ColorPickerTool = (function ColorPickerTool() {
 		};
 
 		var createHuePalette = function createHuePalette() {
-			var palette = new Palette('Hue', 12);
+		    var samples_hue_palette = 12;
+			var palette = new Palette('Hue', samples_hue_palette);
 
 			UIColorPicker.subscribe('picker', function(color) {
 				if (palette.locked === true)
 					return;
 
-				for(var i = 0; i < 12; i++) {
-					palette.samples[i].updateHue(color, 30, i);
+				for(var i = 0; i < samples_hue_palette; i++) {
+					palette.samples[i].updateHue(color, 5, i);
 				}
 			});
 
@@ -1611,6 +1622,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 	/**
 	 * ColorPicker Samples
 	 */
+	// there are the sample colors that are managed in the middle area
 	var ColorPickerSamples = (function ColorPickerSamples() {
 
 		var samples = [];
@@ -1619,7 +1631,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 		var container = null;
 		var	samples_per_line = 10;
 		var trash_can = null;
-		var base_color = new HSLColor(0, 50, 100);
+		var base_color = new HSLColor(0, 0, 100);
 		var add_btn;
 		var add_btn_pos;
 
@@ -1671,14 +1683,27 @@ var ColorPickerTool = (function ColorPickerTool() {
 		};
 
 		ColorSample.prototype.dragStart = function dragStart(e) {
+		    console.log("Started dragging:" + this.uid);
 			e.dataTransfer.setData('sampleID', this.uid);
 			e.dataTransfer.setData('location', 'picker-samples');
 		};
 
 		ColorSample.prototype.dragDrop = function dragDrop(e) {
 			e.stopPropagation();
+			var sampleID = e.dataTransfer.getData('sampleID');
+			console.log("Dropping over:" + sampleID);
+			console.log("Being dropped on:" + this.uid);
+
+			var old_color = getSampleColor(this.uid);
+
+			// updating the color of the sample on which it is dropped
 			this.color = Tool.getSampleColorFrom(e);
 			this.updateBgColor();
+
+			// updating the color on the sample which was dragged
+			var sample = samples[sampleID];
+			sample.color = old_color;
+			sample.updateBgColor();
 		};
 
 		ColorSample.prototype.deleteSample = function deleteSample() {
@@ -1695,6 +1720,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 			for (var i=0; i < nr; i++)
 				if (samples[i] !== null) {
 					samples[i].updatePosition(index);
+					samples[i].updateBgColor();
 					index++;
 				}
 
@@ -1709,9 +1735,10 @@ var ColorPickerTool = (function ColorPickerTool() {
 				return;
 
 			var sampleID = e.dataTransfer.getData('sampleID');
-			samples[sampleID].deleteSample();
-			console.log(samples);
-
+			// We do not want to delete it
+//			samples[sampleID].deleteSample();
+            // just reset it
+			samples[sampleID].color = new Color(base_color);
 			updateUI();
 		};
 
@@ -1744,8 +1771,30 @@ var ColorPickerTool = (function ColorPickerTool() {
 				return new Color(samples[id].color);
 		};
 
+
+        var getAllColorsAsString = function getAllColorsAsString() {
+            var list_hex = [];
+            samples.forEach(function(sample) {
+                var hex = sample.color.getHexa();
+                // only interested in colors that are not white
+                if( hex !== "#FFFFFF") {
+                    list_hex.push(hex);
+                }
+            });
+
+            if( list_hex.length > 0 ) {
+                return list_hex.join('-');
+            }
+            else {
+                return "";
+            }
+        }
+
 		var updateContainerProp = function updateContainerProp() {
 			samples_per_line = ((container.clientWidth - 5) / 52) | 0;
+			if( samples_per_line > 5 ) {
+			    samples_per_line = 5;
+			}
 			var height = 52 * (1 + (nr_samples / samples_per_line) | 0);
 			container.style.height = height + 10 + 'px';
 		};
@@ -1796,8 +1845,8 @@ var ColorPickerTool = (function ColorPickerTool() {
 			trash_can = getElemById('trash-can');
 
 			AddSampleButton.init();
-
-			for (var i=0; i<16; i++) {
+            // Adding sample boxes to the picker
+			for (var i=0; i<20; i++) {
 				var sample = new ColorSample();
 				container.appendChild(sample.node);
 			}
@@ -1829,7 +1878,8 @@ var ColorPickerTool = (function ColorPickerTool() {
 		return {
 			init : init,
 			getSampleColor : getSampleColor,
-			unsetActiveSample : unsetActiveSample
+			unsetActiveSample : unsetActiveSample,
+			getAllColorsAsString : getAllColorsAsString
 		};
 
 	})();
@@ -1960,7 +2010,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 			canvas.appendChild(button);
 
 			button.addEventListener('click', function() {
-				console.log(state);
 				state = !state;
 				canvas.setAttribute('data-bg', state);
 			});
@@ -2024,6 +2073,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 	/**
 	 * Tool
 	 */
+	 // this is the toolbar on the right side
 	var Tool = (function Tool() {
 
 		var samples = [];
@@ -2032,13 +2082,13 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 		var createPickerModeSwitch = function createPickerModeSwitch() {
 			var parent = getElemById('controls');
-			var icon = document.createElement('div');
+			var icon_copy_all = document.createElement('div');
 			var button = document.createElement('div');
 			var hsv = document.createElement('div');
 			var hsl = document.createElement('div');
 			var active = null;
 
-			icon.className = 'icon picker-icon';
+			icon_copy_all.className = 'icon copy-icon';
 			button.className = 'switch';
 			button.appendChild(hsv);
 			button.appendChild(hsl);
@@ -2056,12 +2106,13 @@ var ColorPickerTool = (function ColorPickerTool() {
 				UIColorPicker.setPickerMode('picker', active.textContent);
 			};
 
-			var picker_sw = new StateButton(icon);
-			picker_sw.subscribe(function() {
-				if (active === hsv)
-					switchPickingModeTo(hsl);
-				else
-					switchPickingModeTo(hsv);
+
+			icon_copy_all.addEventListener('click', function() {
+
+				var s = ColorPickerSamples.getAllColorsAsString();
+				console.log(s);
+				// Copy string to clipboard
+				navigator.clipboard.writeText(s);
 			});
 
 			hsv.addEventListener('click', function() {
@@ -2071,7 +2122,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 				switchPickingModeTo(hsl);
 			});
 
-			parent.appendChild(icon);
+			parent.appendChild(icon_copy_all);
 			parent.appendChild(button);
 		};
 
