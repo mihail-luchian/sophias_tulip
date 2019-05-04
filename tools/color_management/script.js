@@ -1,5 +1,6 @@
 'use strict';
 
+var SAMPLES_PER_LINE = 5; // this constant is dependent on CSS settings, change if necessary
 
 var UIColorPicker = (function UIColorPicker() {
 
@@ -338,7 +339,7 @@ var UIColorPicker = (function UIColorPicker() {
 
 	/*========== Get Methods ==========*/
 
-	Color.prototype.getHexa = function getHexa() {
+	Color.prototype.getHexa = function() {
 		var r = this.r.toString(16);
 		var g = this.g.toString(16);
 		var b = this.b.toString(16);
@@ -349,7 +350,18 @@ var UIColorPicker = (function UIColorPicker() {
 		return value.toUpperCase();
 	};
 
-	Color.prototype.getRGBA = function getRGBA() {
+	Color.prototype.getSimpleHex = function() {
+		var r = this.r.toString(16);
+		var g = this.g.toString(16);
+		var b = this.b.toString(16);
+		if (this.r < 16) r = '0' + r;
+		if (this.g < 16) g = '0' + g;
+		if (this.b < 16) b = '0' + b;
+		var value = '' + r + g + b;
+		return value;
+	};
+
+	Color.prototype.getRGBA = function() {
 
 		var rgb = '(' + this.r + ', ' + this.g + ', ' + this.b;
 		var a = '';
@@ -364,7 +376,7 @@ var UIColorPicker = (function UIColorPicker() {
 		return value;
 	};
 
-	Color.prototype.getHSLA = function getHSLA() {
+	Color.prototype.getHSLA = function() {
 		if (this.format === 'HSV') {
 			var color = new Color(this);
 			color.setFormat('HSL');
@@ -385,7 +397,7 @@ var UIColorPicker = (function UIColorPicker() {
 		return value;
 	};
 
-	Color.prototype.getColor = function getColor() {
+	Color.prototype.getColor = function() {
 		if (this.a | 0 === 1)
 			return this.getHexa();
 		return this.getRGBA();
@@ -1629,7 +1641,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 		var nr_samples = 0;
 		var active = null;
 		var container = null;
-		var	samples_per_line = 10;
 		var trash_can = null;
 		var base_color = new HSLColor(0, 0, 100);
 		var add_btn;
@@ -1639,6 +1650,23 @@ var ColorPickerTool = (function ColorPickerTool() {
 			var node = document.createElement('div');
 			node.className = 'sample';
 
+			// this is the toolbar that you see on hover over the ColorSample
+			var toolbar = document.createElement('div');
+			toolbar.className = 'sample-toolbar'
+
+			var copyIcon = document.createElement('div');
+			copyIcon.className = 'toolbar-copy';
+			copyIcon.textContent = "Copy";
+
+			var copyLineIcon = document.createElement('div');
+			copyLineIcon.className = 'toolbar-copy-line';
+			copyLineIcon.textContent = "Copy-line";
+
+			toolbar.appendChild(copyIcon);
+			toolbar.appendChild(copyLineIcon);
+            node.appendChild(toolbar);
+
+            // settings all the other necessary values
 			this.uid = samples.length;
 			this.index = nr_samples++;
 			this.node = node;
@@ -1650,10 +1678,16 @@ var ColorPickerTool = (function ColorPickerTool() {
 			node.addEventListener('dragstart', this.dragStart.bind(this));
 			node.addEventListener('dragover' , allowDropEvent);
 			node.addEventListener('drop'     , this.dragDrop.bind(this));
+			copyIcon.addEventListener('click', this.copyIconClick.bind(this));
+			copyLineIcon.addEventListener('click', this.copyLineIconClick.bind(this));
+
 
 			this.updatePosition(this.index);
 			this.updateBgColor();
 			samples.push(this);
+
+
+
 		};
 
 		ColorSample.prototype.updateBgColor = function updateBgColor() {
@@ -1662,10 +1696,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 		ColorSample.prototype.updatePosition = function updatePosition(index) {
 			this.index = index;
-			this.posY = 5 + ((index / samples_per_line) | 0) * 52;
-			this.posX = 5 + ((index % samples_per_line) | 0) * 52;
-			this.node.style.top  = this.posY + 'px';
-			this.node.style.left = this.posX + 'px';
 		};
 
 		ColorSample.prototype.updateColor = function updateColor(color) {
@@ -1682,13 +1712,38 @@ var ColorPickerTool = (function ColorPickerTool() {
 			this.node.removeAttribute('data-active');
 		};
 
-		ColorSample.prototype.dragStart = function dragStart(e) {
+		ColorSample.prototype.dragStart = function (e) {
 		    console.log("Started dragging:" + this.uid);
 			e.dataTransfer.setData('sampleID', this.uid);
 			e.dataTransfer.setData('location', 'picker-samples');
 		};
 
-		ColorSample.prototype.dragDrop = function dragDrop(e) {
+        ColorSample.prototype.copyIconClick = function (e) {
+		    navigator.clipboard.writeText(this.color.getSimpleHex());
+		};
+
+        ColorSample.prototype.copyLineIconClick = function (e) {
+
+            var list_hex = [];
+            var my_line = Math.trunc(this.uid / SAMPLES_PER_LINE);
+            for (var i = 0; i < SAMPLES_PER_LINE; i++) {
+                var current_sample_id = my_line*SAMPLES_PER_LINE + i;
+                var hex = samples[current_sample_id].color.getSimpleHex();
+                if( hex !== "ffffff") {
+                    list_hex.push(hex);
+                }
+
+            }
+
+            var final_string = 'NO_COLORS_IN_THIS_LINE';
+            if( list_hex.length > 0 ) {
+                final_string = list_hex.join('-');
+            }
+
+		    navigator.clipboard.writeText(final_string);
+		};
+
+		ColorSample.prototype.dragDrop = function (e) {
 			e.stopPropagation();
 			var sampleID = e.dataTransfer.getData('sampleID');
 			console.log("Dropping over:" + sampleID);
@@ -1713,7 +1768,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 		};
 
 		var updateUI = function updateUI() {
-			updateContainerProp();
 
 			var index = 0;
 			var nr = samples.length;
@@ -1775,9 +1829,9 @@ var ColorPickerTool = (function ColorPickerTool() {
         var getAllColorsAsString = function getAllColorsAsString() {
             var list_hex = [];
             samples.forEach(function(sample) {
-                var hex = sample.color.getHexa();
+                var hex = sample.color.getSimpleHex();
                 // only interested in colors that are not white
-                if( hex !== "#FFFFFF") {
+                if( hex !== "ffffff") {
                     list_hex.push(hex);
                 }
             });
@@ -1790,14 +1844,6 @@ var ColorPickerTool = (function ColorPickerTool() {
             }
         }
 
-		var updateContainerProp = function updateContainerProp() {
-			samples_per_line = ((container.clientWidth - 5) / 52) | 0;
-			if( samples_per_line > 5 ) {
-			    samples_per_line = 5;
-			}
-			var height = 52 * (1 + (nr_samples / samples_per_line) | 0);
-			container.style.height = height + 10 + 'px';
-		};
 
 		var AddSampleButton = (function AddSampleButton() {
 			var node;
@@ -1807,11 +1853,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 			var updatePosition = function updatePosition(index) {
 				_index = index;
-				_posY = 5 + ((index / samples_per_line) | 0) * 52;
-				_posX = 5 + ((index % samples_per_line) | 0) * 52;
-
-				node.style.top  = _posY + 'px';
-				node.style.left = _posX + 'px';
+				node.style.order = '1';
 			};
 
 			var addButtonClick = function addButtonClick() {

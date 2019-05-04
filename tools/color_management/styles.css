@@ -426,36 +426,63 @@ body {
  */
 
 #picker-samples {
-	width: 375px;
-	height: 114px;
+	/* width: 95%; */
+	/*height: 114px;*/
 	/*max-height: 218px; We do not want a limit on the height of the picker-samples */
-	margin: 0 10px 0 30px;
+	margin: 0 15px 0 17px;
 	overflow: hidden;
 	position: relative;
 	float: left;
-
+    display: flex;
+    flex-wrap: wrap;
 	transition: all 0.2s;
+	justify-content: space-between;
 }
 
 #picker-samples .sample {
-	width: 40px;
-	height: 40px;
-	margin: 5px;
+	width: 175px;
+	height: 300px;
+	margin: 7px 5px 5px 5px;
 	border: 1px solid #DDD;
-	position: absolute;
-	float: left;
-	transition: all 0.1s;
+	position: relative;
+	/*float: left;*/
+	/*transition: all 0.1s;*/
+	order: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #picker-samples .sample:hover {
 	cursor: pointer;
 	border-color: #BBB;
-	transform: scale(1.15);
+	/*transform: scale(1.15);*/
 	border-radius: 3px;
 }
 
+#picker-samples .sample:hover .sample-toolbar{
+    display: block;
+}
+
+#picker-samples .sample .sample-toolbar{
+    display: none;
+    text-align: center;
+ }
+
+
+#picker-samples .sample .toolbar-copy,
+#picker-samples .sample .toolbar-copy-line{
+    opacity: 0.3;
+}
+
+#picker-samples .sample .toolbar-copy:hover,
+#picker-samples .sample .toolbar-copy-line:hover{
+    opacity: 1;
+}
+
 #picker-samples .sample[data-active='true'] {
-	border-color: #999;
+	border: 1px solid #999;
+
 }
 
 #picker-samples .sample[data-active='true']:after {
@@ -464,8 +491,10 @@ body {
 	background: url('files/6065/arrow.png') center no-repeat;
 	width: 100%;
 	height: 12px;
-	top: -12px;
-	z-index: 2;
+    top: -7px;
+    z-index: 2;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 #picker-samples #add-icon {
