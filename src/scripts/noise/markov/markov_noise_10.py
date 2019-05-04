@@ -14,7 +14,7 @@ import utils.viz_utils as viz
 
 ### DATA/INPUT/SHARED by all runs section
 print('PREPARING DATA SECTION')
-N = 100
+N = 200
 SEED = config.get('seed',0)
 HEIGHT = 500
 WIDTH  = HEIGHT
@@ -27,6 +27,9 @@ STRING_COLORS_1 = config.get(
 STRING_COLORS_2 = config.get(
     'colors_2','b3b4d4-e4f097-edd1ad-e9a6b4-ffe572')
 
+STRING_COLORS_3 = config.get(
+    'colors_3','b3b4d4-e4f097-edd1ad-e9a6b4-ffe572')
+
 COLOR_DICT_1 = {
     i:j
     for i,j in enumerate(STRING_COLORS_1.split('-'))
@@ -35,6 +38,11 @@ COLOR_DICT_1 = {
 COLOR_DICT_2 = {
     i:j
     for i,j in enumerate(STRING_COLORS_2.split('-'))
+}
+
+COLOR_DICT_3 = {
+    i:j
+    for i,j in enumerate(STRING_COLORS_3.split('-'))
 }
 
 
@@ -48,41 +56,47 @@ if N>1:
 print('FUNCTIONS SETUP')
 
 
-def generate_gradient(height,width,color1,color2):
-    color1 = color.srgb2cam02ucs(color.hex2rgb(color1))
-    color2 = color.srgb2cam02ucs(color.hex2rgb(color2))
+def generate_patch(height, width, color_dict, direction):
 
 
-    color_diff = color2 - color1
+    t = r.choice([0,1],p=[0.9,0.1])
+    # t = r.choice([0,1],p=[1,0])
 
-    base = np.ones((height,width,3))*color1
-
-    option = r.choice([0,2,3],p=[0.4,0.45,0.15])
-    if option == 0:
-        gradient = np.linspace(0,1,width)
-    elif option == 1:
-        length = width//2
-        gradient = np.linspace(0,1,length)
-        if width % 2 == 0:
-            gradient = np.concatenate((gradient, gradient[::-1]))
-        else:
-            gradient = np.concatenate((gradient,np.array([1]),gradient[::-1]))
-    elif option == 2:
-        ### markov stuff
-        pattern = m.RMM([0, 1, -1, 2], self_length=10, lenghts=[10, 3, 1, 4])
+    if t == 0:
+    ### markov stuff
+        pattern = m.RMM([0, 1, 2, 3, 4], self_length=100, sinks=0, reduce_sinks=5)
         pattern = m.SProg(values=pattern)
-        sample = m.sample_markov_hierarchy(pattern, width)
-        sample = np.cumsum(sample)
-        # print(sample)
-        if sample[-1] <= 0:
-            sample[-1] = 1
-        gradient = sample/np.max(np.abs(sample))
-    else:
-        gradient = np.zeros(width)
+        if direction == 1:
+            sample = m.sample_markov_hierarchy(pattern, width)
+            sample = np.repeat(sample, repeats=r.choice([1,2,3,4],size=width))
+            sample = sample[:width]
+            patch = np.tile(sample,reps = height)
+        elif direction == -1:
+            sample = m.sample_markov_hierarchy(pattern, height)
+            sample = np.repeat(sample, repeats=r.choice([1,2,3,4,5],size=height))
+            sample = sample[:height]
+            patch = np.repeat(sample,repeats = width)
+        patch = patch[:width*height]
+        patch = patch.reshape(height,width)
 
-    base = base + (gradient[:,np.newaxis]*color_diff)[np.newaxis,:,:]
+    elif t==1:
+        if direction == 1:
+            patch = r.choice([0,1,2],size=width*height)
+            patch = np.repeat(patch, repeats=r.choice([20,30,40,50],size=width*height))
+            patch = patch[:height * width]
+            patch = patch.reshape(height,width)
+            patch = np.repeat(patch, repeats=r.choice([2,3,10],size=height),axis=0)
+            patch = patch[:height, :width]
+        elif direction == -1:
+            patch = r.choice([0,1,2],size=width*height)
+            patch = patch.reshape(height,width)
+            patch = np.repeat(patch, repeats=r.choice([2,3,4],size=height),axis=0)
+            patch = patch[:height, :width]
+            patch = np.repeat(patch, repeats=r.choice([20,30,40,50],size=width),axis=1)
+            patch = patch[:height, :width]
 
-    patch = color.cam02ucs2srgb(base)
+    patch = color.replace_indices_with_colors(patch,color_dict)
+
     patch[patch<0]=0
     patch[patch>255]=255
     return patch
@@ -107,10 +121,10 @@ def generate_image(gridx, gridy, list_color_dict):
 
             height = endy - starty
             width = endx - startx
-            d = r.choice([0,1])
+            d = r.choice([0,1,2])
             c1,c2 = r.choice(color_keys[d],size=2,replace=False)
-            img[starty:endy,startx:endx] = generate_gradient(
-                height,width,list_color_dict[d][c1],list_color_dict[d][c2])
+            img[starty:endy,startx:endx] = generate_patch(
+                height,width,list_color_dict[d],r.choice([1,-1]))
             startx = endx
 
         startx = 0
@@ -128,14 +142,13 @@ for current_iteration in range(N):
     print('CURRENT_ITERATION:',current_iteration)
     r.init_def_generator(SEED+current_iteration)
 
-
-    pattern1 = m.SProg(values=30,self_length=[7,8])
-    pattern2 = m.SProg(values=[60,65],self_length=[3,4,5])
-    pattern = m.RMM(values=[pattern1,pattern2],self_length=3)
-    randomverysmall = m.RMM(values=[2,3],self_length=[2])
-    randomsmall = m.RMM(values=[7,9,11],self_length=[2,3,4])
-    randombig = m.RMM(values=[150,200],self_length=[1,1,2])
-    parent = m.RMM(values=[pattern1,randomsmall,randombig])
+    pattern1 = m.SProg(values=config.get('grid_jump_1',10),self_length=[2,3])
+    pattern2 = m.SProg(values=config.get('grid_jump_2',10),self_length=[2,3])
+    pattern = m.RMM(values=[pattern1,pattern2],self_length=2)
+    randomsmall = m.RMM(values=config.get('grid_jump_3',10),self_length=[2,3,4])
+    randombig = m.RMM(values=config.get('grid_jump_4',10),self_length=[1,2])
+    parent = m.RMM(values=[pattern,randomsmall,randombig],self_length=30)
+    parent = m.SProg(values=parent)
 
 
     gridx = m.sample_markov_hierarchy_with_cumsum_limit(parent, limit=WIDTH).astype('int32')
@@ -150,7 +163,7 @@ for current_iteration in range(N):
 
 
 
-    final_img = generate_image(gridx, gridy, [COLOR_DICT_1,COLOR_DICT_2])
+    final_img = generate_image(gridx, gridy, [COLOR_DICT_1,COLOR_DICT_2, COLOR_DICT_3])
     file.export_image(
         '%d_%d' % (current_iteration,int(round(time.time() * 1000))),
         final_img.astype('uint8'),format='png')

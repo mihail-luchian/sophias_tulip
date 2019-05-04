@@ -286,6 +286,7 @@ class MarkovModel:
     def __init__(self,
                  preference_matrix=None,
                  start_probs=None,
+                 no_start = None,
                  values=None,
                  vs=None,
                  child_lengths=-1,
@@ -312,14 +313,22 @@ class MarkovModel:
         self.self_length = array_listify_if_not_none(self_length)
         self.type = c.TYPE_GEN
 
+        # computing the start probabilities
         if start_probs is None:
-            self.start_probs = np.ones(l)/l
+            start_prefs = np.ones(l)
         elif is_listy(start_probs) and len(start_probs) == l:
-            self.start_probs = start_probs / np.sum(start_probs)
+            start_prefs = start_probs
         else:
-            self.start_probs = np.zeros(l)
+            start_prefs = np.zeros(l)
             start_probs = listify(start_probs)
-            self.start_probs[start_probs] = 1/len(start_probs)
+            start_prefs[start_probs] = 1
+
+        # no start is a way to specify that you do not want the model to start in a certain state
+        if no_start is not None:
+            no_start = listify(no_start)
+            start_prefs[no_start] = 0
+        self.start_probs = start_prefs / np.sum(start_prefs)
+
         self.leaf = markov_model_is_leaf(values)
         self.preference_matrix = np.array(preference_matrix)
         self.transition_matrix = compute_transition_matrix(self.preference_matrix)
@@ -394,14 +403,30 @@ class FuzzyProgression(MarkovModel):
 
 class RandomMarkovModel(MarkovModel):
 
-    def __init__(self, values=None, **kwargs):
+    def __init__(self, values=None, num_sinks = None, sinks = None,reduce_sinks = None,**kwargs):
+
+        if num_sinks is not None and sinks is not None:
+            raise Exception('You have to use either "num_sinks" or "sinks" to pass values. Both is not possible')
+
 
         self.random_key = r.bind_generator()
 
         values = listify(values)
         l = len(values)
         preference_matrix = r.choice_from(
-            self.random_key,np.arange(100),size=(l,l))
+            self.random_key,np.arange(100),size=(l,l)).astype('float32')
+
+        if num_sinks is not None:
+            sinks = r.choice_from(self.random_key,np.arange(l),replace=False)
+        sinks = listify(sinks)
+        for s in sinks:
+            arr = np.zeros(l)
+            arr[s] = 1
+            preference_matrix[s] = arr
+
+        if reduce_sinks is not None:
+            for s in sinks:
+                preference_matrix[:,s] = preference_matrix[:,s]/reduce_sinks
 
         super().__init__(
             preference_matrix=preference_matrix,
