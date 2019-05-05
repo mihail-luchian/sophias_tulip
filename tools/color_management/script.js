@@ -1,7 +1,10 @@
 'use strict';
 
-var SAMPLES_PER_LINE = 5; // this constant is dependent on CSS settings, change if necessary
+var SAMPLES_PER_LINE = 5;
+var NUM_STARTING_LINES = 4;
+var DIGEST_UNIFIER = '/';
 
+// this is the Whole color picker in the middle to the right
 var UIColorPicker = (function UIColorPicker() {
 
 	function getElemById(id) {
@@ -450,7 +453,6 @@ var UIColorPicker = (function UIColorPicker() {
 		this.newInputComponent('B', 'blue', this.inputChangeBlue.bind(this));
 
 		this.createPreviewBox();
-		this.createChangeModeButton();
 
 		this.newInputComponent('alpha', 'alpha', this.inputChangeAlpha.bind(this));
 		this.newInputComponent('hexa', 'hexa', this.inputChangeHexa.bind(this));
@@ -550,20 +552,6 @@ var UIColorPicker = (function UIColorPicker() {
 		});
 	};
 
-	ColorPicker.prototype.createChangeModeButton = function createChangeModeButton() {
-
-		var button = document.createElement('div');
-		button.className = 'switch_mode';
-		button.addEventListener('click', function() {
-			if (this.picker_mode === 'HSV')
-				this.setPickerMode('HSL');
-			else
-				this.setPickerMode('HSV');
-
-		}.bind(this));
-
-		this.node.appendChild(button);
-	};
 
 	/*************************************************************************/
 	//					Updates properties of UI elements
@@ -895,10 +883,9 @@ var UIColorPicker = (function UIColorPicker() {
 	};
 
 	var init = function init() {
-		var elem = document.querySelectorAll('.ui-color-picker');
-		var size = elem.length;
-		for (var i = 0; i < size; i++)
-			new ColorPicker(elem[i]);
+        var elem = document.getElementById('ui-color-picker');
+        console.log(elem)
+        new ColorPicker(elem);
 	};
 
 	return {
@@ -919,270 +906,6 @@ var UIColorPicker = (function UIColorPicker() {
 
 })();
 
-
-
-/**
- * UI-SlidersManager
- */
-
-var InputSliderManager = (function InputSliderManager() {
-
-	var subscribers = {};
-	var sliders = [];
-
-	var InputComponent = function InputComponent(obj) {
-		var input = document.createElement('input');
-		input.setAttribute('type', 'text');
-		input.style.width = 50 + obj.precision * 10 + 'px';
-
-		input.addEventListener('click', function(e) {
-			this.select();
-		});
-
-		input.addEventListener('change', function(e) {
-			var value = parseFloat(e.target.value);
-
-			if (isNaN(value) === true)
-				setValue(obj.topic, obj.value);
-			else
-				setValue(obj.topic, value);
-		});
-
-		return input;
-	};
-
-	var SliderComponent = function SliderComponent(obj, sign) {
-		var slider = document.createElement('div');
-		var startX = null;
-		var start_value = 0;
-
-		slider.addEventListener("click", function(e) {
-			document.removeEventListener("mousemove", sliderMotion);
-			setValue(obj.topic, obj.value + obj.step * sign);
-		});
-
-		slider.addEventListener("mousedown", function(e) {
-			startX = e.clientX;
-			start_value = obj.value;
-			document.body.style.cursor = "e-resize";
-
-			document.addEventListener("mouseup", slideEnd);
-			document.addEventListener("mousemove", sliderMotion);
-		});
-
-		var slideEnd = function slideEnd(e) {
-			document.removeEventListener("mousemove", sliderMotion);
-			document.body.style.cursor = "auto";
-			slider.style.cursor = "pointer";
-		};
-
-		var sliderMotion = function sliderMotion(e) {
-			slider.style.cursor = "e-resize";
-			var delta = (e.clientX - startX) / obj.sensivity | 0;
-			var value = delta * obj.step + start_value;
-			setValue(obj.topic, value);
-		};
-
-		return slider;
-	};
-
-	var InputSlider = function(node) {
-		var min		= parseFloat(node.getAttribute('data-min'));
-		var max		= parseFloat(node.getAttribute('data-max'));
-		var step	= parseFloat(node.getAttribute('data-step'));
-		var value	= parseFloat(node.getAttribute('data-value'));
-		var topic	= node.getAttribute('data-topic');
-		var unit	= node.getAttribute('data-unit');
-		var name 	= node.getAttribute('data-info');
-		var sensivity = node.getAttribute('data-sensivity') | 0;
-		var precision = node.getAttribute('data-precision') | 0;
-
-		this.min = isNaN(min) ? 0 : min;
-		this.max = isNaN(max) ? 100 : max;
-		this.precision = precision >= 0 ? precision : 0;
-		this.step = step < 0 || isNaN(step) ? 1 : step.toFixed(precision);
-		this.topic = topic;
-		this.node = node;
-		this.unit = unit === null ? '' : unit;
-		this.sensivity = sensivity > 0 ? sensivity : 5;
-		value = isNaN(value) ? this.min : value;
-
-		var input = new InputComponent(this);
-		var slider_left  = new SliderComponent(this, -1);
-		var slider_right = new SliderComponent(this,  1);
-
-		slider_left.className = 'ui-input-slider-left';
-		slider_right.className = 'ui-input-slider-right';
-
-		if (name) {
-			var info = document.createElement('span');
-			info.className = 'ui-input-slider-info';
-			info.textContent = name;
-			node.appendChild(info);
-		}
-
-		node.appendChild(slider_left);
-		node.appendChild(input);
-		node.appendChild(slider_right);
-
-		this.input = input;
-		sliders[topic] = this;
-		setValue(topic, value);
-	};
-
-	InputSlider.prototype.setInputValue = function setInputValue() {
-		this.input.value = this.value.toFixed(this.precision) + this.unit;
-	};
-
-	var setValue = function setValue(topic, value, send_notify) {
-		var slider = sliders[topic];
-		if (slider === undefined)
-			return;
-
-		value = parseFloat(value.toFixed(slider.precision));
-
-		if (value > slider.max) value = slider.max;
-		if (value < slider.min)	value = slider.min;
-
-		slider.value = value;
-		slider.node.setAttribute('data-value', value);
-
-		slider.setInputValue();
-
-		if (send_notify === false)
-			return;
-
-		notify.call(slider);
-	};
-
-	var setMax = function setMax(topic, value) {
-		var slider = sliders[topic];
-		if (slider === undefined)
-			return;
-
-		slider.max = value;
-		setValue(topic, slider.value);
-	};
-
-	var setMin = function setMin(topic, value) {
-		var slider = sliders[topic];
-		if (slider === undefined)
-			return;
-
-		slider.min = value;
-		setValue(topic, slider.value);
-	};
-
-	var setUnit = function setUnit(topic, unit) {
-		var slider = sliders[topic];
-		if (slider === undefined)
-			return;
-
-		slider.unit = unit;
-		setValue(topic, slider.value);
-	};
-
-	var setStep = function setStep(topic, value) {
-		var slider = sliders[topic];
-		if (slider === undefined)
-			return;
-
-		slider.step = parseFloat(value);
-		setValue(topic, slider.value);
-	};
-
-	var setPrecision = function setPrecision(topic, value) {
-		var slider = sliders[topic];
-		if (slider === undefined)
-			return;
-
-		value = value | 0;
-		slider.precision = value;
-
-		var step = parseFloat(slider.step.toFixed(value));
-		if (step === 0)
-			slider.step = 1 / Math.pow(10, value);
-
-		setValue(topic, slider.value);
-	};
-
-	var setSensivity = function setSensivity(topic, value) {
-		var slider = sliders[topic];
-		if (slider === undefined)
-			return;
-
-		value = value | 0;
-
-		slider.sensivity = value > 0 ? value : 5;
-	};
-
-	var getNode =  function getNode(topic) {
-		return sliders[topic].node;
-	};
-
-	var getPrecision =  function getPrecision(topic) {
-		return sliders[topic].precision;
-	};
-
-	var getStep =  function getStep(topic) {
-		return sliders[topic].step;
-	};
-
-	var subscribe = function subscribe(topic, callback) {
-		if (subscribers[topic] === undefined)
-			subscribers[topic] = [];
-		subscribers[topic].push(callback);
-	};
-
-	var unsubscribe = function unsubscribe(topic, callback) {
-		subscribers[topic].indexOf(callback);
-		subscribers[topic].splice(index, 1);
-	};
-
-	var notify = function notify() {
-		if (subscribers[this.topic] === undefined)
-			return;
-		for (var i = 0; i < subscribers[this.topic].length; i++)
-			subscribers[this.topic][i](this.value);
-	};
-
-	var createSlider = function createSlider(topic, label) {
-		var slider = document.createElement('div');
-		slider.className = 'ui-input-slider';
-		slider.setAttribute('data-topic', topic);
-
-		if (label !== undefined)
-			slider.setAttribute('data-info', label);
-
-		new InputSlider(slider);
-		return slider;
-	};
-
-	var init = function init() {
-		var elem = document.querySelectorAll('.ui-input-slider');
-		var size = elem.length;
-		for (var i = 0; i < size; i++)
-			new InputSlider(elem[i]);
-	};
-
-	return {
-		init : init,
-		setMax : setMax,
-		setMin : setMin,
-		setUnit : setUnit,
-		setStep : setStep,
-		getNode : getNode,
-		getStep : getStep,
-		setValue : setValue,
-		subscribe : subscribe,
-		unsubscribe : unsubscribe,
-		setPrecision : setPrecision,
-		setSensivity : setSensivity,
-		getPrecision : getPrecision,
-		createSlider : createSlider,
-	};
-
-})();
 
 
 'use strict';
@@ -1326,8 +1049,9 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 		var ColorSample = function ColorSample(id) {
 			var node = document.createElement('div');
-			node.className = 'sample';
+			node.className = 'sample-color';
 
+            // additional color sample information
 			this.uid = samples.length;
 			this.node = node;
 			this.color = new Color();
@@ -1341,14 +1065,16 @@ var ColorPickerTool = (function ColorPickerTool() {
 			samples.push(this);
 		};
 
-		ColorSample.prototype.updateBgColor = function updateBgColor() {
+
+		ColorSample.prototype.updateBgColor = function() {
 			this.node.style.backgroundColor = this.color.getColor();
 		};
 
-		ColorSample.prototype.updateColor = function updateColor(color) {
+		ColorSample.prototype.updateColor = function(color) {
 			this.color.copy(color);
 			this.updateBgColor();
 		};
+
 
 		ColorSample.prototype.updateHue = function updateHue(color, degree, steps) {
 			this.color.copy(color);
@@ -1647,60 +1373,69 @@ var ColorPickerTool = (function ColorPickerTool() {
 		var add_btn_pos;
 
 		var ColorSample = function ColorSample() {
-			var node = document.createElement('div');
-			node.className = 'sample';
-
-			// this is the toolbar that you see on hover over the ColorSample
-			var toolbar = document.createElement('div');
-			toolbar.className = 'sample-toolbar'
-
-			var copyIcon = document.createElement('div');
-			copyIcon.className = 'toolbar-copy';
-			copyIcon.textContent = "Copy";
-
-			var copyLineIcon = document.createElement('div');
-			copyLineIcon.className = 'toolbar-copy-line';
-			copyLineIcon.textContent = "Copy-line";
-
-			toolbar.appendChild(copyIcon);
-			toolbar.appendChild(copyLineIcon);
-            node.appendChild(toolbar);
+            // this is the overall node that will hold all sample information
+            var node = document.createElement('div');
+            node.className = 'sample';
+            var sample_contents_template = document.getElementById('sample-template');
+            var contents = document.importNode(sample_contents_template.content, true);
+            node.appendChild(contents);
 
             // settings all the other necessary values
 			this.uid = samples.length;
 			this.index = nr_samples++;
 			this.node = node;
+			this.sampleColor = node.querySelector('.sample-color');
 			this.color = new Color(base_color);
 
+			this.key_input = node.querySelector('.sample-key');
+			this.meta_input = node.querySelector('.sample-meta');
+
 			node.setAttribute('sample-id', this.uid);
-			node.setAttribute('draggable', 'true');
+			this.sampleColor.setAttribute('draggable', 'true');
 
-			node.addEventListener('dragstart', this.dragStart.bind(this));
-			node.addEventListener('dragover' , allowDropEvent);
-			node.addEventListener('drop'     , this.dragDrop.bind(this));
-			copyIcon.addEventListener('click', this.copyIconClick.bind(this));
-			copyLineIcon.addEventListener('click', this.copyLineIconClick.bind(this));
+			this.sampleColor.addEventListener('dragstart', this.dragStart.bind(this));
+			this.sampleColor.addEventListener('dragover' , allowDropEvent);
+			this.sampleColor.addEventListener('drop'     , this.dragDrop.bind(this));
+			node.querySelector('.copy-color').addEventListener(
+			    'click', this.copyColorIconClick.bind(this));
+			node.querySelector('.copy-state').addEventListener(
+			    'click', this.copyStateIconClick.bind(this));
+			node.querySelector('.copy-line').addEventListener(
+			    'click', this.copyLineIconClick.bind(this));
 
-
-			this.updatePosition(this.index);
 			this.updateBgColor();
 			samples.push(this);
-
-
 
 		};
 
 		ColorSample.prototype.updateBgColor = function updateBgColor() {
-			this.node.style.backgroundColor = this.color.getColor();
+			this.sampleColor.style.backgroundColor = this.color.getColor();
 		};
 
-		ColorSample.prototype.updatePosition = function updatePosition(index) {
-			this.index = index;
+		ColorSample.prototype.getDigest = function() {
+		    var color_string = this.color.getSimpleHex();
+		    var key_value = '';
+		    if( this.key_input.value.length == 0 ) {
+		        key_value = this.uid;
+		    }
+		    else {
+		        key_value = this.key_input.value;
+		    }
+		    var digest = '' + key_value + DIGEST_UNIFIER
+		        + color_string + DIGEST_UNIFIER
+		        + this.meta_input.value;
+            return digest;
 		};
 
 		ColorSample.prototype.updateColor = function updateColor(color) {
 			this.color.copy(color);
 			this.updateBgColor();
+		};
+
+        ColorSample.prototype.updateState = function(color,key_value,meta_value) {
+			this.updateColor(color);
+			this.key_input.value = key_value;
+			this.meta_input.value = meta_value;
 		};
 
 		ColorSample.prototype.activate = function activate() {
@@ -1718,8 +1453,12 @@ var ColorPickerTool = (function ColorPickerTool() {
 			e.dataTransfer.setData('location', 'picker-samples');
 		};
 
-        ColorSample.prototype.copyIconClick = function (e) {
+        ColorSample.prototype.copyColorIconClick = function (e) {
 		    navigator.clipboard.writeText(this.color.getSimpleHex());
+		};
+
+        ColorSample.prototype.copyStateIconClick = function (e) {
+		    navigator.clipboard.writeText(this.getDigest());
 		};
 
         ColorSample.prototype.copyLineIconClick = function (e) {
@@ -1729,8 +1468,9 @@ var ColorPickerTool = (function ColorPickerTool() {
             for (var i = 0; i < SAMPLES_PER_LINE; i++) {
                 var current_sample_id = my_line*SAMPLES_PER_LINE + i;
                 var hex = samples[current_sample_id].color.getSimpleHex();
+                var digest = samples[current_sample_id].getDigest();
                 if( hex !== "ffffff") {
-                    list_hex.push(hex);
+                    list_hex.push(digest);
                 }
 
             }
@@ -1749,16 +1489,20 @@ var ColorPickerTool = (function ColorPickerTool() {
 			console.log("Dropping over:" + sampleID);
 			console.log("Being dropped on:" + this.uid);
 
+            var dragged_sample = samples[sampleID];
+            var dragged_color = dragged_sample.color;
+            var dragged_key_value = dragged_sample.key_input.value;
+            var dragged_meta_value = dragged_sample.meta_input.value;
+
 			var old_color = getSampleColor(this.uid);
+			var old_key_value = this.key_input.value;
+			var old_meta_value = this.meta_input.value;
 
 			// updating the color of the sample on which it is dropped
-			this.color = Tool.getSampleColorFrom(e);
-			this.updateBgColor();
-
-			// updating the color on the sample which was dragged
-			var sample = samples[sampleID];
-			sample.color = old_color;
-			sample.updateBgColor();
+			this.updateState(
+			    dragged_color,dragged_key_value,dragged_meta_value);
+			dragged_sample.updateState(
+			    old_color,old_key_value,old_meta_value);
 		};
 
 		ColorSample.prototype.deleteSample = function deleteSample() {
@@ -1769,16 +1513,12 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 		var updateUI = function updateUI() {
 
-			var index = 0;
 			var nr = samples.length;
 			for (var i=0; i < nr; i++)
 				if (samples[i] !== null) {
-					samples[i].updatePosition(index);
 					samples[i].updateBgColor();
-					index++;
 				}
 
-			AddSampleButton.updatePosition(index);
 		};
 
 		var deleteSample = function deleteSample(e) {
@@ -1796,21 +1536,12 @@ var ColorPickerTool = (function ColorPickerTool() {
 			updateUI();
 		};
 
-		var createDropSample = function createDropSample() {
-			var sample = document.createElement('div');
-			sample.id = 'drop-effect-sample';
-			sample.className = 'sample';
-			container.appendChild(sample);
-		};
-
 		var setActivateSample = function setActivateSample(e) {
-			if (e.target.className !== 'sample')
+			if (e.target.parentNode.className !== 'sample')
 				return;
-
 			unsetActiveSample(active);
 			Tool.unsetVoidSample();
-			CanvasSamples.unsetActiveSample();
-			active = samples[e.target.getAttribute('sample-id')];
+			active = samples[e.target.parentNode.getAttribute('sample-id')];
 			active.activate();
 		};
 
@@ -1845,55 +1576,41 @@ var ColorPickerTool = (function ColorPickerTool() {
         }
 
 
-		var AddSampleButton = (function AddSampleButton() {
-			var node;
-			var _index = 0;
-			var _posX;
-			var _posY;
+        var SampleLine = function(line_id)  {
 
-			var updatePosition = function updatePosition(index) {
-				_index = index;
-				node.style.order = '1';
-			};
+            var node = document.createElement('div');
+            this.node = node;
+			this.line_id = line_id;
 
-			var addButtonClick = function addButtonClick() {
-				var sample = new ColorSample();
-				container.appendChild(sample.node);
-				updatePosition(_index + 1);
-				updateUI();
-			};
+            node.setAttribute('line-id', line_id);
+            node.className = 'sample-line';
 
-			var init = function init() {
-				node = document.createElement('div');
-				var icon = document.createElement('div');
+            for (var i=0; i<SAMPLES_PER_LINE; i++) {
+                var sample = new ColorSample();
+                node.appendChild(sample.node)
+            }
 
-				node.className = 'sample';
-				icon.id = 'add-icon';
-				node.appendChild(icon);
-				node.addEventListener('click', addButtonClick);
+            var line_toolbar = document.createElement('div');
+            line_toolbar.textContent = '+';
+            line_toolbar.className = 'line-toolbar';
+            node.appendChild(line_toolbar);
 
-				updatePosition(0);
-				container.appendChild(node);
-			};
-
-			return {
-				init : init,
-				updatePosition : updatePosition
-			};
-		})();
+        };
 
 		var init = function init() {
 			container = getElemById('picker-samples');
 			trash_can = getElemById('trash-can');
 
-			AddSampleButton.init();
-            // Adding sample boxes to the picker
-			for (var i=0; i<20; i++) {
-				var sample = new ColorSample();
-				container.appendChild(sample.node);
-			}
+//			AddSampleButton.init();
 
-			AddSampleButton.updatePosition(samples.length);
+            // Adding lines with samples to the picker
+            for (var line=0; line<NUM_STARTING_LINES; line++) {
+
+                var sampleLine = new SampleLine(line);
+                container.appendChild(sampleLine.node);
+            }
+
+
 			updateUI();
 
 			active = samples[0];
@@ -1922,164 +1639,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 			getSampleColor : getSampleColor,
 			unsetActiveSample : unsetActiveSample,
 			getAllColorsAsString : getAllColorsAsString
-		};
-
-	})();
-
-	/**
-	 * Canvas Samples
-	 */
-	var CanvasSamples = (function CanvasSamples() {
-
-		var active = null;
-		var canvas = null;
-		var samples = [];
-		var zindex = null;
-		var tutorial = true;
-
-		var CanvasSample = function CanvasSample(color, posX, posY) {
-
-			var node = document.createElement('div');
-			var pick = document.createElement('div');
-			var delete_btn = document.createElement('div');
-			node.className = 'sample';
-			pick.className = 'pick';
-			delete_btn.className = 'delete';
-
-			this.uid = samples.length;
-			this.node = node;
-			this.color = color;
-			this.updateBgColor();
-			this.zIndex = 1;
-
-			node.style.top = posY - 50 + 'px';
-			node.style.left = posX - 50 + 'px';
-			node.setAttribute('sample-id', this.uid);
-
-			node.appendChild(pick);
-			node.appendChild(delete_btn);
-
-			var activate = function activate() {
-				setActiveSample(this);
-			}.bind(this);
-
-			node.addEventListener('dblclick', activate);
-			pick.addEventListener('click', activate);
-			delete_btn.addEventListener('click', this.deleteSample.bind(this));
-
-			UIComponent.makeDraggable(node);
-			UIComponent.makeResizable(node);
-
-			samples.push(this);
-			canvas.appendChild(node);
-			return this;
-		};
-
-		CanvasSample.prototype.updateBgColor = function updateBgColor() {
-			this.node.style.backgroundColor = this.color.getColor();
-		};
-
-		CanvasSample.prototype.updateColor = function updateColor(color) {
-			this.color.copy(color);
-			this.updateBgColor();
-		};
-
-		CanvasSample.prototype.updateZIndex = function updateZIndex(value) {
-			this.zIndex = value;
-			this.node.style.zIndex = value;
-		};
-
-		CanvasSample.prototype.activate = function activate() {
-			this.node.setAttribute('data-active', 'true');
-			zindex.setAttribute('data-active', 'true');
-
-			UIColorPicker.setColor('picker', this.color);
-			InputSliderManager.setValue('z-index', this.zIndex);
-		};
-
-		CanvasSample.prototype.deactivate = function deactivate() {
-			this.node.removeAttribute('data-active');
-			zindex.removeAttribute('data-active');
-		};
-
-		CanvasSample.prototype.deleteSample = function deleteSample() {
-			if (active === this)
-				unsetActiveSample();
-			canvas.removeChild(this.node);
-			samples[this.uid] = null;
-		};
-
-		CanvasSample.prototype.updatePosition = function updatePosition(posX, posY) {
-			this.node.style.top = posY - this.startY + 'px';
-			this.node.style.left = posX - this.startX + 'px';
-		};
-
-		var canvasDropEvent = function canvasDropEvent(e) {
-			var color = Tool.getSampleColorFrom(e);
-
-			if (color) {
-				var offsetX = e.pageX - canvas.offsetLeft;
-				var offsetY = e.pageY - canvas.offsetTop;
-				var sample = new CanvasSample(color, offsetX, offsetY);
-				if (tutorial) {
-					tutorial = false;
-					canvas.removeAttribute('data-tutorial');
-					var info = new CanvasSample(new Color(), 100, 100);
-					info.node.setAttribute('data-tutorial', 'dblclick');
-				}
-			}
-
-		};
-
-		var setActiveSample = function setActiveSample(sample) {
-			ColorPickerSamples.unsetActiveSample();
-			Tool.unsetVoidSample();
-			unsetActiveSample();
-			active = sample;
-			active.activate();
-		};
-
-		var unsetActiveSample = function unsetActiveSample() {
-			if (active)
-				active.deactivate();
-			active = null;
-		};
-
-		var createToggleBgButton = function createToggleBgButton() {
-			var button = document.createElement('div');
-			var state = false;
-			button.className = 'toggle-bg';
-			canvas.appendChild(button);
-
-			button.addEventListener('click', function() {
-				state = !state;
-				canvas.setAttribute('data-bg', state);
-			});
-		};
-
-		var init = function init() {
-			canvas = getElemById('canvas');
-			zindex = getElemById('zindex');
-
-			canvas.addEventListener('dragover', allowDropEvent);
-			canvas.addEventListener('drop', canvasDropEvent);
-
-			createToggleBgButton();
-
-			UIColorPicker.subscribe('picker', function(color) {
-				if (active)	active.updateColor(color);
-			});
-
-			InputSliderManager.subscribe('z-index', function (value) {
-				if (active)	active.updateZIndex(value);
-			});
-
-			UIComponent.makeResizable(canvas, 'height');
-		};
-
-		return {
-			init : init,
-			unsetActiveSample : unsetActiveSample
 		};
 
 	})();
@@ -2210,7 +1769,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 				void_sample.setAttribute('data-active', state);
 				if (state === true) {
 					ColorPickerSamples.unsetActiveSample();
-					CanvasSamples.unsetActiveSample();
 				}
 			});
 		};
@@ -2241,11 +1799,9 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 	var init = function init() {
 		UIColorPicker.init();
-		InputSliderManager.init();
 		ColorInfo.init();
 		ColorPalette.init();
 		ColorPickerSamples.init();
-		CanvasSamples.init();
 		Tool.init();
 	};
 

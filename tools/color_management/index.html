@@ -21,7 +21,7 @@
 
         <!--This is the middle part, color picking, management part-->
         <div id="picker" class="block">
-            <div class="ui-color-picker" data-topic="picker" data-mode="HSL"></div>
+            <div id="ui-color-picker" data-topic="picker" data-mode="HSL"></div>
 
             <div id="controls">
                 <div id="delete">
@@ -33,12 +33,44 @@
 
        <div id="picker-samples"></div>
 
-        <!--This is the compare color area-->
-        <div id="canvas" data-tutorial="drop">
-            <div id="zindex" class="ui-input-slider" data-topic="z-index" data-info="z-index"
-                data-max="20" data-sensivity="10"></div>
-        </div>
     </div>
+
+
+   			var toolbar = document.createElement('div');
+			toolbar.className = 'sample-toolbar'
+
+			var copyColorIcon = document.createElement('div');
+			copyColorIcon.className = 'toolbar-copy-color';
+			copyColorIcon.textContent = "Copy-Color";
+
+			var copyStateIcon = document.createElement('div');
+			copyStateIcon.className = 'toolbar-copy-state';
+			copyStateIcon.textContent = "Copy-State";
+
+			var copyLineIcon = document.createElement('div');
+			copyLineIcon.className = 'toolbar-copy-line';
+			copyLineIcon.textContent = "Copy-Line-State";
+
+
+    <!--templates-->
+    <!--template for sample-->
+   <template id="sample-template">
+       <!--this is the input for the key of the sample-->
+       <input class="sample-key" type="text" placeholder="key, otherwise sampleID"/>
+       <!--this is a big blob of color representing the sampled color-->
+       <div class="sample-color">
+           <div class="sample-toolbar" >
+                <div class="copy-color">Copy-Color</div>
+                <div class="copy-state">Copy-State</div>
+                <div class="copy-line">Copy-Line-State</div>
+                <div class="delete-color">Delete-Color</div>
+                <div class="delete-state">Delete-State</div>
+          </div>
+       </div>
+       <input class="sample-meta" type="text" placeholder="meta-info..."/>
+   </template>
+
+
 
 </body>
 
