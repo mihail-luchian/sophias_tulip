@@ -1367,7 +1367,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 		var nr_samples = 0;
 		var active = null;
 		var container = null;
-		var trash_can = null;
 		var base_color = new HSLColor(0, 0, 100);
 		var add_btn;
 		var add_btn_pos;
@@ -1402,6 +1401,8 @@ var ColorPickerTool = (function ColorPickerTool() {
 			    'click', this.copyStateIconClick.bind(this));
 			node.querySelector('.copy-line').addEventListener(
 			    'click', this.copyLineIconClick.bind(this));
+            node.querySelector('.delete-color').addEventListener(
+			    'click', this.deleteColorIconClick.bind(this));
 
 			this.updateBgColor();
 			samples.push(this);
@@ -1459,6 +1460,11 @@ var ColorPickerTool = (function ColorPickerTool() {
 
         ColorSample.prototype.copyStateIconClick = function (e) {
 		    navigator.clipboard.writeText(this.getDigest());
+		};
+
+        ColorSample.prototype.deleteColorIconClick = function (e) {
+		    this.color = new Color(base_color);
+		    this.updateBgColor();
 		};
 
         ColorSample.prototype.copyLineIconClick = function (e) {
@@ -1521,21 +1527,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 		};
 
-		var deleteSample = function deleteSample(e) {
-			trash_can.parentElement.setAttribute('drag-state', 'none');
-
-			var location = e.dataTransfer.getData('location');
-			if (location !== 'picker-samples')
-				return;
-
-			var sampleID = e.dataTransfer.getData('sampleID');
-			// We do not want to delete it
-//			samples[sampleID].deleteSample();
-            // just reset it
-			samples[sampleID].color = new Color(base_color);
-			updateUI();
-		};
-
 		var setActivateSample = function setActivateSample(e) {
 			if (e.target.parentNode.className !== 'sample')
 				return;
@@ -1557,13 +1548,14 @@ var ColorPickerTool = (function ColorPickerTool() {
 		};
 
 
-        var getAllColorsAsString = function getAllColorsAsString() {
+        var getStateAllColors = function getStateAllColors() {
             var list_hex = [];
             samples.forEach(function(sample) {
                 var hex = sample.color.getSimpleHex();
+                var state = sample.getDigest();
                 // only interested in colors that are not white
                 if( hex !== "ffffff") {
-                    list_hex.push(hex);
+                    list_hex.push(state);
                 }
             });
 
@@ -1599,9 +1591,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 		var init = function init() {
 			container = getElemById('picker-samples');
-			trash_can = getElemById('trash-can');
-
-//			AddSampleButton.init();
 
             // Adding lines with samples to the picker
             for (var line=0; line<NUM_STARTING_LINES; line++) {
@@ -1618,15 +1607,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 			container.addEventListener('click', setActivateSample);
 
-			trash_can.addEventListener('dragover', allowDropEvent);
-			trash_can.addEventListener('dragenter', function() {
-				this.parentElement.setAttribute('drag-state', 'enter');
-			});
-			trash_can.addEventListener('dragleave', function(e) {
-				this.parentElement.setAttribute('drag-state', 'none');
-			});
-			trash_can.addEventListener('drop', deleteSample);
-
 			UIColorPicker.subscribe('picker', function(color) {
 				if (active)
 					active.updateColor(color);
@@ -1638,7 +1618,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 			init : init,
 			getSampleColor : getSampleColor,
 			unsetActiveSample : unsetActiveSample,
-			getAllColorsAsString : getAllColorsAsString
+			getStateAllColors : getStateAllColors
 		};
 
 	})();
@@ -1680,23 +1660,20 @@ var ColorPickerTool = (function ColorPickerTool() {
 		var samples = [];
 		var controls = null;
 		var void_sw;
+		var node;
 
 		var createPickerModeSwitch = function createPickerModeSwitch() {
-			var parent = getElemById('controls');
-			var icon_copy_all = document.createElement('div');
-			var button = document.createElement('div');
-			var hsv = document.createElement('div');
-			var hsl = document.createElement('div');
+			node = getElemById('controls');
+
+            var tools_template = document.getElementById('tools-template');
+            var contents = document.importNode(tools_template.content, true);
+            node.appendChild(contents);
+
+			var hsv = node.querySelector('#hsv');
+			var hsl = node.querySelector('#hsl');
+			var icon_copy_all = node.querySelector('#copy-all');
+
 			var active = null;
-
-			icon_copy_all.className = 'icon copy-icon';
-			button.className = 'switch';
-			button.appendChild(hsv);
-			button.appendChild(hsl);
-
-			hsv.textContent = 'HSV';
-			hsl.textContent = 'HSL';
-
 			active = hsl;
 			active.setAttribute('data-active', 'true');
 
@@ -1704,13 +1681,13 @@ var ColorPickerTool = (function ColorPickerTool() {
 				active.removeAttribute('data-active');
 				active = elem;
 				active.setAttribute('data-active', 'true');
+                setVoidSample();
 				UIColorPicker.setPickerMode('picker', active.textContent);
 			};
 
 
 			icon_copy_all.addEventListener('click', function() {
-
-				var s = ColorPickerSamples.getAllColorsAsString();
+				var s = ColorPickerSamples.getStateAllColors();
 				console.log(s);
 				// Copy string to clipboard
 				navigator.clipboard.writeText(s);
@@ -1723,8 +1700,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 				switchPickingModeTo(hsl);
 			});
 
-			parent.appendChild(icon_copy_all);
-			parent.appendChild(button);
 		};
 
 		var setPickerDragAndDrop = function setPickerDragAndDrop() {
@@ -1762,8 +1737,8 @@ var ColorPickerTool = (function ColorPickerTool() {
 				return ColorPalette.getSampleColor(sampleID);
 		};
 
-		var setVoidSwitch = function setVoidSwitch() {
-			var void_sample = getElemById('void-sample');
+		var setVoidSwitch = function() {
+			var void_sample = node.querySelector('#void-sample');
 			void_sw = new StateButton(void_sample);
 			void_sw.subscribe( function (state) {
 				void_sample.setAttribute('data-active', state);
@@ -1773,8 +1748,12 @@ var ColorPickerTool = (function ColorPickerTool() {
 			});
 		};
 
-		var unsetVoidSample = function unsetVoidSample() {
+		var unsetVoidSample = function() {
 			void_sw.unset();
+		};
+
+        var setVoidSample = function() {
+			void_sw.set();
 		};
 
 		var init = function init() {
@@ -1792,6 +1771,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 		return {
 			init : init,
 			unsetVoidSample : unsetVoidSample,
+			setVoidSample : setVoidSample,
 			getSampleColorFrom : getSampleColorFrom
 		};
 

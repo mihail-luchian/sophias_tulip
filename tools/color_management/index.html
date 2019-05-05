@@ -24,32 +24,12 @@
             <div id="ui-color-picker" data-topic="picker" data-mode="HSL"></div>
 
             <div id="controls">
-                <div id="delete">
-                    <div id="trash-can"></div>
-                </div>
-                <div id="void-sample" class="icon"></div>
             </div>
         </div>
 
        <div id="picker-samples"></div>
 
     </div>
-
-
-   			var toolbar = document.createElement('div');
-			toolbar.className = 'sample-toolbar'
-
-			var copyColorIcon = document.createElement('div');
-			copyColorIcon.className = 'toolbar-copy-color';
-			copyColorIcon.textContent = "Copy-Color";
-
-			var copyStateIcon = document.createElement('div');
-			copyStateIcon.className = 'toolbar-copy-state';
-			copyStateIcon.textContent = "Copy-State";
-
-			var copyLineIcon = document.createElement('div');
-			copyLineIcon.className = 'toolbar-copy-line';
-			copyLineIcon.textContent = "Copy-Line-State";
 
 
     <!--templates-->
@@ -68,6 +48,16 @@
           </div>
        </div>
        <input class="sample-meta" type="text" placeholder="meta-info..."/>
+   </template>
+
+   <!--this template represents the tools for changig the color modes, selecting, deselecting etc-->
+   <template id="tools-template">
+       <div id="void-sample" class="icon"></div>
+       <div id="copy-all" class="icon copy-icon"></div>
+       <div class="switch">
+           <div id="hsv">HSV</div>
+           <div id="hsl">HSL</div>
+       </div>
    </template>
 
 

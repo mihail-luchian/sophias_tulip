@@ -107,6 +107,22 @@ def interpolate_hex_colors(start,end,n):
 
 
 
+def parse_line_color_states(s):
+    return [ parse_color_state(i) for i in s.split('-')  ]
+
+def parse_color_state(s):
+    ss = s.split('/')
+    key = None
+    meta = None
+    color = None
+    if len(ss[0]) > 0:
+        key = int(ss[0])
+    if len(ss[1]) > 0:
+        color = ss[1]
+    if len(ss[2]) > 0:
+        meta = ss[2]
+    return (key,color,meta)
+
 def convert_color_dict_from_hex(color_dict):
     return {i:hex2rgb(j) for i, j in color_dict.items()}
 
