@@ -380,9 +380,10 @@ body {
 #picker-samples .sample-line .sample{
     display: flex;
     flex-direction: column;
-    width: 175px;
+    /*width: 175px;*/
+    flex-grow:1;
     position: relative;
-    padding: 3px;
+    padding: 10px;
 }
 
 #picker-samples .sample-line input{
