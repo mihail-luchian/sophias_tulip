@@ -2,30 +2,65 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
 <title>Color management</title>
-    <link rel="stylesheet" href="styles.css"/>
-    <script type="module" src="src/script.js"></script>
+    <link rel="stylesheet" href="css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="css/styles.css"/>
+
+    <script src="src/jquery-3.3.1.slim.min.js"></script>
+    <script src="src/popper.min.js"></script>
+    <script src="src/bootstrap.min.js"></script>
+    <script src="src/script.js" type="module"></script>
 </head>
 
 <body>
+
+   <!--bootstrap toasts-->
+   <div
+           aria-live="assertive"
+           aria-atomic="true"
+           style="position: fixed; left: 0; top: 0; width:100%; z-index: 100;">
+    <div
+        role="alert" aria-live="assertive" aria-atomic="true"
+        class="toast" data-autohide="true" data-delay="1000"
+        style="position: absolute; top: 0; right: 0;">
+        <div class="toast-header">
+            <svg
+                class=" rounded mr-2" width="20" height="20"
+                xmlns="http://www.w3.org/2000/svg"
+                preserveAspectRatio="xMidYMid slice" focusable="false" role="img">
+                <rect fill="#007aff" width="100%" height="100%" />
+            </svg>
+            <strong class="mr-auto">Status</strong>
+            </div>
+        <div class="toast-body">
+            <div style="display:none;">Copied the state of all samples.</div>
+            <div style="display:none;">Copied the color of sample.</div>
+            <div style="display:none;">Copied the state of all colors.</div>
+
+        </div>
+    </div>
+   </div>
+
+
    <!-- This is the whole tool -->
    <div id="container">
+       <div>
+               <div id="picker" class="block">
+                    <div id="ui-color-picker" data-topic="picker" data-mode="HSL"></div>
+                    <div id="controls"></div>
+             </div>
 
-        <!--This is the upper part, the variations of a color-->
-        <div id="palette" class="block">
-            <div id="color-palette"></div>
-            <div id="color-info">
-                <div class="title"> CSS Color </div>
+                   <!--This is the upper part, the variations of a color-->
+            <div id="palette" class="block">
+                <div id="color-palette"></div>
+                <!--<div id="color-info">-->
+                    <!--<div class="title"> CSS Color </div>-->
+                <!--</div>-->
             </div>
-        </div>
+       </div>
 
-        <!--This is the middle part, color picking, management part-->
-        <div id="picker" class="block">
-            <div id="ui-color-picker" data-topic="picker" data-mode="HSL"></div>
-
-            <div id="controls">
-            </div>
-        </div>
 
        <div id="picker-samples"></div>
 
@@ -59,7 +94,6 @@
            <div id="hsl">HSL</div>
        </div>
    </template>
-
 
 
 </body>

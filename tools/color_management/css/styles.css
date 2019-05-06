@@ -3,7 +3,7 @@
  */
 
 #ui-color-picker {
-	width: 425px;
+	width: 440px;
 	margin: 0;
 	border: 1px solid #DDD;
 	background-color: #FFF;
@@ -31,7 +31,7 @@
 
 /* HSV format - Hue-Saturation-Value(Brightness) */
 #ui-color-picker .picking-area {
-	background: url('files/picker_mask_200.png') center center;
+	background: url('../files/picker_mask_200.png') center center;
 
 	background: -moz-linear-gradient(bottom, #000 0%, rgba(0, 0, 0, 0) 100%),
 				-moz-linear-gradient(left, #FFF 0%, rgba(255, 255, 255, 0) 100%);
@@ -91,7 +91,7 @@
 }
 
 #ui-color-picker .hue {
-	background: url("files/hue.png") center;
+	background: url("../files/hue.png") center;
 	background: -moz-linear-gradient(left, #F00 0%, #FF0 16.66%, #0F0 33.33%, #0FF 50%,
 				#00F 66.66%, #F0F 83.33%, #F00 100%);
 	background: -webkit-linear-gradient(left, #F00 0%, #FF0 16.66%, #0F0 33.33%, #0FF 50%,
@@ -104,13 +104,13 @@
 
 #ui-color-picker .alpha {
 	border: 1px solid #CCC;
-	background: url("files/alpha.png");
+	background: url("../files/alpha.png");
 }
 
 #ui-color-picker .alpha-mask {
 	width: 100%;
 	height: 100%;
-	background: url("files/alpha_mask.png");
+	background: url("../files/alpha_mask.png");
 }
 
 #ui-color-picker .slider-picker {
@@ -214,7 +214,7 @@
 	margin: 5px;
 	margin-top: 10px;
 	border: 1px solid #DDD;
-	background-image: url("files/alpha.png");
+	background-image: url("../files/alpha.png");
 	float: left;
 	position: relative;
 }
@@ -286,7 +286,7 @@ body {
 .resize-handle {
 	width: 10px;
 	height: 10px;
-	background: url('files/resize.png') center center no-repeat;
+	background: url('../files/resize.png') center center no-repeat;
 	position: absolute;
 	bottom: 0;
 	right: 0;
@@ -387,6 +387,7 @@ body {
 }
 
 #picker-samples .sample-line input{
+    width: 100%;
     border: 1px solid #DDD;
 }
 
@@ -458,7 +459,7 @@ body {
 .sample-line .sample[data-active='true']:after {
 	content: "";
 	position: absolute;
-	background: url('files/arrow.png') center no-repeat;
+	background: url('../files/arrow.png') center no-repeat;
 	width: 100%;
 	height: 12px;
     top: -7px;
@@ -513,7 +514,7 @@ body {
  */
 
 #controls {
-	width: 115px;
+	width: 150px;
 	padding: 10px;
 	float: left;
 }
@@ -539,14 +540,14 @@ body {
 }
 
 #controls .picker-icon {
-	background-image: url('files/picker.png');
+	background-image: url('../files/picker.png');
 }
 
 #controls .copy-icon {
-    width: 24px;
-    height: 24px;
+    width: 48px;
+    height: 48px;
 	padding: 12px;
-	background-image: url('files/copy.png');
+	background-image: url('../files/copy.png');
 	background-position: 7px center;
 }
 
@@ -557,7 +558,7 @@ body {
 
 #controls #void-sample {
 	margin-right: 10px;
-	background-image: url('files/void.png');
+	background-image: url('../files/void.png');
 	background-position: center left;
 }
 
@@ -590,7 +591,7 @@ body {
 
 #controls .switch [data-active='true'] {
 	color: #FFF;
-	background-image: url('files/grain.png');
+	background-image: url('../files/grain.png');
 	background-color: #777;
 }
 
@@ -602,7 +603,7 @@ body {
 	width: 100%;
 	height: 94px;
 	background-color: #DDD;
-	background-image: url('files/grain.png');
+	background-image: url('../files/grain.png');
 	background-repeat: repeat;
 
 	text-align: center;
@@ -617,7 +618,7 @@ body {
 	height: 80%;
 	border: 2px dashed #FFF;
 	border-radius: 5px;
-	background: url('files/trash-can.png') no-repeat center;
+	background: url('../files/trash-can.png') no-repeat center;
 
 	position: absolute;
 	top: 10%;
@@ -664,7 +665,7 @@ body {
 	padding: 15px;
 	font-size: 18px;
 	text-align: center;
-	background-image: url('files/color-wheel.png');
+	background-image: url('../files/color-wheel.png');
 	background-repeat:no-repeat;
 	background-position: center left 30%;
 }
@@ -714,11 +715,11 @@ body {
 }
 
 #color-info .property .copy {
-	width: 24px;
+	width: 36px;
 	height: 100%;
 	padding: 0 5px;
 	background-color: #FFF;
-	background-image: url('files/copy.png');
+	background-image: url('../files/copy.png');
 	background-repeat: no-repeat;
 	background-position: center left;
 	border-left: 1px solid #EEE;
@@ -738,7 +739,7 @@ body {
 #palette {
 	width: 1000px;
 	padding: 10px 0;
-	background-image: url('files/grain.png');
+	background-image: url('../files/grain.png');
 	background-repeat: repeat;
 	background-color: #EEE;
 	color: #777;
@@ -817,7 +818,7 @@ body {
 	height: 24px;
 	margin: 10px;
 	padding: 3px;
-	background-image: url('files/lock.png');
+	background-image: url('../files/lock.png');
 	background-repeat: no-repeat;
 	background-position: bottom right;
 }

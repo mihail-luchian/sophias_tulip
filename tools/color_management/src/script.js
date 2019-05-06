@@ -1,8 +1,9 @@
 import {
     Color,RGBColor,RGBAColor,HSVColor,HSVAColor,HSLColor,HSLAColor
 } from './color.js';
-'use strict';
 
+
+'use strict';
 
 var SAMPLES_PER_LINE = 5;
 var NUM_STARTING_LINES = 4;
@@ -18,8 +19,6 @@ var UIColorPicker = (function UIColorPicker() {
 	var subscribers = [];
 	var pickers = [];
 
-	/*=======================================================================*/
-	/*=======================================================================*/
 
 	/*========== Capture Mouse Movement ==========*/
 
@@ -939,13 +938,13 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 		var init = function init() {
 
-			info_box = getElemById('color-info');
+//			info_box = getElemById('color-info');
 
-			RGBA = new InfoProperty('RGBA');
-			HSLA = new InfoProperty('HSLA');
-			HEXA = new InfoProperty('HEXA');
+//			RGBA = new InfoProperty('RGBA');
+//			HSLA = new InfoProperty('HSLA');
+//			HEXA = new InfoProperty('HEXA');
 
-			UIColorPicker.subscribe('picker', updateInfo);
+//			UIColorPicker.subscribe('picker', updateInfo);
 
 		};
 
@@ -1001,6 +1000,8 @@ var ColorPickerTool = (function ColorPickerTool() {
 			    'click', this.copyLineIconClick.bind(this));
             node.querySelector('.delete-color').addEventListener(
 			    'click', this.deleteColorIconClick.bind(this));
+            node.querySelector('.delete-state').addEventListener(
+			    'click', this.deleteStateIconClick.bind(this));
 
 			this.updateBgColor();
 			samples.push(this);
@@ -1063,6 +1064,13 @@ var ColorPickerTool = (function ColorPickerTool() {
         ColorSample.prototype.deleteColorIconClick = function (e) {
 		    this.color = new Color(base_color);
 		    this.updateBgColor();
+		};
+
+        ColorSample.prototype.deleteStateIconClick = function (e) {
+		    this.color = new Color(base_color);
+		    this.updateBgColor();
+		    this.key_input.value = '';
+		    this.meta_input.value = '';
 		};
 
         ColorSample.prototype.copyLineIconClick = function (e) {
@@ -1287,9 +1295,10 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 			icon_copy_all.addEventListener('click', function() {
 				var s = ColorPickerSamples.getStateAllColors();
-				console.log(s);
+				$('.toast').toast('show');
 				// Copy string to clipboard
 				navigator.clipboard.writeText(s);
+
 			});
 
 			hsv.addEventListener('click', function() {
