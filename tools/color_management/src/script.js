@@ -57,15 +57,12 @@ var UIColorPicker = (function UIColorPicker() {
 		this.newInputComponent('V', 'value', this.inputChangeValue.bind(this));
 		this.newInputComponent('L', 'lightness', this.inputChangeLightness.bind(this));
 
-		this.createAlphaArea();
-
 		this.newInputComponent('R', 'red', this.inputChangeRed.bind(this));
 		this.newInputComponent('G', 'green', this.inputChangeGreen.bind(this));
 		this.newInputComponent('B', 'blue', this.inputChangeBlue.bind(this));
 
 		this.createPreviewBox();
 
-		this.newInputComponent('alpha', 'alpha', this.inputChangeAlpha.bind(this));
 		this.newInputComponent('hexa', 'hexa', this.inputChangeHexa.bind(this));
 
 		this.setColor(this.color);
@@ -106,24 +103,6 @@ var UIColorPicker = (function UIColorPicker() {
 		this.node.appendChild(area);
 	};
 
-	ColorPicker.prototype.createAlphaArea = function createAlphaArea() {
-		var area = document.createElement('div');
-		var mask = document.createElement('div');
-		var picker = document.createElement('div');
-
-		area.className = 'alpha';
-		mask.className = 'alpha-mask';
-		picker.className = 'slider-picker';
-
-		this.alpha_area = area;
-		this.alpha_mask = mask;
-		this.alpha_picker = picker;
-		setMouseTracking(area, this.updateAlphaSlider.bind(this));
-
-		area.appendChild(mask);
-		mask.appendChild(picker);
-		this.node.appendChild(area);
-	};
 
 	ColorPicker.prototype.createPreviewBox = function createPreviewBox(e) {
 		var preview_box = document.createElement('div');
@@ -169,8 +148,17 @@ var UIColorPicker = (function UIColorPicker() {
 	/*************************************************************************/
 
 	ColorPicker.prototype.updateColor = function updateColor(e) {
-		var x = e.pageX - this.picking_area.offsetLeft;
-		var y = e.pageY - this.picking_area.offsetTop;
+
+//        console.log(e);
+
+		var x = e.clientX - this.picking_area.offsetLeft;
+		var y = e.clientY - this.picking_area.offsetTop;
+
+//		x = e.layerX;
+//		y = e.layerY;
+
+        console.log('' + x + ' ' + y);
+
 		var picker_offset = 5;
 
 		// width and height should be the same
@@ -192,7 +180,6 @@ var UIColorPicker = (function UIColorPicker() {
 		this.color_picker.style.left = x - picker_offset + 'px';
 		this.color_picker.style.top = y - picker_offset + 'px';
 
-		this.updateAlphaGradient();
 		this.updatePreviewColor();
 
 		this.notify('value', value);
@@ -222,27 +209,11 @@ var UIColorPicker = (function UIColorPicker() {
 		this.setHue(hue);
 	};
 
-	ColorPicker.prototype.updateAlphaSlider = function updateAlphaSlider(e) {
-		var x = e.pageX - this.alpha_area.offsetLeft;
-		var width = this.alpha_area.clientWidth;
-
-		if (x < 0) x = 0;
-		if (x > width) x = width;
-
-		this.color.a = (x / width).toFixed(2);
-
-		this.updateSliderPosition(this.alpha_picker, x);
-		this.updatePreviewColor();
-
-		this.notify('alpha', this.color.a);
-		notify(this.topic, this.color);
-	};
 
 	ColorPicker.prototype.setHue = function setHue(value) {
 		this.color.setHue(value);
 
 		this.updatePickerBackground();
-		this.updateAlphaGradient();
 		this.updatePreviewColor();
 
 		this.notify('red', this.color.r);
@@ -257,7 +228,6 @@ var UIColorPicker = (function UIColorPicker() {
 	// Updates when one of Saturation/Value/Lightness changes
 	ColorPicker.prototype.updateSLV = function updateSLV() {
 		this.updatePickerPosition();
-		this.updateAlphaGradient();
 		this.updatePreviewColor();
 
 		this.notify('red', this.color.r);
@@ -300,12 +270,6 @@ var UIColorPicker = (function UIColorPicker() {
 		this.hue_picker.style.left = pos - offset + 'px';
 	};
 
-	ColorPicker.prototype.updateAlphaPicker = function updateAlphaPicker() {
-		var size = this.alpha_area.clientWidth;
-		var offset = 1;
-		var pos = (this.color.a * size) | 0;
-		this.alpha_picker.style.left = pos - offset + 'px';
-	};
 
 	/*************************************************************************/
 	//						Update background colors
@@ -317,9 +281,6 @@ var UIColorPicker = (function UIColorPicker() {
 		this.picking_area.style.backgroundColor = nc.getHexa();
 	};
 
-	ColorPicker.prototype.updateAlphaGradient = function updateAlphaGradient() {
-		this.alpha_mask.style.backgroundColor = this.color.getHexa();
-	};
 
 	ColorPicker.prototype.updatePreviewColor = function updatePreviewColor() {
 		this.preview_color.style.backgroundColor = this.color.getColor();
@@ -377,17 +338,6 @@ var UIColorPicker = (function UIColorPicker() {
 		this.setColor(this.color);
 	};
 
-	ColorPicker.prototype.inputChangeAlpha = function inputChangeAlpha(e) {
-		var value = parseFloat(e.target.value);
-
-		if (typeof value === 'number' && isNaN(value) === false &&
-			value >= 0 && value <= 1)
-			this.color.a = value.toFixed(2);
-
-		e.target.value = this.color.a;
-		this.updateAlphaPicker();
-	};
-
 	ColorPicker.prototype.inputChangeHexa = function inputChangeHexa(e) {
 		var value = e.target.value;
 		this.color.setHexa(value);
@@ -426,8 +376,6 @@ var UIColorPicker = (function UIColorPicker() {
 		this.updateHuePicker();
 		this.updatePickerPosition();
 		this.updatePickerBackground();
-		this.updateAlphaPicker();
-		this.updateAlphaGradient();
 		this.updatePreviewColor();
 
 		this.notify('red', this.color.r);
@@ -439,7 +387,6 @@ var UIColorPicker = (function UIColorPicker() {
 		this.notify('value', this.color.value);
 		this.notify('lightness', this.color.lightness);
 
-		this.notify('alpha', this.color.a);
 		this.notify('hexa', this.color.getHexa());
 		notify(this.topic, this.color);
 	};
@@ -718,17 +665,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 			this.updateBgColor();
 		};
 
-		ColorSample.prototype.updateAlpha = function updateAlpha(color, value, steps) {
-			var alpha = parseFloat(color.a) + value * steps;
-			if (alpha <= 0) {
-				this.node.setAttribute('data-hidden', 'true');
-				return;
-			}
-			this.node.removeAttribute('data-hidden');
-			this.color.copy(color);
-			this.color.a = parseFloat(alpha.toFixed(2));
-			this.updateBgColor();
-		};
 
 		ColorSample.prototype.pickColor = function pickColor() {
 			UIColorPicker.setColor('picker', this.color);
@@ -841,20 +777,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 			return false;
 		};
 
-		var createAlphaPalette = function createAlphaPalette() {
-			var palette = new Palette('A', 10);
-
-			UIColorPicker.subscribe('picker', function(color) {
-				if (palette.locked === true)
-					return;
-
-				for(var i = 0; i < 10; i++) {
-					palette.samples[i].updateAlpha(color, -0.1, i);
-				}
-			});
-
-			color_palette.appendChild(palette.container);
-		};
 
 		var getSampleColor = function getSampleColor(id) {
 			if (samples[id] !== undefined && samples[id]!== null)
@@ -867,7 +789,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 			createHuePalette();
 			createSaturationPalette();
 			createVLPalette();
-			createAlphaPalette();
 
 		};
 
