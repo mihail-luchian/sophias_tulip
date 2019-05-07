@@ -2,8 +2,17 @@
  * COLOR PICKER TOOL
  */
 
+.floating-controls {
+
+    position: sticky;
+    left: 0;
+    top: 0;
+    display: inline-block;
+    float: left;
+}
+
 #ui-color-picker {
-	width: 440px;
+	width: 250px;
 	margin: 0;
 	border: 1px solid #DDD;
 	background-color: #FFF;
@@ -190,7 +199,7 @@
 
 #ui-color-picker .input[data-topic="hexa"] {
 	width: auto;
-	float: right;
+	float: left;
 	margin: 6px 8px 0 0;
 }
 
@@ -262,12 +271,8 @@
  */
 
 body {
-	max-width: 1000px;
-	margin: 0 auto;
-
+    max-width: 2000px;
 	font-family: "Segoe UI", Arial, Helvetica, sans-serif;
-
-	box-shadow: 0 0 5px 0 #999;
 
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
@@ -321,7 +326,7 @@ body {
  * 	Container
  */
 #container {
-	width: 100%;
+	width: 2000px;
 
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
@@ -336,7 +341,9 @@ body {
 
 #picker {
 	padding: 10px;
-	width: 980px;
+	width: 250px;
+	display: inline-block;
+	float: right;
 }
 
 #ui-color-picker {
@@ -354,14 +361,15 @@ body {
  * Picker Container
  */
 
+#container-picker-samples {
+    display: inline-block;
+}
+
 #picker-samples {
-	/* width: 95%; */
-	/*height: 114px;*/
-	/*max-height: 218px; We do not want a limit on the height of the picker-samples */
+	width: 1000px;
 	margin: 0 15px 20px 17px;
 	overflow: hidden;
 	position: relative;
-	float: left;
     display: flex;
     flex-wrap: wrap;
 	transition: all 0.2s;
@@ -737,7 +745,7 @@ body {
  */
 
 #palette {
-	width: 1000px;
+	width: 500px;
 	padding: 10px 0;
 	background-image: url('../files/grain.png');
 	background-repeat: repeat;
@@ -770,7 +778,7 @@ body {
 }
 
 #color-palette .title {
-	width: 100px;
+	width: 10px;
 	padding: 0 10px;
 	text-align: right;
 	line-height: inherit;

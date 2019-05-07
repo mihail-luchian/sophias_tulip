@@ -779,7 +779,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 		var createHuePalette = function createHuePalette() {
 		    var samples_hue_palette = 12;
-			var palette = new Palette('Hue', samples_hue_palette);
+			var palette = new Palette('H', samples_hue_palette);
 
 			UIColorPicker.subscribe('picker', function(color) {
 				if (palette.locked === true)
@@ -794,7 +794,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 		};
 
 		var createSaturationPalette = function createSaturationPalette() {
-			var palette = new Palette('Saturation', 11);
+			var palette = new Palette('S', 11);
 
 			UIColorPicker.subscribe('picker', function(color) {
 				if (palette.locked === true)
@@ -810,19 +810,19 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 		/* Brightness or Lightness - depends on the picker mode */
 		var createVLPalette = function createSaturationPalette() {
-			var palette = new Palette('Lightness', 11);
+			var palette = new Palette('L', 11);
 
 			UIColorPicker.subscribe('picker', function(color) {
 				if (palette.locked === true)
 					return;
 
 				if(color.format === 'HSL') {
-					palette.title.textContent = 'Lightness';
+					palette.title.textContent = 'L';
 					for(var i = 0; i < 11; i++)
 						palette.samples[i].updateLightness(color, -10, i);
 				}
 				else {
-					palette.title.textContent = 'Value';
+					palette.title.textContent = 'V';
 					for(var i = 0; i < 11; i++)
 						palette.samples[i].updateBrightness(color, -10, i);
 				}
@@ -842,7 +842,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 		};
 
 		var createAlphaPalette = function createAlphaPalette() {
-			var palette = new Palette('Alpha', 10);
+			var palette = new Palette('A', 10);
 
 			UIColorPicker.subscribe('picker', function(color) {
 				if (palette.locked === true)

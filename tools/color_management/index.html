@@ -46,23 +46,24 @@
 
    <!-- This is the whole tool -->
    <div id="container">
-       <div>
-               <div id="picker" class="block">
-                    <div id="ui-color-picker" data-topic="picker" data-mode="HSL"></div>
-                    <div id="controls"></div>
-             </div>
+       <div class="floating-controls">
 
-                   <!--This is the upper part, the variations of a color-->
+            <!--This is the upper part, the variations of a color-->
             <div id="palette" class="block">
                 <div id="color-palette"></div>
-                <!--<div id="color-info">-->
-                    <!--<div class="title"> CSS Color </div>-->
-                <!--</div>-->
             </div>
+
+           <!--This is the color picking part   -->
+           <div id="picker">
+               <div id="ui-color-picker" data-topic="picker" data-mode="HSL"></div>
+                <div id="controls"></div>
+           </div>
+
        </div>
 
-
-       <div id="picker-samples"></div>
+       <div id="container-picker-samples">
+           <div id="picker-samples"></div>
+       </div>
 
     </div>
 
