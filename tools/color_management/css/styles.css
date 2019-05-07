@@ -5,9 +5,7 @@
 .floating-controls {
 
     position: sticky;
-    left: 0;
     top: 0;
-    float: left;
 }
 
 #ui-color-picker {
@@ -330,7 +328,8 @@ body {
 	-webkit-box-sizing: border-box;
 	box-sizing: border-box;
 
-	display: table;
+	display: flex;
+	align-items: flex-start;
 }
 
 /**
@@ -360,7 +359,6 @@ body {
  */
 
 #container-picker-samples {
-    float: left;
 }
 
 #picker-samples {
@@ -842,7 +840,5 @@ body {
 
 .notification-area {
     position: sticky;
-    z-index: 100;
     top: 0;
-    float: right;
 }
