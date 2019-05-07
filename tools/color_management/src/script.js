@@ -149,16 +149,8 @@ var UIColorPicker = (function UIColorPicker() {
 
 	ColorPicker.prototype.updateColor = function updateColor(e) {
 
-//        console.log(e);
-
 		var x = e.clientX - this.picking_area.offsetLeft;
 		var y = e.clientY - this.picking_area.offsetTop;
-
-//		x = e.layerX;
-//		y = e.layerY;
-
-        console.log('' + x + ' ' + y);
-
 		var picker_offset = 5;
 
 		// width and height should be the same
@@ -400,10 +392,6 @@ var UIColorPicker = (function UIColorPicker() {
 		this.setColor(this.color);
 	};
 
-	/*************************************************************************/
-	//								UNUSED
-	/*************************************************************************/
-
 	var setPickerMode = function setPickerMode(topic, mode) {
 		if (pickers[topic])
 			pickers[topic].setPickerMode(mode);
@@ -591,9 +579,9 @@ var ColorPickerTool = (function ColorPickerTool() {
 			node.setAttribute('data-hidden', 'true');
 		};
 
-		var ColorSample = function ColorSample(id) {
+		var PaletteColorSample = function (id) {
 			var node = document.createElement('div');
-			node.className = 'sample-color';
+			node.className = 'palette-sample-color';
 
             // additional color sample information
 			this.uid = samples.length;
@@ -610,17 +598,17 @@ var ColorPickerTool = (function ColorPickerTool() {
 		};
 
 
-		ColorSample.prototype.updateBgColor = function() {
+		PaletteColorSample.prototype.updateBgColor = function() {
 			this.node.style.backgroundColor = this.color.getColor();
 		};
 
-		ColorSample.prototype.updateColor = function(color) {
+		PaletteColorSample.prototype.updateColor = function(color) {
 			this.color.copy(color);
 			this.updateBgColor();
 		};
 
 
-		ColorSample.prototype.updateHue = function updateHue(color, degree, steps) {
+		PaletteColorSample.prototype.updateHue = function (color, degree, steps) {
 			this.color.copy(color);
 			var hue = (steps * degree + this.color.hue) % 360;
 			if (hue < 0) hue += 360;
@@ -628,7 +616,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 			this.updateBgColor();
 		};
 
-		ColorSample.prototype.updateSaturation = function updateSaturation(color, value, steps) {
+		PaletteColorSample.prototype.updateSaturation = function (color, value, steps) {
 			var saturation = color.saturation + value * steps;
 			if (saturation <= 0) {
 				this.node.setAttribute('data-hidden', 'true');
@@ -641,7 +629,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 			this.updateBgColor();
 		};
 
-		ColorSample.prototype.updateLightness = function updateLightness(color, value, steps) {
+		PaletteColorSample.prototype.updateLightness = function (color, value, steps) {
 			var lightness = color.lightness + value * steps;
 			if (lightness <= 0) {
 				this.node.setAttribute('data-hidden', 'true');
@@ -653,7 +641,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 			this.updateBgColor();
 		};
 
-		ColorSample.prototype.updateBrightness = function updateBrightness(color, value, steps) {
+		PaletteColorSample.prototype.updateBrightness = function (color, value, steps) {
 			var brightness = color.value + value * steps;
 			if (brightness <= 0) {
 				this.node.setAttribute('data-hidden', 'true');
@@ -666,11 +654,11 @@ var ColorPickerTool = (function ColorPickerTool() {
 		};
 
 
-		ColorSample.prototype.pickColor = function pickColor() {
+		PaletteColorSample.prototype.pickColor = function () {
 			UIColorPicker.setColor('picker', this.color);
 		};
 
-		ColorSample.prototype.dragStart = function dragStart(e) {
+		PaletteColorSample.prototype.dragStart = function (e) {
 			e.dataTransfer.setData('sampleID', this.uid);
 			e.dataTransfer.setData('location', 'palette-samples');
 		};
@@ -686,7 +674,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 			var container = document.createElement('div');
 			var lock = document.createElement('div');
 
-			container.className = 'container';
+			container.className = 'palette-container';
 			title.className = 'title';
 			palette.className = 'palette';
 			controls.className = 'controls';
@@ -704,7 +692,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 			}.bind(this));
 
 			for(var i = 0; i < size; i++) {
-				var sample = new ColorSample();
+				var sample = new PaletteColorSample();
 				this.samples.push(sample);
 				palette.appendChild(sample.node);
 			}
@@ -714,7 +702,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 		};
 
 		var createHuePalette = function createHuePalette() {
-		    var samples_hue_palette = 12;
+		    var samples_hue_palette = 8;
 			var palette = new Palette('H', samples_hue_palette);
 
 			UIColorPicker.subscribe('picker', function(color) {
@@ -730,13 +718,14 @@ var ColorPickerTool = (function ColorPickerTool() {
 		};
 
 		var createSaturationPalette = function createSaturationPalette() {
-			var palette = new Palette('S', 11);
+		    var samples_sat_palette = 8;
+			var palette = new Palette('S', samples_sat_palette);
 
 			UIColorPicker.subscribe('picker', function(color) {
 				if (palette.locked === true)
 					return;
 
-				for(var i = 0; i < 11; i++) {
+				for(var i = 0; i < samples_sat_palette; i++) {
 					palette.samples[i].updateSaturation(color, -10, i);
 				}
 			});
@@ -746,7 +735,8 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 		/* Brightness or Lightness - depends on the picker mode */
 		var createVLPalette = function createSaturationPalette() {
-			var palette = new Palette('L', 11);
+            var samples_vl_palette = 8;
+			var palette = new Palette('L', samples_vl_palette);
 
 			UIColorPicker.subscribe('picker', function(color) {
 				if (palette.locked === true)
@@ -754,7 +744,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 				if(color.format === 'HSL') {
 					palette.title.textContent = 'L';
-					for(var i = 0; i < 11; i++)
+					for(var i = 0; i < samples_vl_palette; i++)
 						palette.samples[i].updateLightness(color, -10, i);
 				}
 				else {
@@ -889,7 +879,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 		var add_btn;
 		var add_btn_pos;
 
-		var ColorSample = function ColorSample() {
+		var ColorSample = function () {
             // this is the overall node that will hold all sample information
             var node = document.createElement('div');
             node.className = 'sample';
@@ -1020,23 +1010,34 @@ var ColorPickerTool = (function ColorPickerTool() {
 			e.stopPropagation();
 
 			var sampleID = e.dataTransfer.getData('sampleID');
-			console.log("Dropping over:" + sampleID);
-			console.log("Being dropped on:" + this.uid);
+			var sampleLocation = e.dataTransfer.getData('location');
+			if( sampleLocation == 'picker-samples')
+			{
+                console.log("Dropping over:" + sampleID);
+                console.log("Being dropped on:" + this.uid);
 
-            var dragged_sample = samples[sampleID];
-            var dragged_color = dragged_sample.color;
-            var dragged_key_value = dragged_sample.key_input.value;
-            var dragged_meta_value = dragged_sample.meta_input.value;
+                var dragged_sample = samples[sampleID];
+                var dragged_color = dragged_sample.color;
+                var dragged_key_value = dragged_sample.key_input.value;
+                var dragged_meta_value = dragged_sample.meta_input.value;
 
-			var old_color = getSampleColor(this.uid);
-			var old_key_value = this.key_input.value;
-			var old_meta_value = this.meta_input.value;
+                var old_color = getSampleColor(this.uid);
+                var old_key_value = this.key_input.value;
+                var old_meta_value = this.meta_input.value;
 
-			// updating the color of the sample on which it is dropped
-			this.updateState(
-			    dragged_color,dragged_key_value,dragged_meta_value);
-			dragged_sample.updateState(
-			    old_color,old_key_value,old_meta_value);
+                // updating the color of the sample on which it is dropped
+                this.updateState(
+                    dragged_color,dragged_key_value,dragged_meta_value);
+                dragged_sample.updateState(
+                    old_color,old_key_value,old_meta_value);
+			}
+			else
+			{
+			    var color = Tool.getSampleColorFrom(e);
+			    this.updateColor(color);
+			}
+
+
 		};
 
 		ColorSample.prototype.deleteSample = function deleteSample() {
