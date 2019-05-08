@@ -1,57 +1,4 @@
-/**
- * Resize Handle
- */
-.resize-handle {
-	width: 10px;
-	height: 10px;
-	background: url('../files/resize.png') center center no-repeat;
-	position: absolute;
-	bottom: 0;
-	right: 0;
-}
-
-[data-resize='both']:hover {
-	cursor: nw-resize !important;
-}
-
-[data-resize='width']:hover {
-	cursor: w-resize !important;
-}
-
-[data-resize='height']:hover {
-	cursor: n-resize !important;
-}
-
-[data-hidden='true'] {
-	display: none;
-}
-
-[data-collapsed='true'] {
-	height: 0 !important;
-}
-
-.block {
-	display: table;
-}
-
-
-/**
- * 	Color Theme
- */
-
-#color-theme {
-	margin: 0 8px 0 0;
-	border: 1px solid #EEE;
-	display: inline-block;
-	float: right;
-}
-
-#color-theme .box {
-	width: 80px;
-	height: 92px;
-	float: left;
-}
-
+/*This file contains the css for the color palettes*/
 
 
 #color-palettes .palette-container {
@@ -72,7 +19,7 @@
 	line-height: inherit;
 }
 
-#color-palettes .palette {
+.palette {
 	width: 200px;
 	height: 38px;
 	margin: 3px;
@@ -81,7 +28,7 @@
 	background-color: #FFF;
 }
 
-#color-palettes .palette .palette-sample-color {
+.palette .palette-sample-color {
 	width: 20px;
 	height: 30px;
 	margin: 1px;
@@ -91,7 +38,7 @@
 	transition: all 0.2s;
 }
 
-#color-palettes .palette .palette-sample-color:hover {
+.palette .palette-sample-color:hover {
 	cursor: pointer;
 	border-color: #BBB;
 	transform: scale(1.15);

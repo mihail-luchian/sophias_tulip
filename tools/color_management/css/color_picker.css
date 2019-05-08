@@ -1,6 +1,5 @@
 /*This file contains the css for the color picker elements*/
 
-
 #color-picker {
     width: 250px;
     margin: 0;
@@ -101,17 +100,6 @@
     #00F 66.66%, #F0F 83.33%, #F00 100%);
 }
 
-#color-picker .alpha {
-    border: 1px solid #CCC;
-    background: url("../files/alpha.png");
-}
-
-#color-picker .alpha-mask {
-    width: 100%;
-    height: 100%;
-    background: url("../files/alpha_mask.png");
-}
-
 #color-picker .slider-picker {
     width: 2px;
     height: 100%;
@@ -171,19 +159,6 @@
 
 #color-picker[data-mode='HSL'] .input[data-topic="lightness"] {
     display: block;
-}
-
-#color-picker .input[data-topic="alpha"] {
-    margin-top: 10px;
-    width: 93px;
-}
-
-#color-picker .input[data-topic="alpha"] > .name {
-    width: 55px;
-}
-
-#color-picker .input[data-topic="alpha"] > input {
-    float: right;
 }
 
 #color-picker .input[data-topic="hexa"] {
