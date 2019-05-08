@@ -1,7 +1,3 @@
-import {
-    Color,RGBColor,RGBAColor,HSVColor,HSVAColor,HSLColor,HSLAColor
-} from './color.js';
-
 
 'use strict';
 
