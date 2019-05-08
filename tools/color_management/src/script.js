@@ -909,6 +909,8 @@ var ColorPickerTool = (function ColorPickerTool() {
 			    'click', this.deleteColorIconClick.bind(this));
             node.querySelector('.delete-state').addEventListener(
 			    'click', this.deleteStateIconClick.bind(this));
+            node.querySelector('.paste-color').addEventListener(
+			    'click', this.pasteColorIconClick.bind(this));
             node.querySelector('.paste-state').addEventListener(
 			    'click', this.pasteStateIconClick.bind(this));
 
@@ -995,6 +997,21 @@ var ColorPickerTool = (function ColorPickerTool() {
                     var meta = state[2];
                     if( i+this.uid < samples.length ) {
                         samples[i+this.uid].updateState(color,key,meta);
+                    }
+                }
+            }
+		};
+
+        ColorSample.prototype.pasteColorIconClick = function (e) {
+            var colors = prompt("Enter your state", "ffffff");
+            if( colors != null ) {
+                var s = parseColors(colors);
+                var l = s.length;
+
+                for( var i = 0; i < l; i++) {
+                    var color = s[i];
+                    if( i+this.uid < samples.length ) {
+                        samples[i+this.uid].updateColor(color);
                     }
                 }
             }

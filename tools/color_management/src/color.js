@@ -410,3 +410,15 @@ function parseStates(states) {
 
     return list_states;
 }
+
+function parseColors(states) {
+    var list_strings = states.trim().split('-');
+    var list_colors = [];
+    list_strings.forEach( function(sample) {
+        var color = new Color();
+        color.setHexa(sample);
+        list_colors.push(color);
+    });
+
+    return list_colors;
+}

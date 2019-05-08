@@ -223,6 +223,16 @@ def sample_markov_hierarchy_with_cumsum_limit(markov_tree, limit):
     return sample
 
 
+def generate_grid_lines( parent,limit):
+    grid = sample_markov_hierarchy_with_cumsum_limit(
+        parent, limit=limit).astype('int32')
+    grid = np.cumsum(grid)
+    grid = grid[grid < limit]
+
+    return grid
+
+
+
 def paint_linearly_markov_hierarchy_with_grid(markov_tree,gridy,gridx):
     height = gridy[-1]
     width = gridx[-1]

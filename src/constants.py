@@ -72,3 +72,5 @@ PATTERN_INDICES_STR = {
     j : i
     for i,j in PATTERN_STR_INDICES.items()
 }
+
+DEFAULT_COLOR_STR = '0/aaaaaa/-1/aaaaaa/-2/aaaaaa/-3/aaaaaa/-4/aaaaaa/'
