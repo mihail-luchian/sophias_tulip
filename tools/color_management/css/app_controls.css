@@ -76,3 +76,19 @@
     background-image: url('../files/grain.png');
     background-color: #777;
 }
+
+
+#control-paste-line {
+    margin-top: 10px;
+    background-color: #EEE;
+    width: 106px;
+    border: 1px solid #CCC;
+    font-size: 14px;
+    text-align: center;
+    line-height: 24px;
+    float: left;
+}
+
+#control-paste-line:hover {
+    cursor: pointer;
+}

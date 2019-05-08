@@ -391,3 +391,22 @@ Color.prototype.getColor = function() {
         return this.getHexa();
     return this.getRGBA();
 };
+
+
+function parseState(state) {
+    var s = state.split('/');
+    var color = new Color();
+    color.setHexa(s[1]);
+    s[1] = color;
+    return s;
+}
+
+function parseStates(states) {
+    var list_strings = states.trim().split('-');
+    var list_states = [];
+    list_strings.forEach( function(sample) {
+        list_states.push(parseState(sample));
+    });
+
+    return list_states;
+}
