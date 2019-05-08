@@ -425,7 +425,7 @@ var UIColorPicker = (function UIColorPicker() {
 	};
 
 	var init = function init() {
-        var elem = document.getElementById('ui-color-picker');
+        var elem = document.getElementById('color-picker');
         console.log(elem)
         new ColorPicker(elem);
 	};
@@ -770,7 +770,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 		};
 
 		var init = function init() {
-			color_palette = getElemById('color-palette');
+			color_palette = getElemById('color-palettes');
 
 			createHuePalette();
 			createSaturationPalette();
@@ -1115,7 +1115,7 @@ var ColorPickerTool = (function ColorPickerTool() {
         };
 
 		var init = function init() {
-			container = getElemById('picker-samples');
+			container = getElemById('container-samples');
 
             // Adding lines with samples to the picker
             for (var line=0; line<NUM_STARTING_LINES; line++) {
@@ -1188,7 +1188,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 		var node;
 
 		var createPickerModeSwitch = function createPickerModeSwitch() {
-			node = getElemById('controls');
+			node = getElemById('app-controls');
 
             var tools_template = document.getElementById('tools-template');
             var contents = document.importNode(tools_template.content, true);
@@ -1229,8 +1229,8 @@ var ColorPickerTool = (function ColorPickerTool() {
 		};
 
 		var setPickerDragAndDrop = function setPickerDragAndDrop() {
-			var preview = document.querySelector('#picker .preview-color');
-			var picking_area = document.querySelector('#picker .picking-area');
+			var preview = document.querySelector('#color-picker .preview-color');
+			var picking_area = document.querySelector('#color-picker .picking-area');
 
 			preview.setAttribute('draggable', 'true');
 			preview.addEventListener('drop', drop);

@@ -1,0 +1,199 @@
+/* This file contains the css for the app-controls*/
+
+
+#app-controls #picker-switch {
+    text-align: center;
+    float: left;
+}
+
+#app-controls .icon {
+    width: 48px;
+    height: 48px;
+    margin: 10px 0;
+    background-repeat: no-repeat;
+    background-position: center;
+    border: 1px solid #DDD;
+    display: table;
+    float: left;
+}
+
+#app-controls .icon:hover {
+    cursor: pointer;
+}
+
+#app-controls .picker-icon {
+    background-image: url('../files/picker.png');
+}
+
+#app-controls .copy-icon {
+    width: 48px;
+    height: 48px;
+    padding: 12px;
+    background-image: url('../files/copy.png');
+    background-position: 7px center;
+}
+
+#app-controls .copy-icon:hover {
+    background-position: -29px center;
+}
+
+
+#app-controls #void-sample {
+    margin-right: 10px;
+    background-image: url('../files/void.png');
+    background-position: center left;
+}
+
+#app-controls #void-sample[data-active='true'] {
+    border-color: #CCC;
+    background-position: center right;
+}
+
+#app-controls .switch {
+    width: 106px;
+    padding: 1px;
+    border: 1px solid #CCC;
+    font-size: 14px;
+    text-align: center;
+    line-height: 24px;
+    overflow: hidden;
+    float: left;
+}
+
+#app-controls .switch:hover {
+    cursor: pointer;
+}
+
+#app-controls .switch > * {
+    width: 50%;
+    padding: 2px 0;
+    background-color: #EEE;
+    float: left;
+}
+
+#app-controls .switch [data-active='true'] {
+    color: #FFF;
+    background-image: url('../files/grain.png');
+    background-color: #777;
+}
+
+
+
+/**
+ * 	Trash Can
+ */
+
+#delete {
+    width: 100%;
+    height: 94px;
+    background-color: #DDD;
+    background-image: url('../files/grain.png');
+    background-repeat: repeat;
+
+    text-align: center;
+    color: #777;
+
+    position: relative;
+    float: right;
+}
+
+#delete #trash-can {
+    width: 80%;
+    height: 80%;
+    border: 2px dashed #FFF;
+    border-radius: 5px;
+    background: url('../files/trash-can.png') no-repeat center;
+
+    position: absolute;
+    top: 10%;
+    left: 10%;
+
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+
+    transition: all 0.2s;
+}
+
+#delete[drag-state='enter'] {
+    background-color: #999;
+}
+
+/**
+ * Color info box
+ */
+#color-info {
+    width: 360px;
+    float: left;
+}
+
+#color-info .title {
+    width: 100%;
+    padding: 15px;
+    font-size: 18px;
+    text-align: center;
+    background-image: url('../files/color-wheel.png');
+    background-repeat:no-repeat;
+    background-position: center left 30%;
+}
+
+#color-info .copy-container {
+    position: absolute;
+    top: -100%;
+}
+
+#color-info .property {
+    min-width: 280px;
+    height: 30px;
+    margin: 10px 0;
+    text-align: center;
+    line-height: 30px;
+}
+
+#color-info .property > * {
+    float: left;
+}
+
+#color-info .property .type {
+    width: 60px;
+    height: 100%;
+    padding: 0 16px 0 0;
+    text-align: right;
+}
+
+#color-info .property .value {
+    width: 200px;
+    height: 100%;
+    padding: 0 10px;
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+    font-size: 16px;
+    color: #777;
+    text-align: center;
+    background-color: #FFF;
+    border: none;
+}
+
+#color-info .property .value:hover {
+    color: #37994A;
+}
+
+#color-info .property .value:hover + .copy {
+    background-position: center right;
+}
+
+#color-info .property .copy {
+    width: 36px;
+    height: 100%;
+    padding: 0 5px;
+    background-color: #FFF;
+    background-image: url('../files/copy.png');
+    background-repeat: no-repeat;
+    background-position: center left;
+    border-left: 1px solid #EEE;
+    text-align: right;
+    float: left;
+}
+
+#color-info .property .copy:hover {
+    background-position: center right;
+}

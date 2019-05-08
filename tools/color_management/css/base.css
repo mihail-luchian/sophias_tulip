@@ -1,0 +1,88 @@
+/*This file contains the css of the general layout elements*/
+
+body {
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+}
+
+#app-container {
+
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: flex-start;
+}
+
+/*First layer of the hierarchy*/
+
+#container-controls {
+
+    width: 300px;
+    position: sticky;
+    top: 0;
+    order: 1;
+}
+
+
+#container-samples {
+    width: 1000px;
+    order: 2;
+    margin: 0 15px 20px 17px;
+    display: flex;
+    flex-wrap: wrap;
+    transition: all 0.2s;
+    justify-content: space-between;
+}
+
+#container-notifications {
+
+    width: 300px;
+    position: sticky;
+    top: 0;
+
+    order: 3;
+}
+
+/*Second layer of the hierarchy*/
+
+#color-palettes {
+
+    padding: 10px 0;
+    background-image: url('../files/grain.png');
+    background-repeat: repeat;
+    background-color: #EEE;
+    color: #777;
+
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    float: left;
+}
+
+
+#color-picker {
+    padding: 10px;
+    width: 250px;
+    display: inline-block;
+    float: right;
+    padding: 3px 5px;
+    float: left;
+    border-color: #FFF;
+}
+
+#app-controls {
+    width: 150px;
+    padding: 10px;
+    float: left;
+}

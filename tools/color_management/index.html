@@ -1,11 +1,16 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-<title>Color management</title>
+    <title>Color management</title>
+
     <link rel="stylesheet" href="css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="css/base.css"/>
+    <link rel="stylesheet" href="css/app_controls.css"/>
+    <link rel="stylesheet" href="css/container_samples.css"/>
+    <link rel="stylesheet" href="css/color_picker.css"/>
     <link rel="stylesheet" href="css/styles.css"/>
 
     <script src="src/jquery-3.3.1.slim.min.js" ></script>
@@ -13,85 +18,87 @@
     <script src="src/bootstrap.min.js" ></script>
     <script src="src/color.js"></script>
     <script src="src/script.js"></script>
+
 </head>
 
 <body>
 
 
-   <!-- This is the whole tool -->
-   <div id="container">
-       <div class="floating-controls">
+    <!-- This is the whole tool -->
+    <div id="app-container">
 
-            <!--This is the upper part, the variations of a color-->
-            <div id="palette" class="block">
-                <div id="color-palette"></div>
-            </div>
+        <!-- the sticky color tools on the left -->
+        <div id="container-controls">
 
-           <!--This is the color picking part   -->
-           <div id="picker">
-               <div id="ui-color-picker" data-topic="picker" data-mode="HSL"></div>
-                <div id="controls"></div>
-           </div>
+            <!--these are the color palettes-->
+            <div id="color-palettes" class="block"></div>
 
-       </div>
+            <!-- this is the color picking tool -->
+            <div id="color-picker" data-topic="picker" data-mode="HSL"></div>
+            <!-- these are the controls -->
+            <div id="app-controls"></div>
 
-       <div id="container-picker-samples">
-           <div id="picker-samples"></div>
-       </div>
+        </div>
 
-       <!--bootstrap toasts, notification area-->
-        <div class="notification-area" >
-        <div
-            role="alert" class="toast" data-autohide="true" data-delay="200000">
-            <div class="toast-header">
-                <svg
-                    class=" rounded mr-2" width="20" height="20"
-                    xmlns="http://www.w3.org/2000/svg"
-                    preserveAspectRatio="xMidYMid slice" focusable="false" role="img">
-                    <rect fill="#007aff" width="100%" height="100%" />
-                </svg>
-                <strong class="mr-auto">Status</strong>
+        <!-- the center scrollable area with the color samples -->
+        <div id="container-samples"></div>
+
+        <!--bootstrap toasts, notification area-->
+        <div id="container-notifications" >
+            <div
+                role="alert" class="toast"
+                data-autohide="true" data-delay="1000">
+
+                <div class="toast-header">
+                    <svg
+                        class=" rounded mr-2" width="20" height="20"
+                        xmlns="http://www.w3.org/2000/svg"
+                        preserveAspectRatio="xMidYMid slice" focusable="false" role="img">
+                        <rect fill="#007aff" width="100%" height="100%" />
+                    </svg>
+                    <strong class="mr-auto">Status</strong>
                 </div>
-            <div class="toast-body">
-                <div >Copied the state of all samples.</div>
-                <div style="display:none;">Copied the color of sample.</div>
-                <div style="display:none;">Copied the state of all colors.</div>
-
+                <div class="toast-body">
+                    <div >Copied the state of all samples.</div>
+                    <div style="display:none;">Copied the color of sample.</div>
+                    <div style="display:none;">Copied the state of all colors.</div>
+                </div>
             </div>
         </div>
-       </div>
-
 
     </div>
 
 
-    <!--templates-->
-    <!--template for sample-->
-   <template id="sample-template">
-       <!--this is the input for the key of the sample-->
-       <input class="sample-key" type="text" placeholder="key, otherwise sampleID"/>
-       <!--this is a big blob of color representing the sampled color-->
-       <div class="sample-color">
-           <div class="sample-toolbar" >
+    <!-- TEMPLATES -->
+
+    <!--the template for the full color sample -->
+    <template id="sample-template">
+        <!--this is the input for the key of the sample-->
+        <input class="sample-key" type="text" placeholder="key, otherwise sampleID"/>
+        <!--this is a big blob of color representing the sampled color and its toolbar-->
+        <div class="sample-color">
+            <div class="sample-toolbar" >
                 <div class="copy-color">Copy-Color</div>
                 <div class="copy-state">Copy-State</div>
                 <div class="copy-line">Copy-Line-State</div>
                 <div class="delete-color">Delete-Color</div>
                 <div class="delete-state">Delete-State</div>
-          </div>
-       </div>
-       <input class="sample-meta" type="text" placeholder="meta-info..."/>
-   </template>
+            </div>
+        </div>
+        <!--this is the input for the meta information of the sample-->
+        <input class="sample-meta" type="text" placeholder="meta-info..."/>
+    </template>
 
-   <!--this template represents the tools for changig the color modes, selecting, deselecting etc-->
-   <template id="tools-template">
-       <div id="void-sample" class="icon"></div>
-       <div id="copy-all" class="icon copy-icon"></div>
-       <div class="switch">
-           <div id="hsv">HSV</div>
-           <div id="hsl">HSL</div>
-       </div>
-   </template>
+    <!--this template represents the tools for changing the color modes-->
+    <!--and for the deselection button-->
+    <template id="tools-template">
+        <div id="void-sample" class="icon"></div>
+        <div id="copy-all" class="icon copy-icon"></div>
+        <div class="switch">
+            <div id="hsv">HSV</div>
+            <div id="hsl">HSL</div>
+        </div>
+    </template>
 
 
 </body>

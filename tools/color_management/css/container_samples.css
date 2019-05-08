@@ -1,0 +1,141 @@
+/*This file contains the css for all the elements in the container-samples*/
+#container-samples .sample-line {
+    float: left;
+    display: flex;
+    justify-content: space-evenly;
+    width: 100%;
+    border-bottom: 2px solid #c9c8c8;
+    padding: 15px 0;
+}
+
+#container-samples .sample-line .sample{
+    display: flex;
+    flex-direction: column;
+    /*width: 175px;*/
+    flex-grow:1;
+    position: relative;
+    padding: 10px;
+}
+
+#container-samples .sample-line input{
+    width: 100%;
+    border: 1px solid #DDD;
+}
+
+
+#container-samples .sample-line .line-toolbar{
+    color: #000;
+    font-size: 44px;
+    border-radius: 19px;
+    border: 1px solid #c9c8c8;
+    height: 36px;
+    width: 36px;
+    align-self: flex-end;
+    text-align: center;
+    line-height: 22px;
+    margin-bottom: -35px;
+    font-weight: bold;
+}
+
+#container-samples .sample-line .line-toolbar:hover{
+    border: 1px solid #000;
+    cursor: pointer;
+}
+
+.sample-line .sample-color {
+    /*width: 175px;*/
+    height: 300px;
+    margin: 5px 0;
+    border: 1px solid #DDD;
+    /*position: relative;
+    float: left;*/
+    /*transition: all 0.1s;*/
+    order: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sample-line .sample-color:hover {
+    cursor: pointer;
+    border-color: #BBB;
+    /*transform: scale(1.15);*/
+    border-radius: 3px;
+}
+
+.sample-line .sample-color:hover .sample-toolbar{
+    display: block;
+}
+
+.sample-line .sample-color .sample-toolbar{
+    display: none;
+    text-align: center;
+}
+
+
+.sample-toolbar > * {
+    opacity: 0.3;
+}
+
+.sample-toolbar > *:hover{
+    opacity: 1;
+}
+
+
+.sample-line .sample[data-active='true'] {
+    border: 1px solid #999;
+
+}
+
+.sample-line .sample[data-active='true']:after {
+    content: "";
+    position: absolute;
+    background: url('../files/arrow.png') center no-repeat;
+    width: 100%;
+    height: 12px;
+    top: -7px;
+    z-index: 2;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#container-samples #add-icon {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    box-shadow: inset 0px 0px 2px 0px #DDD;
+}
+
+#container-samples #add-icon:hover {
+    cursor: pointer;
+    border-color: #DDD;
+    box-shadow: inset 0px 0px 5px 0px #CCC;
+}
+
+#container-samples #add-icon:before,
+#container-samples #add-icon:after {
+    content: "";
+    position: absolute;
+    background-color: #EEE;
+    box-shadow: 0 0 1px 0 #EEE;
+}
+
+#container-samples #add-icon:before {
+    width: 70%;
+    height: 16%;
+    top: 42%;
+    left: 15%;
+}
+
+#container-samples #add-icon:after {
+    width: 16%;
+    height: 70%;
+    top: 15%;
+    left: 42%;
+}
+
+#container-samples #add-icon:hover:before,
+#container-samples #add-icon:hover:after {
+    background-color: #DDD;
+    box-shadow: 0 0 1px 0 #DDD;
+}
