@@ -1132,8 +1132,13 @@ var ColorPickerTool = (function ColorPickerTool() {
 
         var SampleLine = function(line_id)  {
 
+            var parent = document.createElement('div');
+            parent.className = 'sample-line-parent'
             var node = document.createElement('div');
+            parent.appendChild(node);
+
             this.node = node;
+            this.parent = parent;
 			this.line_id = line_id;
 
             node.setAttribute('line-id', line_id);
@@ -1144,11 +1149,10 @@ var ColorPickerTool = (function ColorPickerTool() {
                 node.appendChild(sample.node)
             }
 
-            var line_toolbar = document.createElement('div');
-            line_toolbar.textContent = '+';
-            line_toolbar.className = 'line-toolbar';
-            node.appendChild(line_toolbar);
-
+            // adding the line toolbar to the sample line
+			var line_toolbar_template = document.getElementById('line-toolbar-template');
+			var line_toolbar = document.importNode(line_toolbar_template.content, true);
+			parent.appendChild(line_toolbar);
         };
 
 		var init = function init() {
@@ -1158,7 +1162,7 @@ var ColorPickerTool = (function ColorPickerTool() {
             for (var line=0; line<NUM_STARTING_LINES; line++) {
 
                 var sampleLine = new SampleLine(line);
-                container.appendChild(sampleLine.node);
+                container.appendChild(sampleLine.parent);
             }
 
 

@@ -5,7 +5,6 @@
     display: flex;
     justify-content: space-evenly;
     width: 100%;
-    border-bottom: 2px solid #c9c8c8;
     padding: 15px 0;
 }
 
@@ -23,24 +22,59 @@
 }
 
 
-.sample-line .line-toolbar{
+.line-toolbar {
+    align-self: flex-end;
+    border-bottom: 2px solid #c9c8c8;
+    float: right;
+    width: 100%;
+}
+
+.line-toolbar .line-toolbar-trigger{
     color: #000;
     font-size: 44px;
-    border-radius: 19px;
+    border-radius: 5px;
     border: 1px solid #c9c8c8;
     height: 36px;
     width: 36px;
-    align-self: flex-end;
     text-align: center;
-    line-height: 22px;
-    margin-bottom: -35px;
+    line-height: 31px;
+    margin-bottom: -18px;
     font-weight: bold;
+    float: right;
+    position: relative;
 }
 
-.sample-line .line-toolbar:hover{
+.line-toolbar .line-toolbar-icons{
+    position: absolute;
+    color: #000;
+    border: 1px solid #c9c8c8;
+    display: none;
+    margin-left: 1000px;
+    margin-top: -70px;
+
+}
+
+
+.line-toolbar .line-toolbar-trigger:hover{
     border: 1px solid #000;
     cursor: pointer;
 }
+.line-toolbar .line-toolbar-trigger:hover ~ .line-toolbar-icons,
+.line-toolbar .line-toolbar-icons:hover{
+    align-self: flex-end;
+    display: flex;
+    flex-direction: column;
+}
+
+.line-toolbar-icons > * {
+    opacity: 0.3;
+}
+
+
+.line-toolbar-icons > *:hover {
+    opacity: 1;
+}
+
 
 .sample-line .sample-color {
     height: 300px;

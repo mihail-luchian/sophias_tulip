@@ -43,6 +43,7 @@ body {
     flex-wrap: wrap;
     transition: all 0.2s;
     justify-content: space-between;
+    flex-shrink: 0;
 }
 
 #container-notifications {
