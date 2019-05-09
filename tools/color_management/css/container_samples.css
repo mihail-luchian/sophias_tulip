@@ -46,7 +46,7 @@
 
 .line-toolbar .line-toolbar-icons{
     position: absolute;
-    color: #000;
+    background-color: #FAFAFA;
     border: 1px solid #c9c8c8;
     display: none;
     margin-left: 1000px;

@@ -903,8 +903,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 			    'click', this.copyColorIconClick.bind(this));
 			node.querySelector('.copy-state').addEventListener(
 			    'click', this.copyStateIconClick.bind(this));
-			node.querySelector('.copy-line').addEventListener(
-			    'click', this.copyLineIconClick.bind(this));
             node.querySelector('.delete-color').addEventListener(
 			    'click', this.deleteColorIconClick.bind(this));
             node.querySelector('.delete-state').addEventListener(
@@ -973,15 +971,22 @@ var ColorPickerTool = (function ColorPickerTool() {
 		};
 
         ColorSample.prototype.deleteColorIconClick = function (e) {
-		    this.color = new Color(base_color);
-		    this.updateBgColor();
+            this.deleteColor();
 		};
 
-        ColorSample.prototype.deleteStateIconClick = function (e) {
-		    this.color = new Color(base_color);
+		ColorSample.prototype.deleteColor = function() {
+            this.color = new Color(base_color);
 		    this.updateBgColor();
-		    this.key_input.value = '';
+		}
+
+        ColorSample.prototype.deleteState = function() {
+            this.deleteColor();
+            this.key_input.value = '';
 		    this.meta_input.value = '';
+		}
+
+        ColorSample.prototype.deleteStateIconClick = function (e) {
+		    this.deleteState();
 		};
 
         ColorSample.prototype.pasteStateIconClick = function (e) {
@@ -1017,27 +1022,6 @@ var ColorPickerTool = (function ColorPickerTool() {
             }
 		};
 
-        ColorSample.prototype.copyLineIconClick = function (e) {
-
-            var list_hex = [];
-            var my_line = Math.trunc(this.uid / SAMPLES_PER_LINE);
-            for (var i = 0; i < SAMPLES_PER_LINE; i++) {
-                var current_sample_id = my_line*SAMPLES_PER_LINE + i;
-                var hex = samples[current_sample_id].color.getSimpleHex();
-                var digest = samples[current_sample_id].getDigest();
-                if( hex !== "ffffff") {
-                    list_hex.push(digest);
-                }
-
-            }
-
-            var final_string = 'NO_COLORS_IN_THIS_LINE';
-            if( list_hex.length > 0 ) {
-                final_string = list_hex.join('-');
-            }
-
-		    navigator.clipboard.writeText(final_string);
-		};
 
 		ColorSample.prototype.dragDrop = function (e) {
 			e.stopPropagation();
@@ -1153,7 +1137,56 @@ var ColorPickerTool = (function ColorPickerTool() {
 			var line_toolbar_template = document.getElementById('line-toolbar-template');
 			var line_toolbar = document.importNode(line_toolbar_template.content, true);
 			parent.appendChild(line_toolbar);
+
+            parent.querySelector('.copy-line-state').addEventListener(
+			    'click', this.copyLineStateIconClick.bind(this));
+            parent.querySelector('.delete-line-color').addEventListener(
+			    'click', this.deleteLineColorIconClick.bind(this));
+           parent.querySelector('.delete-line-state').addEventListener(
+			    'click', this.deleteLineStateIconClick.bind(this));
+
+
         };
+
+        SampleLine.prototype.copyLineStateIconClick = function (e) {
+            var list_hex = [];
+            var my_line = this.line_id;
+            for (var i = 0; i < SAMPLES_PER_LINE; i++) {
+                var current_sample_id = my_line*SAMPLES_PER_LINE + i;
+                var hex = samples[current_sample_id].color.getSimpleHex();
+                var digest = samples[current_sample_id].getDigest();
+                if( hex !== "ffffff") {
+                    list_hex.push(digest);
+                }
+
+            }
+
+            var final_string = 'NO_COLORS_IN_THIS_LINE';
+            if( list_hex.length > 0 ) {
+                final_string = list_hex.join('-');
+            }
+
+		    navigator.clipboard.writeText(final_string);
+		};
+
+        SampleLine.prototype.deleteLineColorIconClick = function (e) {
+            var my_line = this.line_id;
+            for (var i = 0; i < SAMPLES_PER_LINE; i++) {
+                var current_sample_id = my_line*SAMPLES_PER_LINE + i;
+                var hex = samples[current_sample_id].deleteColor();
+            }
+
+		};
+
+        SampleLine.prototype.deleteLineStateIconClick = function (e) {
+            var my_line = this.line_id;
+            for (var i = 0; i < SAMPLES_PER_LINE; i++) {
+                var current_sample_id = my_line*SAMPLES_PER_LINE + i;
+                var hex = samples[current_sample_id].deleteState();
+            }
+
+		};
+
 
 		var init = function init() {
 			container = getElemById('container-samples');
