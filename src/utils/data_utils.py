@@ -217,4 +217,56 @@ def reconstruct_from_dmd(
 
     return result
 
+### Easing functions
 
+def ease_inout_quad(x):
+
+    tx = np.zeros_like(x,dtype='float32')
+
+    mask_small = x < 0.5
+    mask_big = x >= 0.5
+
+    x_small = x[mask_small]
+    x_big = x[mask_big]
+
+    tx[mask_small] = 2*x_small*x_small
+    tx[mask_big] = (-2 * x_big * x_big) + (4 * x_big) - 1
+
+    return tx
+
+
+def ease_inout_cubic(x):
+
+    tx = np.zeros_like(x,dtype='float32')
+
+    mask_small = x < 0.5
+    mask_big = x >= 0.5
+
+    x_small = x[mask_small]
+    x_big = x[mask_big]
+
+    tx[mask_small] = 4*(x_small**3)
+    p = 2*x_big - 2
+    tx[mask_big] = 0.5*(p**3)+1
+
+    return tx
+
+
+def ease_inout_sine(x):
+    return 0.5 * (1 - np.cos(x * np.pi))
+
+def ease_inout_quintic(x):
+
+    tx = np.zeros_like(x,dtype='float32')
+
+    mask_small = x < 0.5
+    mask_big = x >= 0.5
+
+    x_small = x[mask_small]
+    x_big = x[mask_big]
+
+    tx[mask_small] = 16*(x_small**5)
+    p = (2*x_big) - 2
+    tx[mask_big] = 0.5 * (p**5) + 1
+
+    return tx

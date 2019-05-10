@@ -25,9 +25,11 @@ UPSCALE_FACTOR = c.INSTA_SIZE // HEIGHT
 STRING_COLORS_1 = config.get('string_colors_1',c.DEFAULT_COLOR_STR)
 STRING_COLORS_2 = config.get('string_colors_2',c.DEFAULT_COLOR_STR)
 STRING_COLORS_3 = config.get('string_colors_3',c.DEFAULT_COLOR_STR)
+STRING_COLORS_4 = config.get('string_colors_4',c.DEFAULT_COLOR_STR)
 COLOR_DICT_1 = color.build_color_dictionary(STRING_COLORS_1)
 COLOR_DICT_2 = color.build_color_dictionary(STRING_COLORS_2)
 COLOR_DICT_3 = color.build_color_dictionary(STRING_COLORS_3)
+COLOR_DICT_4 = color.build_color_dictionary(STRING_COLORS_4)
 
 
 ### SETUP section
@@ -41,11 +43,24 @@ print('FUNCTIONS SETUP')
 
 
 def continous_linspace(values,lengths):
-    return np.concatenate(
+    transitions = np.concatenate(
         [
-            np.linspace(values[i],values[i+1],lengths[i])[:-1]
+            np.linspace(0,1,lengths[i])
             for i in range(len(values)-1)
-        ]
+    ])
+
+
+    bins = np.arange(6)/6
+    digitized = np.digitize(transitions,bins)
+    transitions = bins[digitized-1]
+
+    transitions = data.ease_inout_sine(transitions)
+    values_start = values[:-1]
+    values_end = values[1:]
+
+    return (
+            np.repeat(values_start,lengths.astype('int32'))*(1-transitions)
+            + transitions*np.repeat(values_end,lengths.astype('int32'))
     )
 
 def generate_gradient(colors,lengths):
@@ -117,11 +132,17 @@ def generate_image(gridx, gridy, list_color_dict):
 
             height = endy - starty
             width = endx - startx
-            img[starty:endy,startx:endx] = generate_patch(height,width,list_color_dict)
+            patch = generate_patch(height,width,list_color_dict)
+            img[starty:endy,startx:endx] = patch
             startx = endx
 
         startx = 0
+
+        img[starty:endy] = np.roll(img[starty:endy],shift=r.choice(6)*50,axis=1)
+
+
         starty = endy
+
 
     final = data.upscale_nearest(img,ny = UPSCALE_FACTOR, nx = UPSCALE_FACTOR)
 
@@ -144,7 +165,9 @@ for current_iteration in range(N):
     print(gridx)
     print(gridy)
 
-    final_img = generate_image(gridx, gridy, [COLOR_DICT_1,COLOR_DICT_2,COLOR_DICT_3])
+    final_img = generate_image(
+        gridx, gridy,
+        [COLOR_DICT_1,COLOR_DICT_2,COLOR_DICT_3,COLOR_DICT_4])
 
     file.export_image(
         '%d_%d' % (current_iteration,int(round(time.time() * 1000))),

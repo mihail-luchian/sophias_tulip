@@ -388,12 +388,10 @@ class SimplePattern(SimpleProgression):
 class FuzzyProgression(MarkovModel):
     def __init__(self,
                  values = None,
-                 child_lengths = None,
-                 start_probs = None,
                  positive_shifts = 1,
                  negative_shifts = 0,
-                 repeat_factor = 1
-                 ):
+                 repeat_factor = 1,
+                 **kwargs):
 
         l = len(values)
 
@@ -406,9 +404,8 @@ class FuzzyProgression(MarkovModel):
 
         super().__init__(
             preference_matrix=preference_matrix,
-            start_probs=start_probs,
             values=values,
-            child_lengths=child_lengths)
+            **kwargs)
 
 
 class RandomMarkovModel(MarkovModel):
