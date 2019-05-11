@@ -59,7 +59,7 @@ var UIColorPicker = (function UIColorPicker() {
 
 		this.createPreviewBox();
 
-		this.newInputComponent('hexa', 'hexa', this.inputChangeHexa.bind(this));
+		this.newInputComponent('hexa', 'hexa', this.inputChangeHexa.bind(this),'text');
 
 		this.setColor(this.color);
 		pickers[topic] = this;
@@ -113,7 +113,7 @@ var UIColorPicker = (function UIColorPicker() {
 		this.node.appendChild(preview_box);
 	};
 
-	ColorPicker.prototype.newInputComponent = function newInputComponent(title, topic, onChangeFunc) {
+	ColorPicker.prototype.newInputComponent = function newInputComponent(title, topic, onChangeFunc,type = 'number') {
 		var wrapper = document.createElement('div');
 		var input = document.createElement('input');
 		var info = document.createElement('span');
@@ -122,7 +122,7 @@ var UIColorPicker = (function UIColorPicker() {
 		wrapper.setAttribute('data-topic', topic);
 		info.textContent = title;
 		info.className = 'name';
-		input.setAttribute('type', 'text');
+		input.setAttribute('type', type);
 
 		wrapper.appendChild(info);
 		wrapper.appendChild(input);
