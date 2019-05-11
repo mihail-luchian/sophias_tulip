@@ -14,7 +14,7 @@ import utils.viz_utils as viz
 
 ### DATA/INPUT/SHARED by all runs section
 print('PREPARING DATA SECTION')
-N = 2
+N = 70
 SEED = config.get('seed',0)
 HEIGHT = 1000
 WIDTH  = HEIGHT
@@ -86,24 +86,48 @@ def generate_gradient(colors,lengths):
 
 def generate_patch(height, width, list_color_dicts):
 
-
     d = r.choice(len(list_color_dicts))
     patch = np.zeros((height,width,3),dtype='float64')
 
-    pattern = m.RMM(values=[0,1,2,3,4],self_length=100)
-    num_samples = width//5
-    sample = m.sample_markov_hierarchy(pattern,num_samples)
-    sample = color.replace_indices_with_colors(sample,list_color_dicts[d])
+    color_start_lengths = np.array([
+        int(l)
+        for _,(_,l) in list_color_dicts[d].items()
+    ])
+    num_color_samples = width//np.min(color_start_lengths) + 20
 
-    start = np.ones(num_samples)*60
-    start = np.cumsum(start)
-    offsets = r.choice([-1,0,1],p=[0.05,0.9,0.05],size=(height,num_samples))
-    offsets = np.cumsum(offsets,axis=0) + start
+    pattern = m.FuzzyProgression(
+        values=[0,1,2,3,4],
+        positive_shifts=3,
+        negative_shifts=3,
+        repeat_factor=5,
+        self_length=num_color_samples)
+    raw_sample = m.sample_markov_hierarchy(pattern,num_color_samples)
+    sample = color.replace_indices_with_colors(raw_sample,list_color_dicts[d])
+
+
+    start_lengths = color_start_lengths[raw_sample.astype('int32')]
+    start_lengths = np.cumsum(start_lengths)
+
+    num_vertical_reps = 3
+    num_vertical_samples = height//num_vertical_reps + 3
+    model = m.MM(
+        values=[-1,0,1],
+        preference_matrix=[[0,2,1],[1,2,1],[1,2,0]],
+        self_length=num_vertical_samples)
+    offsets = np.stack([
+        m.sample_markov_hierarchy(model,num_vertical_samples)
+        for i in range(num_color_samples)
+    ],axis=1)
+
+    offsets = np.repeat(offsets,repeats=num_vertical_reps,axis=0)
+    offsets[-1] = 0
+    offsets = np.cumsum(offsets,axis=0) + start_lengths
 
     i = 0
     while i < height:
         diff = np.diff(offsets[i])
-        multiples = r.choice([3,4,5])
+        diff[diff<5] = 2
+        multiples = r.choice([3,4,5,10,25,40,50])
         gradient = generate_gradient(sample,diff)[:width]
         patch[i:i+multiples] = gradient[None,:]
         i += multiples
@@ -156,7 +180,7 @@ for current_iteration in range(N):
     print('CURRENT_ITERATION:',current_iteration)
     r.init_def_generator(SEED+current_iteration)
 
-    gridpattern = m.RMM(values=np.arange(300,400,5),self_length=10)
+    gridpattern = m.RMM(values=[100,100,250,300,300,350,400],self_length=10)
     parent = m.SProg(values=gridpattern)
 
     gridx = m.generate_grid_lines(parent,WIDTH)
