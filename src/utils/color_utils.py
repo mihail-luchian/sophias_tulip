@@ -113,6 +113,13 @@ def build_color_dictionary(s):
         for key,color,meta in parse_line_color_states(s)
     }
 
+
+def build_list_color_dictionaries(s):
+    return [
+        build_color_dictionary(i)
+        for i in s.split('|')
+    ]
+
 def parse_line_color_states(s):
     return [ parse_color_state(i) for i in s.split('-')  ]
 

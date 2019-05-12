@@ -617,7 +617,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 		PaletteColorSample.prototype.updateSaturation = function (
 		    color, value, steps, total) {
 			var saturation = color.saturation - value * (steps - Math.floor(total/2) );
-			if (saturation <= 0) {
+			if ((saturation <= 0)|| (saturation > 100 )) {
 				this.node.setAttribute('data-hidden', 'true');
 				return;
 			}
@@ -631,7 +631,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 		PaletteColorSample.prototype.updateLightness = function (
 		    color, value, steps, total) {
 			var lightness = color.lightness + value * (steps - Math.floor(total / 2));
-			if (lightness <= 0) {
+			if ((lightness <= 0)|| (lightness > 100 )) {
 				this.node.setAttribute('data-hidden', 'true');
 				return;
 			}
@@ -644,7 +644,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 		PaletteColorSample.prototype.updateBrightness = function (
 		    color, value, steps, total) {
 			var brightness = color.value + value * (steps - Math.floor(total / 2));
-			if (brightness <= 0) {
+			if ((brightness <= 0) || (brightness > 100 )) {
 				this.node.setAttribute('data-hidden', 'true');
 				return;
 			}
@@ -794,6 +794,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 	var ColorPickerSamples = (function ColorPickerSamples() {
 
 		var samples = [];
+        var lines = [];
 		var nr_samples = 0;
 		var active = null;
 		var container = null;
@@ -1022,25 +1023,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 		};
 
 
-        var getStateAllColors = function getStateAllColors() {
-            var list_hex = [];
-            samples.forEach(function(sample) {
-                var hex = sample.color.getSimpleHex();
-                var state = sample.getDigest();
-                // only interested in colors that are not white
-                if( hex !== "ffffff") {
-                    list_hex.push(state);
-                }
-            });
-
-            if( list_hex.length > 0 ) {
-                return list_hex.join('-');
-            }
-            else {
-                return "";
-            }
-        }
-
 
         var SampleLine = function(line_id)  {
 
@@ -1076,7 +1058,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 
         };
 
-        SampleLine.prototype.copyLineStateIconClick = function (e) {
+        SampleLine.prototype.getLineState = function() {
             var list_hex = [];
             var my_line = this.line_id;
             for (var i = 0; i < SAMPLES_PER_LINE; i++) {
@@ -1089,12 +1071,16 @@ var ColorPickerTool = (function ColorPickerTool() {
 
             }
 
-            var final_string = 'NO_COLORS_IN_THIS_LINE';
+            var final_string = '';
             if( list_hex.length > 0 ) {
                 final_string = list_hex.join('-');
             }
 
-		    navigator.clipboard.writeText(final_string);
+            return final_string;
+        };
+
+        SampleLine.prototype.copyLineStateIconClick = function (e) {
+		    navigator.clipboard.writeText(this.getLineState());
 		};
 
         SampleLine.prototype.deleteLineColorIconClick = function (e) {
@@ -1116,6 +1102,21 @@ var ColorPickerTool = (function ColorPickerTool() {
 		};
 
 
+        var getStateAllLines = function getStateAllLines() {
+            var list_line_states = [];
+
+            console.log(lines);
+            for(var i = 0; i<NUM_STARTING_LINES; i++) {
+               var state =  lines[i].getLineState();
+               if( state.length > 0 ) {
+                  list_line_states.push( state );
+               }
+            }
+
+            return list_line_states.join('|');
+
+        }
+
 		var init = function init() {
 			container = getElemById('container-samples');
 
@@ -1124,6 +1125,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 
                 var sampleLine = new SampleLine(line);
                 container.appendChild(sampleLine.parent);
+                lines.push(sampleLine);
             }
 
 
@@ -1145,7 +1147,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 			init : init,
 			getSampleColor : getSampleColor,
 			unsetActiveSample : unsetActiveSample,
-			getStateAllColors : getStateAllColors
+			getStateAllLines : getStateAllLines
 		};
 
 	})();
@@ -1214,7 +1216,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 
 			icon_copy_all.addEventListener('click', function() {
-				var s = ColorPickerSamples.getStateAllColors();
+				var s = ColorPickerSamples.getStateAllLines();
 				$('.toast').toast('show');
 				// Copy string to clipboard
 				navigator.clipboard.writeText(s);
