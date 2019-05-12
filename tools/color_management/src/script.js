@@ -388,9 +388,11 @@ var UIColorPicker = (function UIColorPicker() {
 		this.setColor(this.color);
 	};
 
+    // wrapper for the ColorPicker.prototype.setPickerMode function
 	var setPickerMode = function setPickerMode(topic, mode) {
-		if (pickers[topic])
-			pickers[topic].setPickerMode(mode);
+		if (pickers[topic]) {
+            pickers[topic].setPickerMode(mode);
+		}
 	};
 
 	var setColor = function setColor(topic, color) {
@@ -612,8 +614,9 @@ var ColorPickerTool = (function ColorPickerTool() {
 			this.updateBgColor();
 		};
 
-		PaletteColorSample.prototype.updateSaturation = function (color, value, steps) {
-			var saturation = color.saturation + value * steps;
+		PaletteColorSample.prototype.updateSaturation = function (
+		    color, value, steps, total) {
+			var saturation = color.saturation - value * (steps - Math.floor(total/2) );
 			if (saturation <= 0) {
 				this.node.setAttribute('data-hidden', 'true');
 				return;
@@ -625,8 +628,9 @@ var ColorPickerTool = (function ColorPickerTool() {
 			this.updateBgColor();
 		};
 
-		PaletteColorSample.prototype.updateLightness = function (color, value, steps) {
-			var lightness = color.lightness + value * steps;
+		PaletteColorSample.prototype.updateLightness = function (
+		    color, value, steps, total) {
+			var lightness = color.lightness + value * (steps - Math.floor(total / 2));
 			if (lightness <= 0) {
 				this.node.setAttribute('data-hidden', 'true');
 				return;
@@ -637,8 +641,9 @@ var ColorPickerTool = (function ColorPickerTool() {
 			this.updateBgColor();
 		};
 
-		PaletteColorSample.prototype.updateBrightness = function (color, value, steps) {
-			var brightness = color.value + value * steps;
+		PaletteColorSample.prototype.updateBrightness = function (
+		    color, value, steps, total) {
+			var brightness = color.value + value * (steps - Math.floor(total / 2));
 			if (brightness <= 0) {
 				this.node.setAttribute('data-hidden', 'true');
 				return;
@@ -664,33 +669,26 @@ var ColorPickerTool = (function ColorPickerTool() {
 			this.samples = [];
 			this.locked = false;
 
-			var palette = document.createElement('div');
-			var title = document.createElement('div');
-			var controls = document.createElement('div');
-			var container = document.createElement('div');
-			var lock = document.createElement('div');
+            var container = document.createElement('div');
+            container.className = 'palette-container';
+            var palette_template = document.getElementById('palette-template');
+            var palette = document.importNode(palette_template.content, true);
+            container.appendChild(palette);
 
-			container.className = 'palette-container';
-			title.className = 'title';
-			palette.className = 'palette';
-			controls.className = 'controls';
-			lock.className = 'lock';
+            var palette_samples = container.querySelector('.palette-samples');
+            var title = container.querySelector('.title');
 			title.textContent = text;
-
-			controls.appendChild(lock);
-			container.appendChild(title);
-			container.appendChild(controls);
-			container.appendChild(palette);
-
-			lock.addEventListener('click', function () {
-				this.locked = !this.locked;
-				lock.setAttribute('locked-state', this.locked);
-			}.bind(this));
-
+//
+//
+//			lock.addEventListener('click', function () {
+//				this.locked = !this.locked;
+//				lock.setAttribute('locked-state', this.locked);
+//			}.bind(this));
+//
 			for(var i = 0; i < size; i++) {
 				var sample = new PaletteColorSample();
 				this.samples.push(sample);
-				palette.appendChild(sample.node);
+				palette_samples.appendChild(sample.node);
 			}
 
 			this.container = container;
@@ -698,7 +696,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 		};
 
 		var createHuePalette = function createHuePalette() {
-		    var samples_hue_palette = 8;
+		    var samples_hue_palette = 24;
 			var palette = new Palette('H', samples_hue_palette);
 
 			UIColorPicker.subscribe('picker', function(color) {
@@ -714,7 +712,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 		};
 
 		var createSaturationPalette = function createSaturationPalette() {
-		    var samples_sat_palette = 8;
+		    var samples_sat_palette = 15;
 			var palette = new Palette('S', samples_sat_palette);
 
 			UIColorPicker.subscribe('picker', function(color) {
@@ -722,7 +720,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 					return;
 
 				for(var i = 0; i < samples_sat_palette; i++) {
-					palette.samples[i].updateSaturation(color, -10, i);
+					palette.samples[i].updateSaturation(color, -5, i, samples_sat_palette);
 				}
 			});
 
@@ -731,7 +729,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 		/* Brightness or Lightness - depends on the picker mode */
 		var createVLPalette = function createSaturationPalette() {
-            var samples_vl_palette = 8;
+            var samples_vl_palette = 15;
 			var palette = new Palette('L', samples_vl_palette);
 
 			UIColorPicker.subscribe('picker', function(color) {
@@ -741,12 +739,15 @@ var ColorPickerTool = (function ColorPickerTool() {
 				if(color.format === 'HSL') {
 					palette.title.textContent = 'L';
 					for(var i = 0; i < samples_vl_palette; i++)
-						palette.samples[i].updateLightness(color, -10, i);
+						palette.samples[i].updateLightness(color, -5, i, samples_vl_palette);
 				}
 				else {
 					palette.title.textContent = 'V';
-					for(var i = 0; i < 11; i++)
-						palette.samples[i].updateBrightness(color, -10, i);
+					for(var i = 0; i < samples_vl_palette; i++)
+					{
+					    palette.samples[i].updateBrightness(color, -5, i, samples_vl_palette);
+					}
+
 				}
 			});
 
@@ -785,81 +786,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 	})();
 
-	/**
-	 * ColorInfo
-	 */
-	var ColorInfo = (function ColorInfo() {
-
-		var info_box;
-		var select;
-		var RGBA;
-		var HEXA;
-		var HSLA;
-
-		var updateInfo = function updateInfo(color) {
-			if (color.a | 0 === 1) {
-				RGBA.info.textContent = 'RGB';
-				HSLA.info.textContent = 'HSL';
-			}
-			else {
-				RGBA.info.textContent = 'RGBA';
-				HSLA.info.textContent = 'HSLA';
-			}
-
-			RGBA.value.value = color.getRGBA();
-			HSLA.value.value = color.getHSLA();
-			HEXA.value.value = color.getHexa();
-		};
-
-		var InfoProperty = function InfoProperty(info) {
-
-			var node = document.createElement('div');
-			var title = document.createElement('div');
-			var value = document.createElement('input');
-			var copy = document.createElement('div');
-
-			node.className = 'property';
-			title.className = 'type';
-			value.className = 'value';
-			copy.className = 'copy';
-
-			title.textContent = info;
-			value.setAttribute('type', 'text');
-
-			copy.addEventListener('click', function() {
-				value.select();
-				// this copies value to clipboard
-				document.execCommand("copy");
-			});
-
-			node.appendChild(title);
-			node.appendChild(value);
-			node.appendChild(copy);
-
-			this.node = node;
-			this.value = value;
-			this.info = title;
-
-			info_box.appendChild(node);
-		};
-
-		var init = function init() {
-
-//			info_box = getElemById('color-info');
-
-//			RGBA = new InfoProperty('RGBA');
-//			HSLA = new InfoProperty('HSLA');
-//			HEXA = new InfoProperty('HEXA');
-
-//			UIColorPicker.subscribe('picker', updateInfo);
-
-		};
-
-		return {
-			init: init
-		};
-
-	})();
 
 	/**
 	 * ColorPicker Samples
@@ -950,10 +876,12 @@ var ColorPickerTool = (function ColorPickerTool() {
 		ColorSample.prototype.activate = function activate() {
 			UIColorPicker.setColor('picker', this.color);
 			this.node.setAttribute('data-active', 'true');
+			this.node.parentNode.setAttribute('data-active', 'true');
 		};
 
 		ColorSample.prototype.deactivate = function deactivate() {
 			this.node.removeAttribute('data-active');
+			this.node.parentNode.removeAttribute('data-active');
 		};
 
 		ColorSample.prototype.dragStart = function (e) {
@@ -1273,7 +1201,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 			var icon_copy_all = node.querySelector('#copy-all');
 
 			var active = null;
-			active = hsl;
+			active = hsv;
 			active.setAttribute('data-active', 'true');
 
 			function switchPickingModeTo(elem) {
@@ -1379,7 +1307,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 	var init = function init() {
 		UIColorPicker.init();
-		ColorInfo.init();
 		ColorPalette.init();
 		ColorPickerSamples.init();
 		Tool.init();

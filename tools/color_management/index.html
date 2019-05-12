@@ -34,7 +34,7 @@
             <div id="color-palettes" ></div>
 
             <!-- this is the color picking tool -->
-            <div id="color-picker" data-topic="picker" data-mode="HSL"></div>
+            <div id="color-picker" data-topic="picker" data-mode="HSV"></div>
             <!-- these are the controls -->
             <div id="app-controls"></div>
 
@@ -107,6 +107,15 @@
             <div id="hsl">HSL</div>
         </div>
         <div id="control-paste-line">Paste</div>
+    </template>
+
+    <!--this template represents the tools for changing the color modes-->
+    <template id="palette-template">
+        <div class="title"></div>
+        <div class="controls">
+            <div class="lock"></div>
+        </div>
+        <div class="palette-samples"></div>
     </template>
 
 

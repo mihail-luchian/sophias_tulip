@@ -33,6 +33,7 @@ body {
     top: 0;
     order: 1;
     flex-shrink: 0;
+    margin-top: 10px;
 }
 
 
@@ -45,7 +46,10 @@ body {
     transition: all 0.2s;
     justify-content: space-between;
     flex-shrink: 0;
+    padding: 20px 0;
 }
+
+
 
 #container-notifications {
 
@@ -61,17 +65,27 @@ body {
 #color-palettes {
 
     width: 100%;
+    height: 100px;
     padding: 0;
     background-image: url('../files/grain.png');
     background-repeat: repeat;
     background-color: #EEE;
     color: #777;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+
 
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
     float: left;
-    display: table;
+    transition: height 0.35s ease-out;
+}
+
+#color-palettes:hover {
+    height: 220px;
+    transition: height 0.2s ease-out;
 }
 
 

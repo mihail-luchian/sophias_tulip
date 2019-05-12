@@ -5,8 +5,19 @@
     display: flex;
     justify-content: space-evenly;
     width: 100%;
-    padding: 15px 0;
+    height: 240px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    transition: height 0.2s ease-out;
 }
+
+.sample-line[data-active='true'] {
+    height: 350px;
+}
+
+/*.sample-line:not([data-active]):hover {
+    height: 280px;
+}*/
 
 .sample-line .sample{
     display: flex;
@@ -52,14 +63,14 @@
 
 .line-toolbar .line-toolbar-trigger{
     color: #000;
-    font-size: 44px;
+    font-size: 33px;
     border-radius: 5px;
     border: 1px solid #c9c8c8;
-    height: 36px;
-    width: 36px;
+    height: 26px;
+    width: 26px;
     text-align: center;
-    line-height: 31px;
-    margin-bottom: -18px;
+    line-height: 18px;
+    margin-bottom: -13px;
     font-weight: bold;
     float: right;
     position: relative;
@@ -98,7 +109,7 @@
 
 
 .sample-line .sample-color {
-    height: 300px;
+    height: 80%;
     margin: 5px 0;
     border: 1px solid #DDD;
     order: 0;
