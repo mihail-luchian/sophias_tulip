@@ -84,7 +84,7 @@ body {
 }
 
 #color-palettes:hover {
-    height: 220px;
+    height: 150px;
     transition: height 0.2s ease-out;
 }
 

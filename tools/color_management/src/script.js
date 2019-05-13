@@ -1,4 +1,3 @@
-
 'use strict';
 
 var SAMPLES_PER_LINE = 5;
@@ -7,10 +6,6 @@ var DIGEST_UNIFIER = '/';
 
 // this is the Whole color picker in the middle to the right
 var UIColorPicker = (function UIColorPicker() {
-
-	function getElemById(id) {
-		return document.getElementById(id);
-	}
 
 	var subscribers = [];
 	var pickers = [];
@@ -451,16 +446,6 @@ window.addEventListener("load", function() {
 // the color sampling and management
 var ColorPickerTool = (function ColorPickerTool() {
 
-	/*========== Get DOM Element By ID ==========*/
-
-	function getElemById(id) {
-		return document.getElementById(id);
-	}
-
-	function allowDropEvent(e) {
-		e.preventDefault();
-	}
-
 	/*========== Make an element resizable relative to it's parent ==========*/
 
 	var UIComponent = (function UIComponent() {
@@ -622,6 +607,13 @@ var ColorPickerTool = (function ColorPickerTool() {
 				return;
 			}
 
+			if( (steps - Math.floor(total / 2)) == 0 ) {
+			    this.node.setAttribute('data-working-color', 'true');
+			}
+			else {
+			    this.node.setAttribute('data-working-color', 'false');
+			}
+
 			this.node.removeAttribute('data-hidden');
 			this.color.copy(color);
 			this.color.setSaturation(saturation);
@@ -635,6 +627,15 @@ var ColorPickerTool = (function ColorPickerTool() {
 				this.node.setAttribute('data-hidden', 'true');
 				return;
 			}
+
+			if( (steps - Math.floor(total / 2)) == 0 ) {
+			    this.node.setAttribute('data-working-color', 'true');
+			}
+			else {
+			    this.node.setAttribute('data-working-color', 'false');
+			}
+
+
 			this.node.removeAttribute('data-hidden');
 			this.color.copy(color);
 			this.color.setLightness(lightness);
@@ -648,6 +649,15 @@ var ColorPickerTool = (function ColorPickerTool() {
 				this.node.setAttribute('data-hidden', 'true');
 				return;
 			}
+
+            if( (steps - Math.floor(total / 2)) == 0 ) {
+			    this.node.setAttribute('data-working-color', 'true');
+			}
+			else {
+			    this.node.setAttribute('data-working-color', 'false');
+			}
+
+
 			this.node.removeAttribute('data-hidden');
 			this.color.copy(color);
 			this.color.setValue(brightness);
@@ -662,6 +672,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 		PaletteColorSample.prototype.dragStart = function (e) {
 			e.dataTransfer.setData('sampleID', this.uid);
 			e.dataTransfer.setData('location', 'palette-samples');
+			e.dataTransfer.setData('color', this.color.getHexa());
 		};
 
         // this is the general class for the palette on top
@@ -798,199 +809,8 @@ var ColorPickerTool = (function ColorPickerTool() {
 		var nr_samples = 0;
 		var active = null;
 		var container = null;
-		var base_color = new HSLColor(0, 0, 100);
 		var add_btn;
 		var add_btn_pos;
-
-		var ColorSample = function () {
-            // this is the overall node that will hold all sample information
-            var node = document.createElement('div');
-            node.className = 'sample';
-            var sample_contents_template = document.getElementById('sample-template');
-            var contents = document.importNode(sample_contents_template.content, true);
-            node.appendChild(contents);
-
-            // settings all the other necessary values
-			this.uid = samples.length;
-			this.index = nr_samples++;
-			this.node = node;
-			this.sampleColor = node.querySelector('.sample-color');
-			this.color = new Color(base_color);
-
-			this.key_input = node.querySelector('.sample-key');
-			this.meta_input = node.querySelector('.sample-meta');
-
-			node.setAttribute('sample-id', this.uid);
-			this.sampleColor.setAttribute('draggable', 'true');
-
-			this.sampleColor.addEventListener('dragstart', this.dragStart.bind(this));
-			this.sampleColor.addEventListener('dragover' , allowDropEvent);
-			this.sampleColor.addEventListener('drop'     , this.dragDrop.bind(this));
-			node.querySelector('.copy-color').addEventListener(
-			    'click', this.copyColorIconClick.bind(this));
-			node.querySelector('.copy-state').addEventListener(
-			    'click', this.copyStateIconClick.bind(this));
-            node.querySelector('.delete-color').addEventListener(
-			    'click', this.deleteColorIconClick.bind(this));
-            node.querySelector('.delete-state').addEventListener(
-			    'click', this.deleteStateIconClick.bind(this));
-            node.querySelector('.paste-color').addEventListener(
-			    'click', this.pasteColorIconClick.bind(this));
-            node.querySelector('.paste-state').addEventListener(
-			    'click', this.pasteStateIconClick.bind(this));
-
-			this.updateBgColor();
-			samples.push(this);
-
-		};
-
-		ColorSample.prototype.updateBgColor = function updateBgColor() {
-			this.sampleColor.style.backgroundColor = this.color.getColor();
-		};
-
-		ColorSample.prototype.getDigest = function() {
-		    var color_string = this.color.getSimpleHex();
-		    var key_value = '';
-		    if( this.key_input.value.length == 0 ) {
-		        key_value = this.uid;
-		    }
-		    else {
-		        key_value = this.key_input.value;
-		    }
-		    var digest = '' + key_value + DIGEST_UNIFIER
-		        + color_string + DIGEST_UNIFIER
-		        + this.meta_input.value;
-            return digest;
-		};
-
-		ColorSample.prototype.updateColor = function updateColor(color) {
-			this.color.copy(color);
-			this.updateBgColor();
-		};
-
-        ColorSample.prototype.updateState = function(color,key_value,meta_value) {
-			this.updateColor(color);
-			this.key_input.value = key_value;
-			this.meta_input.value = meta_value;
-		};
-
-		ColorSample.prototype.activate = function activate() {
-			UIColorPicker.setColor('picker', this.color);
-			this.node.setAttribute('data-active', 'true');
-			this.node.parentNode.setAttribute('data-active', 'true');
-		};
-
-		ColorSample.prototype.deactivate = function deactivate() {
-			this.node.removeAttribute('data-active');
-			this.node.parentNode.removeAttribute('data-active');
-		};
-
-		ColorSample.prototype.dragStart = function (e) {
-		    console.log("Started dragging:" + this.uid);
-			e.dataTransfer.setData('sampleID', this.uid);
-			e.dataTransfer.setData('location', 'picker-samples');
-		};
-
-        ColorSample.prototype.copyColorIconClick = function (e) {
-		    navigator.clipboard.writeText(this.color.getSimpleHex());
-		};
-
-        ColorSample.prototype.copyStateIconClick = function (e) {
-		    navigator.clipboard.writeText(this.getDigest());
-		};
-
-        ColorSample.prototype.deleteColorIconClick = function (e) {
-            this.deleteColor();
-		};
-
-		ColorSample.prototype.deleteColor = function() {
-            this.color = new Color(base_color);
-		    this.updateBgColor();
-		}
-
-        ColorSample.prototype.deleteState = function() {
-            this.deleteColor();
-            this.key_input.value = '';
-		    this.meta_input.value = '';
-		}
-
-        ColorSample.prototype.deleteStateIconClick = function (e) {
-		    this.deleteState();
-		};
-
-        ColorSample.prototype.pasteStateIconClick = function (e) {
-            var states = prompt("Enter your state", "0/ffffff/");
-            if( states != null ) {
-                var s = parseStates(states);
-                var l = s.length;
-                for( var i = 0; i < l; i++) {
-                    var state = s[i];
-                    console.log(state);
-                    var color = state[1];
-                    var key = state[0];
-                    var meta = state[2];
-                    if( i+this.uid < samples.length ) {
-                        samples[i+this.uid].updateState(color,key,meta);
-                    }
-                }
-            }
-		};
-
-        ColorSample.prototype.pasteColorIconClick = function (e) {
-            var colors = prompt("Enter your state", "ffffff");
-            if( colors != null ) {
-                var s = parseColors(colors);
-                var l = s.length;
-
-                for( var i = 0; i < l; i++) {
-                    var color = s[i];
-                    if( i+this.uid < samples.length ) {
-                        samples[i+this.uid].updateColor(color);
-                    }
-                }
-            }
-		};
-
-
-		ColorSample.prototype.dragDrop = function (e) {
-			e.stopPropagation();
-
-			var sampleID = e.dataTransfer.getData('sampleID');
-			var sampleLocation = e.dataTransfer.getData('location');
-			if( sampleLocation == 'picker-samples')
-			{
-                console.log("Dropping over:" + sampleID);
-                console.log("Being dropped on:" + this.uid);
-
-                var dragged_sample = samples[sampleID];
-                var dragged_color = dragged_sample.color;
-                var dragged_key_value = dragged_sample.key_input.value;
-                var dragged_meta_value = dragged_sample.meta_input.value;
-
-                var old_color = getSampleColor(this.uid);
-                var old_key_value = this.key_input.value;
-                var old_meta_value = this.meta_input.value;
-
-                // updating the color of the sample on which it is dropped
-                this.updateState(
-                    dragged_color,dragged_key_value,dragged_meta_value);
-                dragged_sample.updateState(
-                    old_color,old_key_value,old_meta_value);
-			}
-			else
-			{
-			    var color = Tool.getSampleColorFrom(e);
-			    this.updateColor(color);
-			}
-
-
-		};
-
-		ColorSample.prototype.deleteSample = function deleteSample() {
-			container.removeChild(this.node);
-			samples[this.uid] = null;
-			nr_samples--;
-		};
 
 		var updateUI = function updateUI() {
 
@@ -1039,8 +859,9 @@ var ColorPickerTool = (function ColorPickerTool() {
             node.className = 'sample-line';
 
             for (var i=0; i<SAMPLES_PER_LINE; i++) {
-                var sample = new ColorSample();
-                node.appendChild(sample.node)
+                var sample = new ColorSample(this,line_id*SAMPLES_PER_LINE+i);
+                node.appendChild(sample.node);
+                samples.push(sample);
             }
 
             // adding the line toolbar to the sample line
@@ -1054,7 +875,10 @@ var ColorPickerTool = (function ColorPickerTool() {
 			    'click', this.deleteLineColorIconClick.bind(this));
            parent.querySelector('.delete-line-state').addEventListener(
 			    'click', this.deleteLineStateIconClick.bind(this));
-
+           parent.querySelector('.paste-line-state').addEventListener(
+			    'click', this.pasteLineStateIconClick.bind(this));
+           parent.querySelector('.paste-line-color').addEventListener(
+			    'click', this.pasteLineColorIconClick.bind(this));
 
         };
 
@@ -1101,6 +925,49 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 		};
 
+
+        SampleLine.prototype.pasteLineStateIconClick = function (e) {
+            var states = prompt("Enter your state", "0/ffffff/");
+            if( states != null ) {
+                this.pasteLineStates(states);
+            }
+
+		};
+
+
+        SampleLine.prototype.pasteLineStates = function (states) {
+            var s = parseStates(states);
+            var l = s.length;
+            for( var i = 0; i < SAMPLES_PER_LINE; i++) {
+                var state = s[i];
+                samples[this.line_id*SAMPLES_PER_LINE+i].updateState(state);
+            }
+
+		};
+
+
+        SampleLine.prototype.pasteLineColorIconClick = function (e) {
+            var colors = prompt("Enter your state", "ffffff");
+            if( colors != null ) {
+                this.pasteLineColors(colors);
+            }
+
+		};
+
+
+        SampleLine.prototype.pasteLineColors = function (s) {
+            var s = parseColors(colors);
+            var l = s.length;
+
+            for( var i = 0; i < SAMPLES_PER_LINE; i++) {
+                var color = s[i];
+                samples[this.line_id*SAMPLES_PER_LINE+i].updateColor(color);
+            }
+		};
+
+        SampleLine.prototype.updateSample = function (sample_id,digest) {
+            samples[sample_id].updateState(parseState(digest));
+		};
 
         var getStateAllLines = function getStateAllLines() {
             var list_line_states = [];
@@ -1245,26 +1112,15 @@ var ColorPickerTool = (function ColorPickerTool() {
 			picking_area.addEventListener('dragover', allowDropEvent);
 
 			function drop(e) {
-				var color = getSampleColorFrom(e);
-				UIColorPicker.setColor('picker', color);
+				var color = e.dataTransfer.getData('color');
+				UIColorPicker.setColor('picker', parseColor(color));
 			};
 
 			function dragStart(e) {
 				e.dataTransfer.setData('sampleID', 'picker');
 				e.dataTransfer.setData('location', 'picker');
+				e.dataTransfer.setData('color', UIColorPicker.getColor('picker').getHexa());
 			};
-		};
-
-		var getSampleColorFrom = function getSampleColorFrom(e) {
-			var sampleID = e.dataTransfer.getData('sampleID');
-			var location = e.dataTransfer.getData('location');
-
-			if (location === 'picker')
-				return UIColorPicker.getColor(sampleID);
-			if (location === 'picker-samples')
-				return ColorPickerSamples.getSampleColor(sampleID);
-			if (location === 'palette-samples')
-				return ColorPalette.getSampleColor(sampleID);
 		};
 
 		var setVoidSwitch = function() {
@@ -1302,7 +1158,6 @@ var ColorPickerTool = (function ColorPickerTool() {
 			init : init,
 			unsetVoidSample : unsetVoidSample,
 			setVoidSample : setVoidSample,
-			getSampleColorFrom : getSampleColorFrom
 		};
 
 	})();

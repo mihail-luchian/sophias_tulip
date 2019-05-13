@@ -16,7 +16,9 @@
     <script src="src/jquery-3.3.1.slim.min.js" ></script>
     <script src="src/popper.min.js" ></script>
     <script src="src/bootstrap.min.js" ></script>
+    <script src="src/utils.js"></script>
     <script src="src/color.js"></script>
+    <script src="src/color_sample.js"></script>
     <script src="src/script.js"></script>
 
 </head>
@@ -72,12 +74,21 @@
         <!--this is a big blob of color representing the sampled color and its toolbar-->
         <div class="sample-color">
             <div class="sample-toolbar" >
-                <div class="copy-color">Copy-Color</div>
-                <div class="copy-state">Copy-State</div>
-                <div class="delete-color">Delete-Color</div>
-                <div class="delete-state">Delete-State</div>
-                <div class="paste-color">Paste-Color</div>
-                <div class="paste-state">Paste-State</div>
+                <div class="copy-tool">
+                    <div class="copy-text">Copy</div>
+                    <span class="copy-color">Color</span>
+                    <span class="copy-state">State</span>
+                </div>
+                <div class="paste-tool">
+                    <div class="paste-text">Paste</div>
+                    <span class="paste-color">Color</span>
+                    <span class="paste-state">State</span>
+                </div>
+                <div class="delete-tool">
+                    <div class="delete-text">Delete</div>
+                    <span class="delete-color">Color</span>
+                    <span class="delete-state">State</span>
+                </div>
             </div>
         </div>
         <!--this is the input for the meta information of the sample-->
@@ -88,10 +99,23 @@
         <div class="line-toolbar">
             <div class="line-toolbar-trigger" >+</div>
             <div class="line-toolbar-icons">
-                <div class="copy-line-color">Copy-Line-Color</div>
-                <div class="copy-line-state">Copy-Line-State</div>
-                <div class="delete-line-color">Delete-Line-Color</div>
-                <div class="delete-line-state">Delete-Line-State</div>
+                <div class="copy-line-tool">
+                    <div class="copy-line-text">Copy</div>
+                    <span class="copy-line-color">Color</span>
+                    <span class="copy-line-state">State</span>
+                </div>
+                <div class="paste-line-tool">
+                    <div class="paste-line-text">Paste</div>
+                    <span class="paste-line-color">Color</span>
+                    <span class="paste-line-state">State</span>
+                </div>
+                <div class="delete-line-tool">
+                    <div class="delete-line-text">Delete</div>
+                    <span class="delete-line-color">Color</span>
+                    <span class="delete-line-state">State</span>
+                </div>
+
+
             </div>
         </div>
 

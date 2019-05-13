@@ -82,28 +82,37 @@
     border: 1px solid #c9c8c8;
     display: none;
     margin-left: 990px;
-    margin-top: -70px;
+    margin-top: -160px;
+    padding: 5px;
 
 }
 
+.line-toolbar-icons .copy-line-text,
+.line-toolbar-icons .paste-line-text,
+.line-toolbar-icons .delete-line-text {
+    text-align: center;
+    font-size: 20px;
+    opacity: 0.3;
+}
 
 .line-toolbar .line-toolbar-trigger:hover{
     border: 1px solid #000;
     cursor: pointer;
 }
 .line-toolbar .line-toolbar-trigger:hover ~ .line-toolbar-icons,
+
 .line-toolbar .line-toolbar-icons:hover{
     align-self: flex-end;
     display: flex;
     flex-direction: column;
 }
 
-.line-toolbar-icons > * {
+.line-toolbar-icons span {
     opacity: 0.3;
 }
 
 
-.line-toolbar-icons > *:hover {
+.line-toolbar-icons span:hover {
     opacity: 1;
 }
 
@@ -133,13 +142,19 @@
     text-align: center;
 }
 
-
-.sample-toolbar > * {
+.sample-toolbar .delete-text, .sample-toolbar .copy-text, .sample-toolbar .paste-text {
+    font-size: 20px;
+    height: 25px;
     opacity: 0.3;
 }
 
-.sample-toolbar > *:hover{
+.sample-toolbar span {
+    opacity: 0.3;
+}
+
+.sample-toolbar span:hover{
     opacity: 1;
 }
+
 
 

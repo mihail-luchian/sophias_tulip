@@ -37,6 +37,10 @@
 	transition: all 0.1s;
 }
 
+.palette-samples .palette-sample-color[data-working-color="true"] {
+	border: 3px solid #BBB;
+}
+
 .palette-samples .palette-sample-color:hover {
 	cursor: pointer;
 	border-color: #BBB;

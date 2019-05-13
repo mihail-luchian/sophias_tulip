@@ -393,10 +393,12 @@ Color.prototype.getColor = function() {
 };
 
 
+// general function to handle "string" interface
+
+
 function parseState(state) {
     var s = state.split('/');
-    var color = new Color();
-    color.setHexa(s[1]);
+    var color = parseColor(s[1]);
     s[1] = color;
     return s;
 }
@@ -411,12 +413,18 @@ function parseStates(states) {
     return list_states;
 }
 
+
+function parseColor(s){
+    var color = new Color();
+    color.setHexa(s);
+    return color;
+}
+
 function parseColors(states) {
     var list_strings = states.trim().split('-');
     var list_colors = [];
     list_strings.forEach( function(sample) {
-        var color = new Color();
-        color.setHexa(sample);
+        var color = parseColor(sample);
         list_colors.push(color);
     });
 
