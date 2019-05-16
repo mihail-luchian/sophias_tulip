@@ -120,6 +120,13 @@ def build_list_color_dictionaries(s):
         for i in s.split('|')
     ]
 
+def flatten_color_dicts(list_color_dicts):
+    return {
+        i:j
+        for d in list_color_dicts
+        for i,j in d.items()
+    }
+
 def parse_line_color_states(s):
     return [ parse_color_state(i) for i in s.split('-')  ]
 

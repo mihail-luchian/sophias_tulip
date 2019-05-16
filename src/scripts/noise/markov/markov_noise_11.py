@@ -23,7 +23,8 @@ UPSCALE_FACTOR = c.INSTA_SIZE // HEIGHT
 
 
 LIST_COLOR_DICTS = color.build_list_color_dictionaries(
-    config.get('string_colors',c.DEFAULT_COLOR_STR + ('|'+c.DEFAULT_COLOR_STR)*2))
+    config.get('string-colors-light-blue', c.DEFAULT_COLOR_STR_2))
+COLOR_DICT = color.flatten_color_dicts(LIST_COLOR_DICTS)
 
 
 ### SETUP section
@@ -45,7 +46,7 @@ def continous_linspace(values,lengths):
     ])
 
 
-    bins = np.arange(9)/9
+    bins = np.arange(12)/12
     digitized = np.digitize(transitions,bins)
     transitions = bins[digitized-1]
     transitions = data.ease_inout_sine(transitions)
@@ -79,33 +80,31 @@ def generate_gradient(colors,lengths):
         )
     )
 
-def generate_patch(height, width, list_color_dicts):
+def generate_patch(height, width, color_dict):
 
-    d = r.choice(len(list_color_dicts))
     patch = np.zeros((height,width,3),dtype='float64')
 
     color_start_lengths = np.array([
         int(l)
-        for _,(_,l) in list_color_dicts[d].items()
+        for _,(_,l) in color_dict.items()
     ])
 
     num_color_samples = width//np.min(color_start_lengths) + 20
 
     pattern = m.FuzzyProgression(
-        values=[0,1,2,3,4],
+        values=np.arange(15),
         positive_shifts=3,
         negative_shifts=3,
-        repeat_factor=1,
         self_length=num_color_samples)
     # +1 because we want gradients
     raw_sample = m.sample_markov_hierarchy(pattern,num_color_samples+1)
-    sample = color.replace_indices_with_colors(raw_sample,list_color_dicts[d])
+    sample = color.replace_indices_with_colors(raw_sample,color_dict)
 
 
     start_lengths = color_start_lengths[raw_sample[:-1].astype('int32')]
     start_lengths = np.cumsum(start_lengths)
 
-    num_vertical_reps = 3
+    num_vertical_reps = 4
     num_vertical_samples = height//num_vertical_reps + 3
     model = m.MM(
         values=[-1,0,1],
@@ -118,9 +117,12 @@ def generate_patch(height, width, list_color_dicts):
 
     offsets = np.repeat(
         offsets,
-        repeats=r.choice([num_vertical_reps+i for i in range(6)],size=(num_vertical_samples,))
+        repeats=r.choice([num_vertical_reps+i for i in range(3)],size=(num_vertical_samples,))
         ,axis=0)
-    offsets = np.cumsum(offsets,axis=0) + start_lengths
+    offsets = np.cumsum(offsets,axis=0)
+    # offsets[offsets>55] = 55
+    # offsets[offsets<-55] = -55
+    offsets += start_lengths
     offsets = np.hstack( [np.zeros((offsets.shape[0],1)),offsets])
 
     i = 0
@@ -132,7 +134,7 @@ def generate_patch(height, width, list_color_dicts):
 
         diff = np.diff(current_lengths[mask])
         samples_masked = sample[mask]
-        multiples = r.choice([2,3,5,10,25])
+        multiples = r.choice([2,3,4,5,10]*2+[20,25,50])
 
 
         gradient = generate_gradient(samples_masked,diff)[:width]
@@ -145,88 +147,6 @@ def generate_patch(height, width, list_color_dicts):
 
 
 
-def generate_image(gridx, gridy, list_color_dict):
-
-    color_keys = [
-        list(i.keys())
-        for i in list_color_dict
-    ]
-    img = np.zeros((HEIGHT,WIDTH,3),dtype='float64')
-
-    startx = 0
-    starty = 0
-
-    y_iteration = 0
-    gridyextended = np.append(gridy, HEIGHT)
-    gridxextended = np.append(gridx, HEIGHT)
-    occupied = np.zeros((gridyextended.size,gridxextended.size),dtype='bool')
-    for i,y in enumerate(gridyextended):
-        endy = y
-        num_dicts = r.choice([3])
-        list_dicts = [
-                list_color_dict[k]
-                for k in r.choice([0,1,2],size=num_dicts,replace=False)
-        ]
-        y_iteration += 1
-        for j,x in enumerate(gridxextended):
-            endx = x
-
-            if occupied[i,j] > 0:
-                startx = endx
-                continue
-
-            p = 0.3
-            elongatey = r.choice([True,False],p=[p,1-p])
-            elongatex = r.choice([True,False],p=[p,1-p])
-            if i >= gridyextended.size-1: elongatey = False
-            if j >= gridxextended.size-1: elongatex = False
-
-            startyactual = starty
-            endyactual = endy
-            startxactual = startx
-            endxactual = endx
-
-            height = endy - starty
-            width = endx - startx
-
-            if elongatey:
-                add_height = gridyextended[i + 1] - gridyextended[i]
-                height = endy + add_height - starty
-                endyactual += add_height
-
-            if elongatex:
-                add_width = gridxextended[j + 1] - gridxextended[j]
-                width = endx + add_width - startx
-                endxactual += add_width
-
-            if elongatex and elongatey:
-                occupied[i:i+2,j:j+2] = True
-            elif elongatex and not elongatey:
-                occupied[i,j:j+2] = True
-            elif elongatey and not elongatex:
-                occupied[i:i+2,j] = True
-            else:
-                occupied[i,j] = True
-
-            patch = generate_patch(height,width,list_dicts)
-            img[startyactual:endyactual,startxactual:endxactual] = patch
-
-            startx = endx
-
-        startx = 0
-
-        # if y_iteration % 2 == 0 and num_dicts > 1:
-        #     img[starty:endy] = np.roll(img[starty:endy],shift=(r.choice(5)*2+1)*25,axis=1)
-
-
-        starty = endy
-
-
-    final = data.upscale_nearest(img,ny = UPSCALE_FACTOR, nx = UPSCALE_FACTOR)
-
-    return final.astype('uint8')
-
-
 ### GENERATE SECTION
 print('GENERATE SECTION')
 
@@ -234,22 +154,7 @@ for current_iteration in range(N):
     print('CURRENT_ITERATION:',current_iteration)
     r.init_def_generator(SEED+current_iteration)
 
-    gridpatternx = m.RMM(values=[50,100,100]*2+[150],self_length=10)
-    parentx = m.SProg(values=gridpatternx)
-
-    gridpatterny = m.RMM(values=[100,150,300,350]*2+[400,450],self_length=20)
-    parenty = m.SProg(values=gridpatterny)
-
-    gridx = m.generate_grid_lines(parentx,WIDTH)
-    gridy = m.generate_grid_lines(parenty,HEIGHT)
-
-    print(gridx)
-    print(gridy)
-
-    final_img = generate_image(
-        gridx, gridy,LIST_COLOR_DICTS)
-    # final_img = generate_patch(
-    #     HEIGHT, WIDTH,LIST_COLOR_DICTS)
+    final_img = generate_patch(HEIGHT, WIDTH,COLOR_DICT)
 
 
     file.export_image(

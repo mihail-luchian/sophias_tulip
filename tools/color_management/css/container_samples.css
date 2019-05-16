@@ -1,5 +1,14 @@
 /*This file contains the css for all the elements in the container-samples*/
 
+.sample-line-parent {
+
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+
+}
+
+
 .sample-line {
     float: left;
     display: flex;
@@ -9,6 +18,7 @@
     padding-top: 5px;
     padding-bottom: 5px;
     transition: height 0.2s ease-out;
+    order: 1;
 }
 
 .sample-line[data-active='true'] {
@@ -59,6 +69,9 @@
     border-bottom: 2px solid #c9c8c8;
     float: right;
     width: 100%;
+    order: 0;
+    z-index: 100;
+
 }
 
 .line-toolbar .line-toolbar-trigger{
@@ -82,7 +95,6 @@
     border: 1px solid #c9c8c8;
     display: none;
     margin-left: 990px;
-    margin-top: -160px;
     padding: 5px;
 
 }

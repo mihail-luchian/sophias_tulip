@@ -16,10 +16,12 @@ var UIColorPicker = (function UIColorPicker() {
 	var setMouseTracking = function setMouseTracking(elem, callback) {
 		elem.addEventListener('mousedown', function(e) {
 			callback(e);
+			document.getElementById("container-controls").setAttribute("expand-palette","false");
 			document.addEventListener('mousemove', callback);
 		});
 
 		document.addEventListener('mouseup', function(e) {
+            document.getElementById("container-controls").setAttribute("expand-palette","true");
 			document.removeEventListener('mousemove', callback);
 		});
 	};
@@ -28,9 +30,9 @@ var UIColorPicker = (function UIColorPicker() {
 	// Color Picker Class
 	/*====================*/
 
-	function ColorPicker(node) {
+	function ColorPicker() {
 		this.color = new Color();
-		this.node = node;
+		this.node = document.getElementById('color-picker');;
 		this.subscribers = [];
 
 		var type = this.node.getAttribute('data-mode');
@@ -422,9 +424,7 @@ var UIColorPicker = (function UIColorPicker() {
 	};
 
 	var init = function init() {
-        var elem = document.getElementById('color-picker');
-        console.log(elem)
-        new ColorPicker(elem);
+        new ColorPicker();
 	};
 
 	return {
@@ -844,13 +844,14 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 
 
-        var SampleLine = function(line_id)  {
+        var SampleLine = function(container,line_id)  {
 
             var parent = document.createElement('div');
             parent.className = 'sample-line-parent'
             var node = document.createElement('div');
             parent.appendChild(node);
 
+            this.container = container;
             this.node = node;
             this.parent = parent;
 			this.line_id = line_id;
@@ -873,11 +874,11 @@ var ColorPickerTool = (function ColorPickerTool() {
 			    'click', this.copyLineStateIconClick.bind(this));
             parent.querySelector('.delete-line-color').addEventListener(
 			    'click', this.deleteLineColorIconClick.bind(this));
-           parent.querySelector('.delete-line-state').addEventListener(
+            parent.querySelector('.delete-line-state').addEventListener(
 			    'click', this.deleteLineStateIconClick.bind(this));
-           parent.querySelector('.paste-line-state').addEventListener(
+            parent.querySelector('.paste-line-state').addEventListener(
 			    'click', this.pasteLineStateIconClick.bind(this));
-           parent.querySelector('.paste-line-color').addEventListener(
+            parent.querySelector('.paste-line-color').addEventListener(
 			    'click', this.pasteLineColorIconClick.bind(this));
 
         };
@@ -990,7 +991,7 @@ var ColorPickerTool = (function ColorPickerTool() {
             // Adding lines with samples to the picker
             for (var line=0; line<NUM_STARTING_LINES; line++) {
 
-                var sampleLine = new SampleLine(line);
+                var sampleLine = new SampleLine(this,line);
                 container.appendChild(sampleLine.parent);
                 lines.push(sampleLine);
             }

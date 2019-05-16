@@ -83,7 +83,7 @@ body {
     transition: height 0.35s ease-out;
 }
 
-#color-palettes:hover {
+#container-controls[expand-palette="true"] #color-palettes:hover {
     height: 150px;
     transition: height 0.2s ease-out;
 }
