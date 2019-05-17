@@ -270,3 +270,49 @@ def ease_inout_quintic(x):
     tx[mask_big] = 0.5 * (p**5) + 1
 
     return tx
+
+def str2mat(s):
+
+    lines = s.split(',')
+    lines = [line.strip() for line in lines]
+    parsed_lines = {}
+    max_candidates = []
+
+    current_line = 0
+    for line in lines:
+        elements = line.split(' ')
+        elements = [ i for i in elements if len(i) > 0]
+        if ':' in line:
+            head = int(elements[0][:-1])
+            current_line = int(head)
+            elements = elements[1:]
+
+        current_element = 0;
+
+        row_dict = {}
+        for i in elements:
+            if '-' in i:
+                pair = i.split('-')
+                current_element = int(pair[0])
+                value = int(pair[1])
+            else:
+                value = int(i)
+
+            row_dict[current_element] = value
+            current_element += 1
+
+        max_candidates += [current_line,current_element-1]
+        parsed_lines[current_line] = row_dict
+        current_line += 1
+
+
+    matrix_dim = max(max_candidates) + 1
+    preference_matrix = np.eye(matrix_dim)
+
+    for i in parsed_lines.keys():
+        row = np.zeros(matrix_dim)
+        for j,k in parsed_lines[i].items():
+            row[j] = k
+        preference_matrix[i] = row
+
+    return preference_matrix

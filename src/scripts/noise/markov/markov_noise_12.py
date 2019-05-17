@@ -14,7 +14,7 @@ import utils.viz_utils as viz
 
 ### DATA/INPUT/SHARED by all runs section
 print('PREPARING DATA SECTION')
-N = 100
+N = 2
 SEED = config.get('seed',0)
 HEIGHT = 1000
 WIDTH  = HEIGHT
@@ -58,7 +58,6 @@ def continous_linspace(values,lengths):
             np.repeat(values_start,lengths.astype('int32'))*(1-transitions)
             + transitions*np.repeat(values_end,lengths.astype('int32'))
     )
-
 
 def generate_gradient(colors,lengths):
     # print(colors.shape)
@@ -155,8 +154,43 @@ for current_iteration in range(N):
     print('CURRENT_ITERATION:',current_iteration)
     r.init_def_generator(SEED+current_iteration)
 
-    final_img = generate_patch(HEIGHT, WIDTH,COLOR_DICT)
+    color_1 = color.srgb2cam02(color.hex2rgb('#aa4457'))
+    color_2 = color.srgb2cam02(color.hex2rgb('#44aa88'))
+    # c1 = color.hex2rgb('#98ac57')
+    variation = np.array([10,0,80])
+    offset = np.array([0,0.0,0.0])
 
+    vals = np.arange(1,15)*8 + 5
+    vals = np.append(vals,vals[::-1])
+    model = m.FuzzyProgression(
+        values=vals,
+        # positive_shifts=0,
+        # negative_shifts=0,
+    )
+
+    divs = m.sample_markov_hierarchy(model,sample_size=WIDTH)
+    print(divs)
+    ts = 0.5/divs
+    ts = np.cumsum(ts)
+    cs = np.cos( 2*np.pi*(ts[:,None] + offset[None,:]))
+
+    print(cs)
+
+
+    c1 = np.stack((
+        np.linspace(color_1[0],color_2[0],num=WIDTH),
+        np.linspace(color_1[1],color_2[1],num=WIDTH),
+        np.linspace(color_1[2],color_2[2],num=WIDTH),
+    ),axis=1)
+
+    print(c1.shape)
+
+    cs = variation * cs
+    c2 = c1 + cs
+    c2 = color.cam022srgb(c2)
+
+    final_img = data.upscale_nearest( c2[None,:,:],ny=HEIGHT, nx=1 )
+    final_img = data.upscale_nearest( final_img,ny=UPSCALE_FACTOR, nx=UPSCALE_FACTOR )
 
     file.export_image(
         '%d_%d' % (current_iteration,int(round(time.time() * 1000))),
