@@ -25,12 +25,19 @@ def choice(*args,**kwargs):
     return default_generator.choice(*args,**kwargs)
 
 def choice_from(key,*args,**kwargs):
-    return dict_generators[key].choice(*args,**kwargs)
+    # this is done to make one sampling operation independent from others
+    # and thus allow for more sophisticated effects like animation
+    seed = random_seed(dict_generators[key])
+    return np.random.RandomState(seed).choice(*args,**kwargs)
+
+
+def random_seed(generator):
+    return generator.randint(0,ui32.max//2)
 
 def bind_generator():
     global num_generators
 
-    seed = default_generator.randint(0,ui32.max//2)
+    seed = random_seed(default_generator)
     generator = np.random.RandomState(seed)
 
     key = num_generators
