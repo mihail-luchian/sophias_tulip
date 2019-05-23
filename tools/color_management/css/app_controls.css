@@ -78,7 +78,7 @@
 }
 
 
-#control-paste-state,#control-connect-server {
+#control-paste-state,#control-connect-server,#control-send-server {
     margin-top: 10px;
     background-color: #EEE;
     width: 106px;

@@ -1,9 +1,5 @@
 'use strict';
 
-var SAMPLES_PER_LINE = 5;
-var NUM_STARTING_LINES = 4;
-var DIGEST_UNIFIER = '/';
-
 // this is the Whole color picker in the middle to the right
 var UIColorPicker = (function UIColorPicker() {
 
@@ -142,8 +138,12 @@ var UIColorPicker = (function UIColorPicker() {
 
 	ColorPicker.prototype.updateColor = function updateColor(e) {
 
-		var x = e.clientX - this.picking_area.offsetLeft;
-		var y = e.clientY - this.picking_area.offsetTop;
+        // the fuck if I understand how this voodoo works
+        var rect = this.picking_area.getBoundingClientRect();
+        var docEl = document.documentElement;
+
+		var x = e.pageX - (rect.left + window.pageXOffset - docEl.clientLeft);
+		var y = e.pageY - (rect.top + window.pageYOffset - docEl.clientTop);
 		var picker_offset = 5;
 
 		// width and height should be the same
@@ -1121,6 +1121,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 
             var icon_paste_state = node.querySelector('#control-paste-state');
             var icon_connect_server = node.querySelector('#control-connect-server');
+            var icon_send_server = node.querySelector('#control-send-server');
 			var hsv = node.querySelector('#hsv');
 			var hsl = node.querySelector('#hsl');
 			var icon_copy_all = node.querySelector('#copy-all');
@@ -1149,7 +1150,11 @@ var ColorPickerTool = (function ColorPickerTool() {
 			icon_connect_server.addEventListener('click', function() {
 
 			    var success = function(data) {
-                    ColorPickerSamples.pasteContainerState(data);
+                    ColorPickerSamples.pasteContainerState(data['color-string']);
+
+                    var img = document.getElementById('server-image');
+                    img.setAttribute('data-image-state','active')
+                    img.src = 'data:image/png;base64,' + data['image'];
 			    }
 
                 $.ajax({
@@ -1158,6 +1163,26 @@ var ColorPickerTool = (function ColorPickerTool() {
                   success: success,
                 });
 			});
+
+			icon_send_server.addEventListener('click', function() {
+
+			    var success = function(data) {
+                    ColorPickerSamples.pasteContainerState(data['color-string']);
+
+                    var img = document.getElementById('server-image');
+                    img.setAttribute('data-image-state','active')
+                    img.src = 'data:image/png;base64,' + data['image'];
+			    }
+
+                $.ajax({
+                  type: "POST",
+                  crossDomain: true,
+                  url: REST_SET_COLOR_STRING,
+                  success: success,
+                  data: ColorPickerSamples.getStateAllLines(),
+                });
+			});
+
 
 			icon_copy_all.addEventListener('click', function() {
 				var s = ColorPickerSamples.getStateAllLines();

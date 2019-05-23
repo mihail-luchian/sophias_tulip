@@ -14,11 +14,17 @@ body {
 
 }
 
-#server-image {
+#server-image[data-image-state="non"] {
+    display: none;
+}
+
+#server-image[data-image-state="active"] {
 
     width: 1000px;
     height: 1000px;
     margin-left: 400px;
+    margin-top: 50px;
+    margin-bottom: 50px;
 
 }
 

@@ -117,8 +117,19 @@ def build_color_dictionary(s):
 def build_list_color_dictionaries(s):
     return [
         build_color_dictionary(i)
-        for i in s.split('|')
+        for i in s.split(',')
     ]
+
+
+def build_dict_color_dictionaries(s):
+
+
+    return {
+        s1: build_color_dictionary(s2)
+        for i in s.split(',')
+        for s1,s2 in [i.split(':')]
+    }
+
 
 def flatten_color_dicts(list_color_dicts):
     return {

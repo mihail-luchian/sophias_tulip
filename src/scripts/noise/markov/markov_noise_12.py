@@ -16,14 +16,14 @@ import utils.viz_utils as viz
 print('PREPARING DATA SECTION')
 N = 1
 SEED = config.get('seed',0)
-HEIGHT = 1000
+HEIGHT = 100
 WIDTH  = HEIGHT
 
 UPSCALE_FACTOR = c.INSTA_SIZE // HEIGHT
 
 
 COLOR_STRING = config.get('color-string', c.DEFAULT_COLOR_STR_2)
-# LIST_COLOR_DICTS = color.build_list_color_dictionaries(COLOR_STRING)
+DICT_COLOR_DICTS = color.build_dict_color_dictionaries(COLOR_STRING)
 # COLOR_DICT = color.flatten_color_dicts(LIST_COLOR_DICTS)
 
 
@@ -196,5 +196,19 @@ for current_iteration in range(N):
     #     '%d_%d' % (current_iteration,int(round(time.time() * 1000))),
     #     final_img.astype('uint8'),format='png')
 
+
+    img = r.choice([0,1,2,3],size=(HEIGHT,WIDTH))
+    img = data.upscale_nearest(img,nx=10,ny=10)
+
+    def generate_image(color_string):
+        dict_color_dicts = color.build_dict_color_dictionaries(color_string)
+        return color.replace_indices_with_colors(img, dict_color_dicts['Blue'])
+
+
+    imgs = generate_image(COLOR_STRING)
+    file.export_image(
+        '%d_%d' % (current_iteration,int(round(time.time() * 1000))),
+        imgs.astype('uint8'),format='png')
+
     if N==1:
-        viz.start_image_server(COLOR_STRING)
+        viz.start_image_server(COLOR_STRING,generate_image)
