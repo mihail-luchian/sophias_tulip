@@ -78,7 +78,7 @@
 }
 
 
-#control-paste-line {
+#control-paste-state,#control-connect-server {
     margin-top: 10px;
     background-color: #EEE;
     width: 106px;
@@ -89,6 +89,7 @@
     float: left;
 }
 
-#control-paste-line:hover {
+
+#control-paste-state:hover, #control-connect-server:hover {
     cursor: pointer;
 }

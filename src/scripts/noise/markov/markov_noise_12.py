@@ -14,7 +14,7 @@ import utils.viz_utils as viz
 
 ### DATA/INPUT/SHARED by all runs section
 print('PREPARING DATA SECTION')
-N = 2
+N = 1
 SEED = config.get('seed',0)
 HEIGHT = 1000
 WIDTH  = HEIGHT
@@ -22,9 +22,9 @@ WIDTH  = HEIGHT
 UPSCALE_FACTOR = c.INSTA_SIZE // HEIGHT
 
 
-LIST_COLOR_DICTS = color.build_list_color_dictionaries(
-    config.get('string-colors-light-blue', c.DEFAULT_COLOR_STR_2))
-COLOR_DICT = color.flatten_color_dicts(LIST_COLOR_DICTS)
+COLOR_STRING = config.get('color-string', c.DEFAULT_COLOR_STR_2)
+# LIST_COLOR_DICTS = color.build_list_color_dictionaries(COLOR_STRING)
+# COLOR_DICT = color.flatten_color_dicts(LIST_COLOR_DICTS)
 
 
 ### SETUP section
@@ -169,12 +169,12 @@ for current_iteration in range(N):
     )
 
     divs = m.sample_markov_hierarchy(model,sample_size=WIDTH)
-    print(divs)
+    # print(divs)
     ts = 0.5/divs
     ts = np.cumsum(ts)
     cs = np.cos( 2*np.pi*(ts[:,None] + offset[None,:]))
 
-    print(cs)
+    # print(cs)
 
 
     c1 = np.stack((
@@ -183,15 +183,18 @@ for current_iteration in range(N):
         np.linspace(color_1[2],color_2[2],num=WIDTH),
     ),axis=1)
 
-    print(c1.shape)
+    # print(c1.shape)
 
     cs = variation * cs
     c2 = c1 + cs
     c2 = color.cam022srgb(c2)
 
-    final_img = data.upscale_nearest( c2[None,:,:],ny=HEIGHT, nx=1 )
-    final_img = data.upscale_nearest( final_img,ny=UPSCALE_FACTOR, nx=UPSCALE_FACTOR )
+    # final_img = data.upscale_nearest( c2[None,:,:],ny=HEIGHT, nx=1 )
+    # final_img = data.upscale_nearest( final_img,ny=UPSCALE_FACTOR, nx=UPSCALE_FACTOR )
+    #
+    # file.export_image(
+    #     '%d_%d' % (current_iteration,int(round(time.time() * 1000))),
+    #     final_img.astype('uint8'),format='png')
 
-    file.export_image(
-        '%d_%d' % (current_iteration,int(round(time.time() * 1000))),
-        final_img.astype('uint8'),format='png')
+    if N==1:
+        viz.start_image_server(COLOR_STRING)

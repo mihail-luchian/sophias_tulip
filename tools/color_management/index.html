@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="css/color_picker.css"/>
     <link rel="stylesheet" href="css/color_palettes.css"/>
 
-    <script src="src/jquery-3.3.1.slim.min.js" ></script>
+    <script src="src/jquery-3.4.1.js" ></script>
     <script src="src/popper.min.js" ></script>
     <script src="src/bootstrap.min.js" ></script>
     <script src="src/utils.js"></script>
@@ -25,7 +25,7 @@
 
 <body>
 
-
+    <!--<img id="server-image" src=""/>-->
     <!-- This is the whole tool -->
     <div id="app-container">
 
@@ -67,6 +67,13 @@
 
     <!-- TEMPLATES -->
 
+    <!--the template for a line of samples -->
+    <template id="line-template">
+        <div class="sample-line" sample-line="0" ></div>
+        <div class="line-toolbar"></div>
+    </template>
+
+
     <!--the template for the full color sample -->
     <template id="sample-template">
         <!--this is the input for the key of the sample-->
@@ -98,27 +105,27 @@
 
     <!-- the template for the line line toolbar -->
     <template id="line-toolbar-template">
-        <div class="line-toolbar">
-            <div class="line-toolbar-trigger" >+</div>
-            <div class="line-toolbar-icons">
-                <div class="copy-line-tool">
-                    <div class="copy-line-text">Copy</div>
-                    <span class="copy-line-color">Color</span>
-                    <span class="copy-line-state">State</span>
-                </div>
-                <div class="paste-line-tool">
-                    <div class="paste-line-text">Paste</div>
-                    <span class="paste-line-color">Color</span>
-                    <span class="paste-line-state">State</span>
-                </div>
-                <div class="delete-line-tool">
-                    <div class="delete-line-text">Delete</div>
-                    <span class="delete-line-color">Color</span>
-                    <span class="delete-line-state">State</span>
-                </div>
-
-
+        <input class="line-key" type="text" placeholder="key, otherwise lineID"/>
+        <div class="line-toolbar-separator" ></div>
+        <div class="line-toolbar-trigger" >+</div>
+        <div class="line-toolbar-icons">
+            <div class="copy-line-tool">
+                <div class="copy-line-text">Copy</div>
+                <span class="copy-line-color">Color</span>
+                <span class="copy-line-state">State</span>
             </div>
+            <div class="paste-line-tool">
+                <div class="paste-line-text">Paste</div>
+                <span class="paste-line-color">Color</span>
+                <span class="paste-line-state">State</span>
+            </div>
+            <div class="delete-line-tool">
+                <div class="delete-line-text">Delete</div>
+                <span class="delete-line-color">Color</span>
+                <span class="delete-line-state">State</span>
+            </div>
+
+
         </div>
 
     </template>
@@ -132,7 +139,8 @@
             <div id="hsv">HSV</div>
             <div id="hsl">HSL</div>
         </div>
-        <div id="control-paste-line">Paste</div>
+        <div id="control-paste-state">Paste State</div>
+        <div id="control-connect-server">Connect Server</div>
     </template>
 
     <!--this template represents the tools for changing the color modes-->

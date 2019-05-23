@@ -8,3 +8,7 @@ Libraries used:
 * pyqt5
 * tensorflow
 * colorspacious
+
+For the color management tool, you will also need:
+* flask
+* flask-cors

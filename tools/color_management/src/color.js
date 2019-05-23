@@ -413,6 +413,15 @@ function parseStates(states) {
     return list_states;
 }
 
+function parseLineState(s) {
+    var list_string = s.trim().split(':');
+    var line_state = [];
+    line_state.push(list_string[0])
+    line_state.push(parseStates(list_string[1]))
+
+    return line_state;
+}
+
 
 function parseColor(s){
     var color = new Color();

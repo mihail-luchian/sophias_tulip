@@ -848,16 +848,18 @@ var ColorPickerTool = (function ColorPickerTool() {
 
             var parent = document.createElement('div');
             parent.className = 'sample-line-parent'
-            var node = document.createElement('div');
-            parent.appendChild(node);
+
+            var line_template = document.getElementById('line-template');
+			var line = document.importNode(line_template.content, true);
+            parent.appendChild(line);
+
+            var node = parent.querySelector('.sample-line');
+            node.setAttribute('line-id', line_id);
 
             this.container = container;
             this.node = node;
             this.parent = parent;
 			this.line_id = line_id;
-
-            node.setAttribute('line-id', line_id);
-            node.className = 'sample-line';
 
             for (var i=0; i<SAMPLES_PER_LINE; i++) {
                 var sample = new ColorSample(this,line_id*SAMPLES_PER_LINE+i);
@@ -868,7 +870,8 @@ var ColorPickerTool = (function ColorPickerTool() {
             // adding the line toolbar to the sample line
 			var line_toolbar_template = document.getElementById('line-toolbar-template');
 			var line_toolbar = document.importNode(line_toolbar_template.content, true);
-			parent.appendChild(line_toolbar);
+			parent.querySelector('.line-toolbar').appendChild(line_toolbar);
+            this.line_key_input = parent.querySelector('.line-key');
 
             parent.querySelector('.copy-line-state').addEventListener(
 			    'click', this.copyLineStateIconClick.bind(this));
@@ -893,13 +896,22 @@ var ColorPickerTool = (function ColorPickerTool() {
                 if( hex !== "ffffff") {
                     list_hex.push(digest);
                 }
-
             }
 
-            var final_string = '';
+            // Get key of the line
+            var key_value = this.line_key_input.value;
+            if( this.line_key_input.value.length == 0 ) {
+                key_value = '' + this.line_id;
+            }
+
+
+            var final_string = '' + key_value + ':';
             if( list_hex.length > 0 ) {
-                final_string = list_hex.join('-');
+                final_string = final_string + list_hex.join('-');
+            } else {
+                final_string = '';
             }
+
 
             return final_string;
         };
@@ -918,31 +930,51 @@ var ColorPickerTool = (function ColorPickerTool() {
 		};
 
         SampleLine.prototype.deleteLineStateIconClick = function (e) {
+            this.deleteLineState();
+		};
+
+        SampleLine.prototype.deleteLineState = function() {
+            this.line_key_input.value = ''
             var my_line = this.line_id;
             for (var i = 0; i < SAMPLES_PER_LINE; i++) {
                 var current_sample_id = my_line*SAMPLES_PER_LINE + i;
                 var hex = samples[current_sample_id].deleteState();
             }
 
-		};
+        }
 
 
         SampleLine.prototype.pasteLineStateIconClick = function (e) {
             var states = prompt("Enter your state", "0/ffffff/");
             if( states != null ) {
-                this.pasteLineStates(states);
+                this.pasteLineState(states);
             }
 
 		};
 
 
-        SampleLine.prototype.pasteLineStates = function (states) {
-            var s = parseStates(states);
-            var l = s.length;
-            for( var i = 0; i < SAMPLES_PER_LINE; i++) {
-                var state = s[i];
-                samples[this.line_id*SAMPLES_PER_LINE+i].updateState(state);
+        SampleLine.prototype.pasteLineState = function (state) {
+
+            if( state.includes(':') ) {
+                var line_state = parseLineState(state);
+                var key = line_state[0];
+                this.line_key_input.value = key;
+
+                var s = line_state[1];
+                var l = s.length;
+                for( var i = 0; i < l; i++) {
+                    var state = s[i];
+                    samples[this.line_id*SAMPLES_PER_LINE+i].updateState(state);
+                }
+            } else {
+                var s = parseStates(state);
+                var l = s.length;
+                for( var i = 0; i < l; i++) {
+                    var state = s[i];
+                    samples[this.line_id*SAMPLES_PER_LINE+i].updateState(state);
+                }
             }
+
 
 		};
 
@@ -970,10 +1002,9 @@ var ColorPickerTool = (function ColorPickerTool() {
             samples[sample_id].updateState(parseState(digest));
 		};
 
-        var getStateAllLines = function getStateAllLines() {
+        var getStateAllLines = function () {
             var list_line_states = [];
 
-            console.log(lines);
             for(var i = 0; i<NUM_STARTING_LINES; i++) {
                var state =  lines[i].getLineState();
                if( state.length > 0 ) {
@@ -981,7 +1012,27 @@ var ColorPickerTool = (function ColorPickerTool() {
                }
             }
 
-            return list_line_states.join('|');
+            return list_line_states.join(',');
+
+        }
+
+        var pasteContainerState = function (state) {
+            deleteContainerState();
+
+            var list_string = state.trim().split(',');
+            var l = list_string.length;
+            for( var i = 0; i < l; i++) {
+                lines[i].pasteLineState(list_string[i]);
+            }
+
+        }
+
+        var deleteContainerState = function (state) {
+
+            var l = lines.length;
+            for( var i = 0; i < l; i++) {
+                lines[i].deleteLineState();
+            }
 
         }
 
@@ -1015,7 +1066,9 @@ var ColorPickerTool = (function ColorPickerTool() {
 			init : init,
 			getSampleColor : getSampleColor,
 			unsetActiveSample : unsetActiveSample,
-			getStateAllLines : getStateAllLines
+			getStateAllLines : getStateAllLines,
+			pasteContainerState : pasteContainerState,
+			deleteContainerState : deleteContainerState
 		};
 
 	})();
@@ -1059,13 +1112,15 @@ var ColorPickerTool = (function ColorPickerTool() {
 		var void_sw;
 		var node;
 
-		var createPickerModeSwitch = function createPickerModeSwitch() {
+		var initControls = function () {
 			node = getElemById('app-controls');
 
             var tools_template = document.getElementById('tools-template');
             var contents = document.importNode(tools_template.content, true);
             node.appendChild(contents);
 
+            var icon_paste_state = node.querySelector('#control-paste-state');
+            var icon_connect_server = node.querySelector('#control-connect-server');
 			var hsv = node.querySelector('#hsv');
 			var hsl = node.querySelector('#hsl');
 			var icon_copy_all = node.querySelector('#copy-all');
@@ -1082,6 +1137,27 @@ var ColorPickerTool = (function ColorPickerTool() {
 				UIColorPicker.setPickerMode('picker', active.textContent);
 			};
 
+
+			icon_paste_state.addEventListener('click', function() {
+                var state = prompt("Enter your state", "0:0/ffffff/1");
+                if( state != null ) {
+                    ColorPickerSamples.pasteContainerState(state);
+                }
+
+			});
+
+			icon_connect_server.addEventListener('click', function() {
+
+			    var success = function(data) {
+                    ColorPickerSamples.pasteContainerState(data);
+			    }
+
+                $.ajax({
+                  type: "GET",
+                  url: REST_GET_COLOR_STRING,
+                  success: success,
+                });
+			});
 
 			icon_copy_all.addEventListener('click', function() {
 				var s = ColorPickerSamples.getStateAllLines();
@@ -1151,7 +1227,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 			UIColorPicker.setColor('picker', color);
 
 			setPickerDragAndDrop();
-			createPickerModeSwitch();
+			initControls();
 			setVoidSwitch();
 		};
 

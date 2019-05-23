@@ -3,8 +3,6 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
 import utils.data_utils as data
-from utils.ui_utils.color_editing_tool import ColorEditingTool
-from PyQt5.QtWidgets import QApplication
 
 def show_animation(data):
     fig = plt.figure()
@@ -23,7 +21,6 @@ def show_image(img):
     plt.imshow(img)
     plt.show()
 
-def start_color_editing_tool(**kwargs):
-    app = QApplication(sys.argv)
-    ex = ColorEditingTool(**kwargs)
-    sys.exit(app.exec_())
+def start_image_server(color_string):
+    import utils.ui_utils.image_server as image_server
+    image_server.start_server(color_string)

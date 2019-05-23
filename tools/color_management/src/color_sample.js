@@ -125,7 +125,7 @@ ColorSample.prototype.pasteStateIconClick = function (e) {
     var state = prompt("Enter your state", "ffffff");
     if( state != null ) {
         if( state.includes('-') ) {
-            this.line.pasteLineStates(state);
+            this.line.pasteLineState(state);
         }
         else {
             this.updateState(parseState(state));
