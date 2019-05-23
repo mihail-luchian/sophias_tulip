@@ -93,3 +93,8 @@
 #control-paste-state:hover, #control-connect-server:hover {
     cursor: pointer;
 }
+
+#app-controls-left {
+    display: flex;
+    flex-direction: column;
+}

@@ -108,9 +108,12 @@ body {
 }
 
 #app-controls {
-    width: 150px;
-    padding: 10px;
+    width: 100%;
+    padding-left: 10px;
     float: left;
+    display: flex;
+    justify-content: space-around;
+    flex-direction: row;
 }
 
 

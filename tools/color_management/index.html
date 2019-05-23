@@ -82,19 +82,19 @@
         <div class="sample-color">
             <div class="sample-toolbar" >
                 <div class="copy-tool">
-                    <div class="copy-text">Copy</div>
-                    <span class="copy-color">Color</span>
-                    <span class="copy-state">State</span>
+                    <span class="copy-color" highlight="true">Color</span>
+                    <span class="copy-text">Copy</span>
+                    <span class="copy-state" highlight="true">State</span>
                 </div>
                 <div class="paste-tool">
-                    <div class="paste-text">Paste</div>
-                    <span class="paste-color">Color</span>
-                    <span class="paste-state">State</span>
+                    <span class="paste-color" highlight="true">Color</span>
+                    <span class="paste-text">Paste</span>
+                    <span class="paste-state" highlight="true">State</span>
                 </div>
                 <div class="delete-tool">
-                    <div class="delete-text">Delete</div>
-                    <span class="delete-color">Color</span>
-                    <span class="delete-state">State</span>
+                    <span class="delete-color" highlight="true">Color</span>
+                    <span class="delete-text">Delete</span>
+                    <span class="delete-state" highlight="true">State</span>
                 </div>
             </div>
         </div>
@@ -107,22 +107,27 @@
     <template id="line-toolbar-template">
         <input class="line-key" type="text" placeholder="key, otherwise lineID"/>
         <div class="line-toolbar-separator" ></div>
-        <div class="line-toolbar-trigger" >+</div>
+        <div class="line-toolbar-trigger" draggable="true">+</div>
         <div class="line-toolbar-icons">
             <div class="copy-line-tool">
-                <div class="copy-line-text">Copy</div>
-                <span class="copy-line-color">Color</span>
-                <span class="copy-line-state">State</span>
+                <span class="copy-line-color" highlight="true">Color</span>
+                <span class="copy-line-text"  highlight="false">Copy</span>
+                <span class="copy-line-state" highlight="true">State</span>
             </div>
             <div class="paste-line-tool">
-                <div class="paste-line-text">Paste</div>
-                <span class="paste-line-color">Color</span>
-                <span class="paste-line-state">State</span>
+                <span class="paste-line-color" highlight="true">Color</span>
+                <span class="paste-line-text"  highlight="false">Paste</span>
+                <span class="paste-line-state" highlight="true">State</span>
             </div>
             <div class="delete-line-tool">
-                <div class="delete-line-text">Delete</div>
-                <span class="delete-line-color">Color</span>
-                <span class="delete-line-state">State</span>
+                <span class="delete-line-color" highlight="true">Color</span>
+                <span class="delete-line-text"  highlight="false">Delete</span>
+                <span class="delete-line-state" highlight="true">State</span>
+            </div>
+            <div class="gen-line-tool">
+                <span class="gen-line-color" highlight="true">Color</span>
+                <span class="gen-line-text"  highlight="false">Gen</span>
+                <span class="gen-line-state" highlight="non">State</span>
             </div>
 
 
@@ -130,17 +135,25 @@
 
     </template>
 
-    <!--this template represents the tools for changing the color modes-->
-    <!--and for the deselection button-->
-    <template id="tools-template">
-        <div id="void-sample" class="icon"></div>
-        <div id="copy-all" class="icon copy-icon"></div>
-        <div class="switch">
-            <div id="hsv">HSV</div>
-            <div id="hsl">HSL</div>
+    <!--this template represents the general app controls-->
+    <template id="app-controls-template">
+        <div id="app-controls-left">
+            <div>
+                <div id="void-sample" class="icon"></div>
+                <div id="copy-all" class="icon copy-icon"></div>
+            </div>
+            <div class="switch">
+                <div id="hsv">HSV</div>
+                <div id="hsl">HSL</div>
+            </div>
         </div>
-        <div id="control-paste-state">Paste State</div>
-        <div id="control-connect-server">Connect Server</div>
+        <div id="app-controls-center">
+            <div id="control-paste-state">Paste State</div>
+        </div>
+        <div id="app-controls-right">
+            <div id="control-connect-server">Connect Server</div>
+        </div>
+
     </template>
 
     <!--this template represents the tools for changing the color modes-->

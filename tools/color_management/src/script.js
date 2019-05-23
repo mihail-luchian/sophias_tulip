@@ -500,7 +500,7 @@ var ColorPickerTool = (function ColorPickerTool() {
 
 		/*========== Make an element draggable relative to it's parent ==========*/
 
-		var makeDraggable = function makeDraggable(elem, endFunction) {
+		var makeDraggable = function (elem, endFunction) {
 
 			var offsetTop;
 			var offsetLeft;
@@ -1115,8 +1115,8 @@ var ColorPickerTool = (function ColorPickerTool() {
 		var initControls = function () {
 			node = getElemById('app-controls');
 
-            var tools_template = document.getElementById('tools-template');
-            var contents = document.importNode(tools_template.content, true);
+            var controls_template = document.getElementById('app-controls-template');
+            var contents = document.importNode(controls_template.content, true);
             node.appendChild(contents);
 
             var icon_paste_state = node.querySelector('#control-paste-state');
