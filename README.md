@@ -5,7 +5,6 @@ Libraries used:
 * sklearn
 * matplotlib
 * ImageIO
-* pyqt5
 * tensorflow
 * colorspacious
 

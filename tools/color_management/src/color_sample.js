@@ -75,7 +75,7 @@ ColorSample.prototype.updateState = function(s) {
 };
 
 ColorSample.prototype.activate = function activate() {
-    UIColorPicker.setColor('picker', this.color);
+    ColorPicker.setColor('picker', this.color);
     this.node.setAttribute('data-active', 'true');
     this.node.parentNode.setAttribute('data-active', 'true');
 };
