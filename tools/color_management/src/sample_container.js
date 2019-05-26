@@ -1,39 +1,34 @@
 'use strict';
 
 
-/**
- * ColorPicker Samples
- */
-// there are the sample colors that are managed in the middle area
-var ColorPickerSamples = (function ColorPickerSamples() {
+var SampleContainer = (function () {
 
 	var samples = [];
 	var lines = [];
 	var active = null;
 	var container = null;
 
-	var updateUI = function updateUI() {
+	var updateSampleBg = function () {
 
-		var nr = samples.length;
-		for (var i=0; i < nr; i++)
+		for (var i=0; i < samples.length; i++)
 			if (samples[i] !== null) {
 				samples[i].updateBgColor();
 			}
-
 	};
 
-	var setActivateSample = function setActivateSample(e) {
+	var activateSample = function (e) {
 		if (e.target.parentNode.className !== 'sample')
 			return;
-		unsetActiveSample(active);
+		deactivateActiveSample(active);
 		AppControls.unsetVoidSample();
 		active = samples[e.target.parentNode.getAttribute('sample-id')];
-		active.activate();
+		active.activateSample();
 	};
 
-	var unsetActiveSample = function unsetActiveSample() {
-		if (active)
-			active.deactivate();
+	var deactivateActiveSample = function () {
+		if (active) {
+			active.deactivateSample();
+		}
 		active = null;
 	};
 
@@ -41,7 +36,6 @@ var ColorPickerSamples = (function ColorPickerSamples() {
 		if (samples[id] !== undefined && samples[id]!== null)
 			return new Color(samples[id].color);
 	};
-
 
 
 	var SampleLine = function(container,line_id)  {
@@ -73,16 +67,23 @@ var ColorPickerSamples = (function ColorPickerSamples() {
 		parent.querySelector('.line-toolbar').appendChild(line_toolbar);
 		this.line_key_input = parent.querySelector('.line-key');
 
+		parent.querySelector('.copy-line-color').addEventListener(
+			'click', this.copyLineColorIconClick.bind(this));
 		parent.querySelector('.copy-line-state').addEventListener(
 			'click', this.copyLineStateIconClick.bind(this));
-		parent.querySelector('.delete-line-color').addEventListener(
-			'click', this.deleteLineColorIconClick.bind(this));
+
 		parent.querySelector('.delete-line-state').addEventListener(
 			'click', this.deleteLineStateIconClick.bind(this));
-		parent.querySelector('.paste-line-state').addEventListener(
-			'click', this.pasteLineStateIconClick.bind(this));
+		parent.querySelector('.delete-line-color').addEventListener(
+			'click', this.deleteLineColorIconClick.bind(this));
+
 		parent.querySelector('.paste-line-color').addEventListener(
 			'click', this.pasteLineColorIconClick.bind(this));
+		parent.querySelector('.paste-line-state').addEventListener(
+			'click', this.pasteLineStateIconClick.bind(this));
+
+		parent.querySelector('.goto-coolors').addEventListener(
+			'click', this.gotoCoolorsClicks.bind(this));
 
 	};
 
@@ -92,7 +93,7 @@ var ColorPickerSamples = (function ColorPickerSamples() {
 		for (var i = 0; i < SAMPLES_PER_LINE; i++) {
 			var current_sample_id = my_line*SAMPLES_PER_LINE + i;
 			var hex = samples[current_sample_id].color.getSimpleHex();
-			var digest = samples[current_sample_id].getDigest();
+			var digest = samples[current_sample_id].getSampleState();
 			if( hex !== "ffffff") {
 				list_hex.push(digest);
 			}
@@ -116,8 +117,27 @@ var ColorPickerSamples = (function ColorPickerSamples() {
 		return final_string;
 	};
 
+
+	SampleLine.prototype.getLineColor = function() {
+		var list_hex = [];
+		var my_line = this.line_id;
+		for (var i = 0; i < SAMPLES_PER_LINE; i++) {
+			var current_sample_id = my_line*SAMPLES_PER_LINE + i;
+			var hex = samples[current_sample_id].color.getSimpleHex();
+            list_hex.push(hex);
+		}
+
+		var final_string = list_hex.join('-');
+		return final_string;
+	};
+
+
 	SampleLine.prototype.copyLineStateIconClick = function (e) {
 		navigator.clipboard.writeText(this.getLineState());
+	};
+
+	SampleLine.prototype.copyLineColorIconClick = function (e) {
+		navigator.clipboard.writeText(this.getLineColor());
 	};
 
 	SampleLine.prototype.deleteLineColorIconClick = function (e) {
@@ -188,9 +208,15 @@ var ColorPickerSamples = (function ColorPickerSamples() {
 	};
 
 
-	SampleLine.prototype.pasteLineColors = function (s) {
+	SampleLine.prototype.pasteLineColors = function (colors) {
+	    var l = colors.length;
+	    var end = l;
+	    // 6*5 + 4 = 34
+	    var start = end - (6*SAMPLES_PER_LINE + SAMPLES_PER_LINE-1);
+	    if( start < 0 ) { start = 0; }
+	    colors = colors.substring(start,end);
+	    console.log(colors);
 		var s = parseColors(colors);
-		var l = s.length;
 
 		for( var i = 0; i < SAMPLES_PER_LINE; i++) {
 			var color = s[i];
@@ -198,11 +224,15 @@ var ColorPickerSamples = (function ColorPickerSamples() {
 		}
 	};
 
+	SampleLine.prototype.gotoCoolorsClicks = function (e) {
+		window.open("https://coolors.co/" + this.getLineColor());
+	};
+
 	SampleLine.prototype.updateSample = function (sample_id,digest) {
 		samples[sample_id].updateState(parseState(digest));
 	};
 
-	var getStateAllLines = function () {
+	var getContainerState = function () {
 		var list_line_states = [];
 
 		for(var i = 0; i<NUM_STARTING_LINES; i++) {
@@ -236,7 +266,7 @@ var ColorPickerSamples = (function ColorPickerSamples() {
 
 	}
 
-	var init = function init() {
+	var initSampleContainer = function init() {
 		container = getElemById('container-samples');
 
 		// Adding lines with samples to the picker
@@ -248,25 +278,24 @@ var ColorPickerSamples = (function ColorPickerSamples() {
 		}
 
 
-		updateUI();
+		updateSampleBg();
 
 		active = samples[0];
-		active.activate();
-
-		container.addEventListener('click', setActivateSample);
-
+		active.activateSample();
+		container.addEventListener('click', activateSample);
 		ColorPicker.subscribe('picker', function(color) {
-			if (active)
+			if (active) {
 				active.updateColor(color);
+			}
 		});
 
 	};
 
 	return {
-		init : init,
+		init : initSampleContainer,
 		getSampleColor : getSampleColor,
-		unsetActiveSample : unsetActiveSample,
-		getContainerState : getStateAllLines,
+		unsetActiveSample : deactivateActiveSample,
+		getContainerState : getContainerState,
 		pasteContainerState : pasteContainerState,
 		deleteContainerState : deleteContainerState
 	};

@@ -48,7 +48,7 @@ ColorSample.prototype.updateBgColor = function updateBgColor() {
     this.sampleColor.style.backgroundColor = this.color.getColor();
 };
 
-ColorSample.prototype.getDigest = function() {
+ColorSample.prototype.getSampleState = function() {
     var color_string = this.color.getSimpleHex();
     var key_value = '';
     if( this.key_input.value.length == 0 ) {
@@ -74,13 +74,13 @@ ColorSample.prototype.updateState = function(s) {
     this.meta_input.value = s[2];
 };
 
-ColorSample.prototype.activate = function activate() {
+ColorSample.prototype.activateSample = function activate() {
     ColorPicker.setColor('picker', this.color);
     this.node.setAttribute('data-active', 'true');
     this.node.parentNode.setAttribute('data-active', 'true');
 };
 
-ColorSample.prototype.deactivate = function deactivate() {
+ColorSample.prototype.deactivateSample = function deactivate() {
     this.node.removeAttribute('data-active');
     this.node.parentNode.removeAttribute('data-active');
 };
@@ -88,7 +88,7 @@ ColorSample.prototype.deactivate = function deactivate() {
 ColorSample.prototype.dragStart = function (e) {
     console.log("Started dragging:" + this.uid);
     e.dataTransfer.setData('sampleID', this.uid);
-    e.dataTransfer.setData('sampleState', this.getDigest());
+    e.dataTransfer.setData('sampleState', this.getSampleState());
     e.dataTransfer.setData('color', this.color.getHexa());
     e.dataTransfer.setData('location', 'picker-samples');
 };
@@ -98,7 +98,7 @@ ColorSample.prototype.copyColorIconClick = function (e) {
 };
 
 ColorSample.prototype.copyStateIconClick = function (e) {
-    navigator.clipboard.writeText(this.getDigest());
+    navigator.clipboard.writeText(this.getSampleState());
 };
 
 ColorSample.prototype.deleteColorIconClick = function (e) {
@@ -155,7 +155,7 @@ ColorSample.prototype.dragDrop = function (e) {
     var sampleLocation = e.dataTransfer.getData('location');
     if( sampleLocation == 'picker-samples')
     {
-        var old_digest = this.getDigest();
+        var old_digest = this.getSampleState();
         var digest = e.dataTransfer.getData('sampleState');
         var s = parseState(digest);
         this.updateState(s);

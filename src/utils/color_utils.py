@@ -121,7 +121,7 @@ def build_list_color_dictionaries(s):
     ]
 
 
-def build_dict_color_dictionaries(s):
+def build_color_repository(s):
 
 
     return {
@@ -131,10 +131,28 @@ def build_dict_color_dictionaries(s):
     }
 
 
-def flatten_color_dicts(list_color_dicts):
+def get_keys_from_dict(color_dict):
+    return [i for i in color_dict.keys()]
+
+def get_colors_from_dict(color_dict):
+    return [j for i,(j,_) in color_dict.items()]
+
+def get_meta_from_dict(color_dict):
+    return [j for i,(_,j) in color_dict.items()]
+
+
+def flatten_list_color_dicts(list_color_dicts):
     return {
         i:j
         for d in list_color_dicts
+        for i,j in d.items()
+    }
+
+
+def flatten_dict_color_dicts(dict_color_dicts):
+    return {
+        i:j
+        for _,d in dict_color_dicts.items()
         for i,j in d.items()
     }
 
@@ -154,13 +172,19 @@ def parse_color_state(s):
         meta = ss[2]
     return (key,color,meta)
 
-def convert_color_dict_from_hex(color_dict):
-    return {i:hex2rgb(j[0]) for i, j in color_dict.items()}
+
+def get_meta_for_each_sample(sample,color_dict):
+    return [
+        color_dict[i][1]
+        for i in sample
+    ]
+
+def get_color_codes_from_color_dict(color_dict):
+    return {i:hex2rgb(j) for i, (j,_) in color_dict.items()}
 
 def replace_indices_with_colors(img, color_dict):
 
-
-    color_dict = convert_color_dict_from_hex(color_dict)
+    color_dict = get_color_codes_from_color_dict(color_dict)
     new_img = np.zeros(list(img.shape)+[3])
     for key,item in color_dict.items():
         mask = img == key

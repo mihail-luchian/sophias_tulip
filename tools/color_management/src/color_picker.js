@@ -54,6 +54,7 @@ var ColorPicker = (function () {
 
         this.newInputComponent('hexa', 'hexa', this.inputChangeHexa.bind(this),'text');
 
+        this.color.setHSL(10, 10, 10);
         this.setColor(this.color);
         pickers[topic] = this;
     }
@@ -75,6 +76,9 @@ var ColorPicker = (function () {
 
         area.appendChild(picker);
         this.node.appendChild(area);
+
+
+
     };
 
     ColorPicker.prototype.createHueArea = function createHueArea() {
@@ -104,6 +108,29 @@ var ColorPicker = (function () {
 
         preview_box.appendChild(preview_color);
         this.node.appendChild(preview_box);
+
+
+        preview_color.setAttribute('draggable', 'true');
+        preview_color.addEventListener('drop', drop);
+        preview_color.addEventListener('dragstart', dragStart);
+        preview_color.addEventListener('dragover', allowDropEvent);
+
+        // var picking_area = document.querySelector('#color-picker .picking-area');
+        // picking_area.addEventListener('drop', drop);
+        // picking_area.addEventListener('dragover', allowDropEvent);
+
+        function drop(e) {
+            var color = e.dataTransfer.getData('color');
+            setColor('picker', parseColor(color));
+        };
+
+        function dragStart(e) {
+            e.dataTransfer.setData('sampleID', 'picker');
+            e.dataTransfer.setData('location', 'picker');
+            e.dataTransfer.setData('color', getColor('picker').getHexa());
+        };
+
+
     };
 
     ColorPicker.prototype.newInputComponent = function newInputComponent(title, topic, onChangeFunc,type) {
@@ -423,12 +450,12 @@ var ColorPicker = (function () {
             subscribers[topic][i](color);
     };
 
-    var init = function init() {
+    var initColorPicker = function() {
         new ColorPicker();
     };
 
     return {
-        init : init,
+        init : initColorPicker,
         setColor : setColor,
         getColor : getColor,
         subscribe : subscribe,

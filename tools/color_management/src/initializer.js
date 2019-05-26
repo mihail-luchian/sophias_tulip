@@ -1,6 +1,6 @@
 window.addEventListener("load", function() {
     ColorPicker.init();
     ColorPalette.init();
-    ColorPickerSamples.init();
+    SampleContainer.init();
     AppControls.init();
 });

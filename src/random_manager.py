@@ -37,8 +37,11 @@ def random_seed(generator):
 def bind_generator():
     global num_generators
 
+
     seed = random_seed(default_generator)
     generator = np.random.RandomState(seed)
+
+    # print('Binding network with seed:',seed)
 
     key = num_generators
     dict_generators[key] = generator

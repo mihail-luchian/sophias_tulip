@@ -14,19 +14,27 @@ body {
 
 }
 
-#server-image[data-image-state="non"] {
-    display: none;
-}
-
-#server-image[data-image-state="active"] {
-
+#server-image {
     width: 1000px;
     height: 1000px;
     margin-left: 400px;
     margin-top: 50px;
     margin-bottom: 50px;
-
 }
+
+#server-image[data-image-state="none"] {
+    display: none;
+}
+
+#server-image[data-image-state="active"] {
+    opacity: 1.0;
+}
+
+#server-image[data-image-state="waiting"] {
+    opacity: 0.1;
+    border: 5px solid rgba(255,0,0,255);
+}
+
 
 #app-container {
 
