@@ -21,6 +21,6 @@ def show_image(img):
     plt.imshow(img)
     plt.show()
 
-def start_image_server(color_string,generate_image_function):
+def start_image_server(color_string,generate_image_function,seed):
     import utils.ui_utils.image_server as image_server
-    image_server.start_server(color_string,generate_image_function)
+    image_server.start_server(color_string,generate_image_function,seed)

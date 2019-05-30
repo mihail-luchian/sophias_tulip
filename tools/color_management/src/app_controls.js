@@ -73,18 +73,20 @@ var AppControls = (function () {
     var initServerControls = function () {
 
         var img = document.getElementById('server-image');
+        var seed_input = document.getElementById('control-random-seed');
 
         var onServerAnswer = function(data) {
             SampleContainer.pasteContainerState(data['color-string']);
             img.setAttribute('data-image-state','active')
             img.src = 'data:image/png;base64,' + data['image'];
+            seed_input.value=data['random-seed']
         }
 
 
         node.querySelector('#control-connect-server').addEventListener(
             'click', function() {
 
-                img.setAttribute('data-image-state','waiting')
+                img.setAttribute('data-image-state','waiting');
                 $.ajax({
                     type: "GET",
                     url: REST_GET_COLOR_STRING,
@@ -93,13 +95,19 @@ var AppControls = (function () {
             });
 
         node.querySelector('#control-send-server').addEventListener('click', function() {
-            img.setAttribute('data-image-state','waiting')
+            img.setAttribute('data-image-state','waiting');
+
+            var data_to_send = JSON.stringify({
+               'color-string' :  SampleContainer.getContainerState(),
+                'random-seed' : seed_input.value
+            });
+
             $.ajax({
                 type: "POST",
                 crossDomain: true,
                 url: REST_SET_COLOR_STRING,
                 success: onServerAnswer,
-                data: SampleContainer.getContainerState(),
+                data: data_to_send,
             });
         });
 

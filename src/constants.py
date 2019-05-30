@@ -76,5 +76,5 @@ PATTERN_INDICES_STR = {
 DEFAULT_COLOR_STR_1 = '0/aaaaaa/1-1/aaaaaa/1-2/aaaaaa/1-3/aaaaaa/1-4/aaaaaa/1'
 DEFAULT_COLOR_STR_2 =  '|'.join(
     '-'.join( str(j*5+i) + '/aaaaaa/1' for i in range(5) )
-    for j in range(2)
+    for j in range(3)
 )

@@ -22,7 +22,10 @@ def init_def_generator(seed):
 
 
 def choice(*args,**kwargs):
-    return default_generator.choice(*args,**kwargs)
+    # this is done to make one sampling operation independent from others
+    # and thus allow for more sophisticated effects like animation
+    seed = random_seed(default_generator)
+    return np.random.RandomState(seed).choice(*args,**kwargs)
 
 def choice_from(key,*args,**kwargs):
     # this is done to make one sampling operation independent from others

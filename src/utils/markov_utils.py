@@ -171,6 +171,7 @@ def simulate_markov_hierarchy(node,length=None):
 
 def sample_markov_hierarchy(markov_tree,sample_size):
 
+    # print('Start sampling')
     # this is the generator for the markov_tree
     full_simulation = simulate_markov_hierarchy(markov_tree)
 
@@ -178,17 +179,21 @@ def sample_markov_hierarchy(markov_tree,sample_size):
     sample = np.zeros(sample_size)
     # we sample from the generator, taking care we sample only as much as required
     for i in full_simulation:
+        # print('full simulation',i)
         l = i.size
         start = current
         end = start + l
         sampled_end = l
         if end >= sample_size:
+            # print(sample)
+            # print('last sample')
             end = sample_size
+            # print(end,sample_size)
             sampled_end = end - start
 
         sample[start:end] = i[:sampled_end]
         current = end
-        if current >= sample_size - 1:
+        if current >= sample_size:
             break
 
     return sample

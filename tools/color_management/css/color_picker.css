@@ -151,16 +151,6 @@
     -moz-appearance: textfield;
 }
 
-/*This is to hide the arrows on the text fields*/
-#color-picker .input input[type="number"] {
-    -moz-appearance: textfield;
-}
-
-#color-picker .input input[type="number"]::-webkit-outer-spin-button,
-#color-picker .input input[type="number"]::-webkit-inner-spin-button{
-    -webkit-appearance: none;
-        margin: 0;
-}
 
 #color-picker .input[data-topic="lightness"] {
     display: none;

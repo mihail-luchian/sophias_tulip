@@ -78,7 +78,9 @@
 }
 
 
-#control-paste-state,#control-connect-server,#control-send-server {
+#control-paste-state,
+#control-connect-server,
+#control-send-server {
     margin-top: 10px;
     background-color: #EEE;
     width: 106px;
@@ -89,12 +91,22 @@
     float: left;
 }
 
+#control-random-seed {
+    width: 60px;
+    margin-left: 10px;
+}
+
 
 #control-paste-state:hover, #control-connect-server:hover {
     cursor: pointer;
 }
 
 #app-controls-left {
+    display: flex;
+    flex-direction: column;
+}
+
+#app-controls-right {
     display: flex;
     flex-direction: column;
 }

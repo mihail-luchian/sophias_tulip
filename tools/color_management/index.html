@@ -8,6 +8,7 @@
 
     <link rel="stylesheet" href="css/bootstrap.min.css"/>
     <link rel="stylesheet" href="css/base.css"/>
+    <link rel="stylesheet" href="css/containers.css"/>
     <link rel="stylesheet" href="css/app_controls.css"/>
     <link rel="stylesheet" href="css/container_samples.css"/>
     <link rel="stylesheet" href="css/color_picker.css"/>
@@ -29,8 +30,6 @@
 
 <body>
 
-    <img id="server-image" src="" data-image-state="none"/>
-    <!-- This is the whole tool -->
     <div id="app-container">
 
         <!-- the sticky color tools on the left -->
@@ -47,7 +46,10 @@
         </div>
 
         <!-- the center scrollable area with the color samples -->
-        <div id="container-samples"></div>
+        <div id="app-center">
+            <img id="server-image" src="" data-image-state="none"/>
+            <div id="container-samples"></div>
+        </div>
 
         <!--bootstrap toasts, notification area-->
         <div id="container-notifications" >
@@ -163,6 +165,7 @@
         <div id="app-controls-right">
             <div id="control-connect-server">Connect Server</div>
             <div id="control-send-server">Send2Server</div>
+            <div>Seed<input id="control-random-seed" type="number"/></div>
         </div>
 
     </template>

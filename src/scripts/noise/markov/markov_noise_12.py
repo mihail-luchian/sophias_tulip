@@ -14,7 +14,7 @@ import utils.viz_utils as viz
 
 ### DATA/INPUT/SHARED by all runs section
 print('PREPARING DATA SECTION')
-N = 200
+N = 50
 SEED = config.get('seed',0)
 HEIGHT = 1000
 WIDTH  = HEIGHT
@@ -22,7 +22,9 @@ WIDTH  = HEIGHT
 UPSCALE_FACTOR = c.INSTA_SIZE // HEIGHT
 
 
-COLOR_STRING = config.get('color-string', c.DEFAULT_COLOR_STR_2)
+COLOR_STRING = config.get(
+    'color-string-3',
+    'Yellows:0/ffdbc9/20-1/ffebc4/20-2/f2ffcc/20-3/def9b8/20-4/ffdcba/20,Violets:10/d62a55/20-11/f97cbd/20-12/f48e7f/20-13/ffa29b/20-14/fc8c58/20,Blue:5/2098f9/20-6/2332ff/20-7/1980e8/20-8/0742f2/20-9/21f3ff/20')
 
 
 ### SETUP section
@@ -34,21 +36,24 @@ if N>1:
 ### FUNCTIONS section
 print('FUNCTIONS SETUP')
 
+def posterize_sequence(sequence):
+    # num_bins = r.choice([4,10,100,400])
+    num_bins = r.choice([100])
+    if num_bins < 30:
+        bins = np.linspace(0,1,num_bins,endpoint=False)
+        digitized = np.digitize(sequence,bins)
+        sequence = bins[digitized-1]
+    return data.ease_inout_sine(sequence)
+    # return sequence
 
-def continous_linspace(values_start,values_end,lengths,num_bins=50):
+def continous_linspace(values_start,values_end,lengths):
 
     transitions = np.concatenate(
         [
-            np.linspace(0,1,lengths[i])
+            posterize_sequence(np.linspace(0,1,lengths[i]))
             for i in range(len(values_start))
         ])
 
-
-    if num_bins < 30:
-        bins = np.linspace(0,1,num_bins)
-        digitized = np.digitize(transitions,bins)
-        transitions = bins[digitized-1]
-    transitions = data.ease_inout_sine(transitions)
 
     return (
             np.repeat(values_start,lengths.astype('int32'))*(1-transitions)
@@ -56,12 +61,12 @@ def continous_linspace(values_start,values_end,lengths,num_bins=50):
     )
 
 
-def generate_gradient(colors_start,colors_end,lengths,num_bins):
+def generate_gradient(colors_start,colors_end,lengths):
     # print(colors.shape)
     # print(lengths.shape)
 
-    colors_start = color.srgb2cam02(colors_start)
-    colors_end = color.srgb2cam02(colors_end)
+    colors_start = color.srgb2cam02ucs(colors_start)
+    colors_end = color.srgb2cam02ucs(colors_end)
 
     j_start = colors_start[:,0]
     c_start = colors_start[:,1]
@@ -71,16 +76,18 @@ def generate_gradient(colors_start,colors_end,lengths,num_bins):
     c_end = colors_end[:,1]
     h_end = colors_end[:,2]
 
-    return color.cam022srgb(
+    return color.cam02ucs2srgb(
         np.stack(
             (
-                continous_linspace(j_start,j_end,lengths, num_bins),
-                continous_linspace(c_start,c_end,lengths, num_bins),
-                continous_linspace(h_start,h_end,lengths, num_bins),
+                continous_linspace(j_start,j_end,lengths),
+                continous_linspace(c_start,c_end,lengths),
+                continous_linspace(h_start,h_end,lengths),
             ),
             axis=1,
         )
     )
+
+
 def generate_patch(height, width, color_dict):
 
     patch = np.zeros((height,width,3),dtype='float64')
@@ -99,16 +106,21 @@ def generate_patch(height, width, color_dict):
         negative_shifts=3,
         self_length=num_color_samples)
 
-    sample_raw_start = m.sample_markov_hierarchy(pattern,num_color_samples)
-    sample_raw_end = m.sample_markov_hierarchy(pattern,num_color_samples)
-    sample_raw_backup = m.sample_markov_hierarchy(pattern,num_color_samples)
-
+    sample_raw_start = m.sample_markov_hierarchy(pattern,num_color_samples).astype('int32')
+    sample_raw_down_start = m.sample_markov_hierarchy(pattern,num_color_samples).astype('int32')
+    # print(sample_raw_start)
+    sample_raw_end = m.sample_markov_hierarchy(pattern,num_color_samples).astype('int32')
+    sample_raw_down_end = m.sample_markov_hierarchy(pattern,num_color_samples).astype('int32')
+    sample_raw_backup = m.sample_markov_hierarchy(pattern,num_color_samples).astype('int32')
     # making the probability of same color used smaller
     replace_mask = sample_raw_start == sample_raw_end
     sample_raw_end[replace_mask] = sample_raw_backup[replace_mask]
 
     sample_start = color.replace_indices_with_colors(sample_raw_start,color_dict)
     sample_end = color.replace_indices_with_colors(sample_raw_end,color_dict)
+
+    sample_down_start = color.replace_indices_with_colors(sample_raw_down_start,color_dict)
+    sample_down_end = color.replace_indices_with_colors(sample_raw_down_end,color_dict)
 
     switch = np.array([
         r.choice([0, 1], replace=False, size=(2,))
@@ -123,15 +135,16 @@ def generate_patch(height, width, color_dict):
 
 
     start_lengths = color.get_meta_for_each_sample(sample_raw_start,color_dict)
+
     start_lengths = np.array([int(i) for i in start_lengths])
     start_lengths = np.cumsum(start_lengths)
 
     num_vertical_reps = 2
     num_vertical_samples = height//num_vertical_reps + 3
     model = m.MarkovModel(
-        values=np.arange(0,21,5)-10,
+        values=np.arange(0,41,10)-20,
         preference_matrix=data.str2mat(
-            '0 1 2 1 0, 1 2 3 1 0, 0 1 8 1 0, 0 1 3 2 1, 0 1 2 1 0'),
+            '0 1 5 1 0, 1 2 5 1 0, 0 1 10 1 0, 0 1 5 2 1, 0 1 5 1 0'),
         self_length=num_vertical_samples)
     offsets = np.stack([
         m.sample_markov_hierarchy(model,num_vertical_samples)
@@ -150,6 +163,11 @@ def generate_patch(height, width, color_dict):
     i = 0
     offset_index = 0
 
+    transition = np.linspace(0,1,num_vertical_samples)
+    sample_start_gradient = sample_start[:,:,None]*(1-transition) + sample_down_start[:,:,None]*transition
+    sample_end_gradient = sample_end[:,:,None]*(1-transition) + sample_down_end[:,:,None]*transition
+
+
     multiples_choices = r.choice(
         config.get('multiples-choices',[20,30,40,50]), size=(6,))
     # print('multiples-choices',multiples_choices)
@@ -164,6 +182,9 @@ def generate_patch(height, width, color_dict):
 
         samples_start_masked = sample_start[mask[1:]]
         samples_end_masked = sample_end[mask[1:]]
+        #
+        # samples_start_masked = sample_start_gradient[:,:,i//num_vertical_reps][mask[1:]]
+        # samples_end_masked = sample_end_gradient[:,:,i//num_vertical_reps][mask[1:]]
 
         p_switch = config.get('gradient-switch-p',0.5)
 
@@ -176,7 +197,7 @@ def generate_patch(height, width, color_dict):
         multiples = r.choice(multiples_choices)
 
         gradient = generate_gradient(
-            sample_start_switched,sample_end_switched,diff,r.choice([4,10,100,400]))[:width]
+            sample_start_switched,sample_end_switched,diff)[:width]
         patch[i:i+multiples] = gradient[None,:]
         i += multiples
         offset_index += 1
@@ -190,7 +211,7 @@ def generate_patch(height, width, color_dict):
 def generate_image(gridx, gridy, color_repository):
 
     keys = list(color_repository.keys())
-    key_probabilities = [0.35,0.35,0.3]
+    key_probabilities = [0.4,0.4,0.2]
     img = np.zeros((HEIGHT,WIDTH,3),dtype='float64')
 
 
@@ -213,7 +234,7 @@ def generate_image(gridx, gridy, color_repository):
 
             p = 0.5
             elongatey = r.choice([True,False],p=[p,1-p])
-            elongatex = r.choice([True,False],p=[p,1-p])
+            elongatex = r.choice([True,False],p=[0,1])
             if i >= gridyextended.size-1: elongatey = False
             if j >= gridxextended.size-1: elongatex = False
 
@@ -244,9 +265,12 @@ def generate_image(gridx, gridy, color_repository):
             else:
                 occupied[i,j] = True
 
+
+            key = r.choice(keys,p=key_probabilities)
+
             patch = generate_patch(
                 height, width,
-                color_repository[r.choice(keys,p=key_probabilities)])
+                color_repository[key])
             img[startyactual:endyactual,startxactual:endxactual] = patch
 
             startx = endx
@@ -266,19 +290,24 @@ print('GENERATE SECTION')
 for current_iteration in range(N):
     print('CURRENT_ITERATION:',current_iteration)
 
-    def generate_full_image(color_string):
-        r.init_def_generator(SEED+current_iteration)
+    def generate_full_image(color_string,seed):
+        r.init_def_generator(seed)
 
-        valuesx = [150,200,250]
-        valuesy = [200,250,300]
-        gridpatternx = m.RMM(values=valuesx,self_length=20)
+        valuesx = [75,100,150]
+        valuesy = [250,300,350]
+        gridpatternx = m.FuzzyProgression(
+            values=valuesx,
+            positive_shifts=1,
+            repeat_factor=3,
+            self_length=20)
         parentx = m.SProg(values=gridpatternx)
 
         gridpatterny = m.RMM(values=valuesy,self_length=20)
         parenty = m.SProg(values=gridpatterny)
 
         gridx = m.generate_grid_lines(parentx,WIDTH)
-        gridy = m.generate_grid_lines(parenty,HEIGHT)
+        # gridy = m.generate_grid_lines(parenty,HEIGHT)
+        gridy = [HEIGHT//2]
 
         # print(gridx)
         # print(gridy)
@@ -296,9 +325,12 @@ for current_iteration in range(N):
     #     imgs.astype('uint8'),format='png')
     #
     if N==1:
-        viz.start_image_server(COLOR_STRING,generate_full_image)
+        viz.start_image_server(
+            COLOR_STRING,
+            generate_full_image,
+            SEED+current_iteration)
     else:
-        imgs = generate_full_image(COLOR_STRING)
+        imgs = generate_full_image(COLOR_STRING,SEED+current_iteration)
         file.export_image(
             '%d_%d_%d' % (current_iteration,SEED+current_iteration,int(round(time.time() * 1000))),
             imgs.astype('uint8'),format='png')
