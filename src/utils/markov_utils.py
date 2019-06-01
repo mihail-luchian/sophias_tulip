@@ -39,27 +39,27 @@ def markov_model_is_leaf(values):
         return True
 
 
-def simulate_markov_chain(node,length):
+def simulate_markov_chain(node,length,rkey):
     if node.update_step is None or node.update_fun is None:
         return simulate_markov_chain_without_update(
             transition_matrix=node.transition_matrix,
             start_probs=node.start_probs,
             length=length,
-            random_key=node.random_key)
+            rkey=rkey)
     else:
         return simulate_markov_chain_with_update(node,length)
 
-def simulate_markov_chain_without_update(transition_matrix, start_probs, length, random_key):
+def simulate_markov_chain_without_update(transition_matrix, start_probs, length, rkey):
 
     num_elems = len(transition_matrix)
     element_range = np.arange(num_elems)
     pseudo_simulations = np.zeros((num_elems,length)).astype('int32')
 
     for i in range(num_elems):
-        s = r.choice_from(random_key,element_range,size=length,p=transition_matrix[i])
+        s = r.choice_from(rkey, element_range, size=length, p=transition_matrix[i])
         pseudo_simulations[i] = s
 
-    start_elem = r.choice_from(random_key,element_range,p=start_probs)
+    start_elem = r.choice_from(rkey, element_range, p=start_probs)
 
     simulation = np.zeros(length)
     simulation[0] = start_elem
@@ -75,6 +75,9 @@ def simulate_markov_chain_without_update(transition_matrix, start_probs, length,
 
 
 def simulate_markov_chain_with_update(node, length):
+
+    ## THIS FUNCTION NEEDS TO BE REWRITTEN
+
 
     current_length = 0
     first_step = node.update_step - node.simulated_length % node.update_step
@@ -102,7 +105,7 @@ def update_node(node):
     node.start_probs = new_start_probs / np.sum(new_start_probs)
 
 
-def simulate_markov_generator(node, length=None):
+def simulate_markov_generator(node, length=None, rkey=None):
 
     breakout = False
     iteration = 0
@@ -111,9 +114,14 @@ def simulate_markov_generator(node, length=None):
     #   and in this case we use the self_length
     sim_length = 10 if length is None else length
     if sim_length == -1:
-        sim_length = r.choice_from(node.random_key,node.self_length)
+        sim_length = r.choice_from(rkey,node.self_length)
     while breakout == False:
-        simulation = simulate_markov_chain(node=node,length=sim_length)
+
+        loop_key = r.bind_generator_from(rkey)
+
+        simulation = r.call_and_bind_from(
+            loop_key,simulate_markov_chain,
+            node=node,length=sim_length)
 
         if node.lengths is not None:
             if len(node.lengths) == 1:
@@ -125,7 +133,7 @@ def simulate_markov_generator(node, length=None):
 
 
         if node.leaf is False:
-            child_lens = r.choice_from(node.random_key,node.child_lengths,sim_length)
+            child_lens = r.choice_from(loop_key,node.child_lengths,sim_length)
             for j,(n,l) in enumerate(zip(vals,child_lens)):
                 m = simulate_markov_hierarchy(n,l)
                 for i in m:
@@ -163,7 +171,9 @@ def simulate_markov_processor(node,length):
 
 def simulate_markov_hierarchy(node,length=None):
     if node.type == c.TYPE_GEN:
-        sim = simulate_markov_generator(node, length)
+        sim = r.call_and_bind_from(
+            node.random_key,simulate_markov_generator,
+            node,length)
     elif node.type == c.TYPE_PROC:
         sim = simulate_markov_processor(node,length)
     for i in sim:
@@ -308,7 +318,8 @@ class MarkovModel:
                  lenghts=None,
                  self_length=None,
                  update_step=None,
-                 update_fun=None):
+                 update_fun=None,
+                 parent_rkey=None):
 
 
         ## checking all the received inputs
@@ -354,7 +365,10 @@ class MarkovModel:
 
         #setup the random number generator if it wasn't already setup by someone else
         if not hasattr(self,'random_key'):
-            self.random_key = r.bind_generator()
+            if parent_rkey is not None:
+                self.random_key = r.bind_generator_from(parent_rkey)
+            else:
+                self.random_key = r.bind_generator()
 
 
 
@@ -415,13 +429,23 @@ class FuzzyProgression(MarkovModel):
 
 class RandomMarkovModel(MarkovModel):
 
-    def __init__(self, values=None, num_sinks = None, sinks = None,reduce_sinks = None,**kwargs):
+    def __init__(
+            self,
+            values=None,
+            num_sinks = None,
+            sinks = None,
+            reduce_sinks = None,
+            parent_rkey = None,
+            **kwargs):
 
         if num_sinks is not None and sinks is not None:
             raise Exception('You have to use either "num_sinks" or "sinks" to pass values. Both is not possible')
 
 
-        self.random_key = r.bind_generator()
+        if parent_rkey is not None:
+            self.random_key = r.bind_generator_from(parent_rkey)
+        else:
+            self.random_key = r.bind_generator()
 
         values = listify(values)
         l = len(values)
@@ -447,13 +471,16 @@ class RandomMarkovModel(MarkovModel):
 
 
 class Processor:
-    def __init__(self, node, num_tiles=None, length_limit=None):
+    def __init__(self, node, num_tiles=None, length_limit=None,parent_rkey=None):
         self.node = node
 
         self.num_tiles = listify_if_not_none(num_tiles)
         self.length_limit = listify_if_not_none(length_limit)
         self.type = c.TYPE_PROC
-        self.random_key = r.bind_generator()
+        if parent_rkey is not None:
+            self.random_key = r.bind_generator_from(parent_rkey)
+        else:
+            self.random_key = r.bind_generator()
 
 
 #### SHORTCUTS
