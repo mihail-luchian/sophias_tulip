@@ -36,24 +36,24 @@ print('FUNCTIONS SETUP')
 
 
 def lab(c):
-    return color.srgb2lab(c)
+    return color.srgb_2_lab(c)
 def lab_back(c):
-    return color.lab2srgb(c)
+    return color.lab_2_srgb(c)
 
 def srgb(c): return c
 def srgb_back(c): return c
 
 
 def cam(c):
-    return color.srgb2cam02(c)
+    return color.srgb_2_cam02(c)
 def cam_back(c):
-    return color.cam022srgb(c)
+    return color.cam02_2_srgb(c)
 
 
 def camucs(c):
-    return color.srgb2cam02ucs(c)
+    return color.srgb_2_cam02ucs(c)
 def camucs_back(c):
-    return color.cam02ucs2srgb(c)
+    return color.cam02ucs_2_srgb(c)
 
 
 ### GENERATE SECTION
@@ -67,8 +67,8 @@ for current_iteration in range(N):
     print('CURRENT_ITERATION:',current_iteration)
     np.random.seed(SEED+current_iteration)
 
-    start_rgb = color.hex2rgb(START_COLOR)
-    end_rgb = color.hex2rgb(END_COLOR)
+    start_rgb = color.hex_2_rgb(START_COLOR)
+    end_rgb = color.hex_2_rgb(END_COLOR)
 
     start_conv = to_space[current_iteration](start_rgb)
     end_conv = to_space[current_iteration](end_rgb)

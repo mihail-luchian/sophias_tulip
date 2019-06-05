@@ -8,8 +8,9 @@ KEY_DEFAULT_GENERATOR = 0
 KEY_DEFAULT_BIND_GENERATOR = 1
 default_generator = None
 
-CHOICE_KEY = 0
-BIND_KEY = 1
+SEED_KEY = 0
+CHOICE_KEY = 1
+BIND_KEY = 2
 
 # this function must be called first, to properly setup the default random number generator
 # if you call the function again, all the previous generators are discarded
@@ -23,6 +24,7 @@ def __generate_random_key__(seed):
     intermediate = np.random.RandomState(seed)
 
     return (
+        seed,
         np.random.RandomState(__random_seed__(intermediate)),
         np.random.RandomState(__random_seed__(intermediate))
     )
@@ -37,6 +39,9 @@ def choice_from(key,*args,**kwargs):
     seed = __random_seed__(key[CHOICE_KEY])
     return np.random.RandomState(seed).choice(*args,**kwargs)
 
+
+def reset_key(key):
+    return __generate_random_key__(key[SEED_KEY])
 
 def __random_seed__(generator):
     return generator.randint(0,ui32.max//2)

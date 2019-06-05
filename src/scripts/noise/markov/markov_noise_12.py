@@ -43,7 +43,7 @@ def posterize_sequence(sequence):
         bins = np.linspace(0,1,num_bins,endpoint=False)
         digitized = np.digitize(sequence,bins)
         sequence = bins[digitized-1]
-    return data.ease_inout_sine(sequence)
+    return data.ease_inout_sin(sequence)
     # return sequence
 
 def continous_linspace(values_start,values_end,lengths):
@@ -65,8 +65,8 @@ def generate_gradient(colors_start,colors_end,lengths):
     # print(colors.shape)
     # print(lengths.shape)
 
-    colors_start = color.srgb2cam02ucs(colors_start)
-    colors_end = color.srgb2cam02ucs(colors_end)
+    colors_start = color.srgb_2_cam02ucs(colors_start)
+    colors_end = color.srgb_2_cam02ucs(colors_end)
 
     j_start = colors_start[:,0]
     c_start = colors_start[:,1]
@@ -76,7 +76,7 @@ def generate_gradient(colors_start,colors_end,lengths):
     c_end = colors_end[:,1]
     h_end = colors_end[:,2]
 
-    return color.cam02ucs2srgb(
+    return color.cam02ucs_2_srgb(
         np.stack(
             (
                 continous_linspace(j_start,j_end,lengths),
@@ -94,12 +94,12 @@ def generate_patch(height, width, color_dict,rkey):
 
     color_start_lengths = np.array([
         int(i)
-        for i in color.get_meta_from_dict(color_dict)
+        for i in color.get_meta_from_palette(color_dict)
     ])
 
     num_color_samples = width//np.min(color_start_lengths) + 20
 
-    color_codes = color.get_keys_from_dict(color_dict)
+    color_codes = color.get_keys_from_palette(color_dict)
     pattern = m.FuzzyProgression(
         values=color_codes,
         positive_shifts=3,

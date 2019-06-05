@@ -252,7 +252,7 @@ def ease_inout_cubic(x):
     return tx
 
 
-def ease_inout_sine(x):
+def ease_inout_sin(x):
     return 0.5 * (1 - np.cos(x * np.pi))
 
 def ease_inout_quintic(x):
@@ -316,3 +316,14 @@ def str2mat(s):
         preference_matrix[i] = row
 
     return preference_matrix
+
+
+def integrate_series(series,n,mean_influence=0):
+    if n<=0:
+        return series
+    else:
+        integrated = series
+        for i in range(n):
+            integrated = np.cumsum(integrated)
+            integrated -= mean_influence*np.mean(integrated)
+        return integrated

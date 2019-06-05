@@ -21,7 +21,7 @@ def linspace_hue(start,end,num_steps):
 
 
 
-def hex2rgb(s):
+def hex_2_rgb(s):
 
     only_digits = s[-6:]
     if len(only_digits) == 6:
@@ -42,23 +42,23 @@ def hex2rgb(s):
     return np.array([r, g, b])
 
 
-def srgb2cam02(rgb):
+def srgb_2_cam02(rgb):
     return cs.cspace_convert(rgb, "sRGB255", "JCh")
 
-def cam022srgb(cam02):
+def cam02_2_srgb(cam02):
     return cs.cspace_convert(cam02, "JCh", "sRGB255")
 
-def srgb2cam02ucs(rgb):
+def srgb_2_cam02ucs(rgb):
     return cs.cspace_convert(rgb, "sRGB255", cs.CAM02UCS)
 
-def cam02ucs2srgb(cam02):
+def cam02ucs_2_srgb(cam02):
     return cs.cspace_convert(cam02, cs.CAM02UCS, "sRGB255")
 
 
-def srgb2lab(rgb):
+def srgb_2_lab(rgb):
     return cs.cspace_convert(rgb,'sRGB255','CIELab')
 
-def lab2srgb(lab):
+def lab_2_srgb(lab):
     return cs.cspace_convert(lab,'CIELab','sRGB255')
 
 
@@ -81,13 +81,13 @@ def clamp_hsv_opencv(a):
     return np.concatenate(
         (lr_hue[:,:,np.newaxis],lr_sat[:,:,np.newaxis],lr_val[:,:,np.newaxis]), axis=2).astype('float32')
 
-def hex2hsv(s):
-    r,g,b = hex2rgb(s)
+def hex_2_hsv(s):
+    r,g,b = hex_2_rgb(s)
     return np.array(colorsys.rgb_to_hsv(r,g,b))*[255,255,1]
 
 def interpolate_hex_colors(start,end,n):
-    r1,g1,b1 = hex2rgb(start)
-    r2,g2,b2 = hex2rgb(end)
+    r1,g1,b1 = hex_2_rgb(start)
+    r2,g2,b2 = hex_2_rgb(end)
 
     def hs(x):
         s = hex(x)[2:]
@@ -107,16 +107,16 @@ def interpolate_hex_colors(start,end,n):
 
 
 
-def build_color_dictionary(s):
+def build_palette_from_state(s):
     return {
         key:(color,meta)
-        for key,color,meta in parse_line_color_states(s)
+        for key,color,meta in parse_palette(s)
     }
 
 
-def build_list_color_dictionaries(s):
+def build_list_palettes(s):
     return [
-        build_color_dictionary(i)
+        build_palette_from_state(i)
         for i in s.split(',')
     ]
 
@@ -125,38 +125,43 @@ def build_color_repository(s):
 
 
     return {
-        s1: build_color_dictionary(s2)
+        s1: build_palette_from_state(s2)
         for i in s.split(',')
         for s1,s2 in [i.split(':')]
     }
 
 
-def get_keys_from_dict(color_dict):
-    return [i for i in color_dict.keys()]
+def get_keys_from_palette(palette):
+    return [i for i in palette.keys()]
 
-def get_colors_from_dict(color_dict):
-    return [j for i,(j,_) in color_dict.items()]
-
-def get_meta_from_dict(color_dict):
-    return [j for i,(_,j) in color_dict.items()]
+def get_colors_from_palette(palette):
+    return [j for i,(j,_) in palette.items()]
 
 
-def flatten_list_color_dicts(list_color_dicts):
+def palette_2_color_dict(palette):
+    return {i:j for i,(j,_) in palette.items()}
+
+
+def get_meta_from_palette(palette):
+    return [j for i,(_,j) in palette.items()]
+
+
+def flatten_list_palettes(list_color_palettes):
     return {
         i:j
-        for d in list_color_dicts
+        for d in list_color_palettes
         for i,j in d.items()
     }
 
 
-def flatten_dict_color_dicts(dict_color_dicts):
+def flatten_dict_palettes(dict_color_palettes):
     return {
         i:j
-        for _,d in dict_color_dicts.items()
+        for _,d in dict_color_palettes.items()
         for i,j in d.items()
     }
 
-def parse_line_color_states(s):
+def parse_palette(s):
     return [ parse_color_state(i) for i in s.split('-')  ]
 
 def parse_color_state(s):
@@ -179,14 +184,14 @@ def get_meta_for_each_sample(sample,color_dict):
         for i in sample
     ]
 
-def get_color_codes_from_color_dict(color_dict):
-    return {i:hex2rgb(j) for i, (j,_) in color_dict.items()}
+def hex_palette_2_rgb_palette(color_dict):
+    return {i:hex_2_rgb(j) for i, (j, _) in color_dict.items()}
 
-def replace_indices_with_colors(img, color_dict):
+def replace_indices_with_colors(img, hex_palette):
 
-    color_dict = get_color_codes_from_color_dict(color_dict)
+    hex_palette = hex_palette_2_rgb_palette(hex_palette)
     new_img = np.zeros(list(img.shape)+[3])
-    for key,item in color_dict.items():
+    for key,item in hex_palette.items():
         mask = img == key
         new_img[mask] = item
 

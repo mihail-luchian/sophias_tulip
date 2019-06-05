@@ -81,7 +81,7 @@ def to_string_pattern(p,values):
 def gen_img_from_accumulations_blueprint(acums, colors, color_dict):
 
     color_dict_hex = {
-        i:color.hex2hsv(j)
+        i:color.hex_2_hsv(j)
         for i,j in color_dict.items()
     }
 

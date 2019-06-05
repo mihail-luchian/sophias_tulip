@@ -63,7 +63,7 @@ def to_string_pattern(p,values):
 def generate_color_image(acums, colors_acum, color_dict):
 
     color_dict_cam = {
-        i: color.srgb2cam02ucs(color.hex2rgb(j))
+        i: color.srgb_2_cam02ucs(color.hex_2_rgb(j))
         for i,j in color_dict.items()
     }
 
@@ -100,7 +100,7 @@ def generate_color_image(acums, colors_acum, color_dict):
     layer_h = default_color[:, :, 2] + acums*(h_distance/num_steps)[:,np.newaxis]
 
     final = np.stack((layer_j, layer_c, layer_h), axis=2)
-    final = color.cam02ucs2srgb(final)
+    final = color.cam02ucs_2_srgb(final)
     final = np.clip(final,0,255)
 
     return final.astype('uint8')

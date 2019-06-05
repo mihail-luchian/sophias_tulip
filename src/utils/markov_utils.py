@@ -304,7 +304,10 @@ def paint_linearly_markov_hierarchy(
 
 def compute_transition_matrix(preference_matrix):
     sums = np.sum(preference_matrix, axis=1)
-    return preference_matrix / sums[:, None]
+    transition_matrix = np.zeros_like(preference_matrix)
+    mask = sums != 0
+    transition_matrix[mask] = preference_matrix[mask]/sums[mask][:,None]
+    return transition_matrix
 
 class MarkovModel:
 

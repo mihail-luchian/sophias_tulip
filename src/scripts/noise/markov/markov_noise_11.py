@@ -22,8 +22,8 @@ WIDTH  = HEIGHT
 UPSCALE_FACTOR = c.INSTA_SIZE // HEIGHT
 
 
-COLOR_DICT_1 = color.build_color_dictionary(config.get('string-color-3', c.DEFAULT_COLOR_STR_1))
-COLOR_DICT_2 = color.build_color_dictionary(config.get('string-color-4', c.DEFAULT_COLOR_STR_1))
+COLOR_DICT_1 = color.build_palette_from_state(config.get('string-color-3', c.DEFAULT_COLOR_STR_1))
+COLOR_DICT_2 = color.build_palette_from_state(config.get('string-color-4', c.DEFAULT_COLOR_STR_1))
 
 
 ### SETUP section
@@ -48,7 +48,7 @@ def continous_linspace(values_start,values_end,lengths):
     # bins = np.arange(16)/16
     # digitized = np.digitize(transitions,bins)
     # transitions = bins[digitized-1]
-    transitions = data.ease_inout_sine(transitions)
+    transitions = data.ease_inout_sin(transitions)
 
     return (
             np.repeat(values_start,lengths.astype('int32'))*(1-transitions)
@@ -60,8 +60,8 @@ def generate_gradient(colors_start,colors_end,lengths):
     # print(colors.shape)
     # print(lengths.shape)
 
-    colors_start = color.srgb2cam02(colors_start)
-    colors_end = color.srgb2cam02(colors_end)
+    colors_start = color.srgb_2_cam02(colors_start)
+    colors_end = color.srgb_2_cam02(colors_end)
 
     j_start = colors_start[:,0]
     c_start = colors_start[:,1]
@@ -71,7 +71,7 @@ def generate_gradient(colors_start,colors_end,lengths):
     c_end = colors_end[:,1]
     h_end = colors_end[:,2]
 
-    return color.cam022srgb(
+    return color.cam02_2_srgb(
         np.stack(
             (
                 continous_linspace(j_start,j_end,lengths),

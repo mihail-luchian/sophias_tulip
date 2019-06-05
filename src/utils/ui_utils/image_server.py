@@ -4,7 +4,7 @@ import cv2
 import base64
 import json
 
-def start_server(color_string,generate_image_function,seed):
+def start_server(generate_image_function,color_string,seed):
 
     app = Flask(__name__)
     CORS(app)
