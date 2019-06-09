@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 print('PREPARING DATA SECTION')
 DUMP_PREVIOUS_EXPORTS = True
 START_SERVER = False
-N = 10
+N = 50
 SEED = config.get('seed',296)
 HEIGHT = 500
 WIDTH  = 500

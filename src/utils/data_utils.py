@@ -327,3 +327,57 @@ def integrate_series(series,n,mean_influence=0):
             integrated = np.cumsum(integrated)
             integrated -= mean_influence*np.mean(integrated)
         return integrated
+
+
+def interpolate(values,value_influences,interpolation_sequence):
+
+    if len(values.shape)==1:
+        values = values[:,None]
+
+    value_influences = np.array(value_influences)
+
+    interpolation_sequence -= np.min(interpolation_sequence)
+    interpolation_sequence /= np.max(interpolation_sequence)
+
+
+    l = len(value_influences)
+
+
+    interpolated = np.zeros((interpolation_sequence.size,values[0].size))
+    acumulated_influence = np.cumsum(value_influences)
+    total_influence = acumulated_influence[-1]
+
+    influence_lengths = np.zeros(l-1)
+
+    for i in range(l-1):
+        if i == 0:
+            influence_lengths[0] = value_influences[0]+value_influences[1]/2
+        elif i == l - 2:
+            influence_lengths[-1] = value_influences[-1]+value_influences[-2]/2
+        else:
+            influence_lengths[i] = value_influences[i]/2 + value_influences[i+1]/2
+
+    influence_lengths_acum = np.cumsum(np.append([0],influence_lengths))
+
+    for i in range(l-1):
+        value_start = values[i]
+        value_end = values[i+1]
+
+        influence_start = influence_lengths_acum[i]
+        influence_end = influence_start + influence_lengths[i]
+
+        interpolation_start = influence_start/total_influence
+        interpolation_end = influence_end/total_influence
+
+        mask = np.logical_and(
+        interpolation_sequence >= interpolation_start,
+        interpolation_sequence <= interpolation_end,
+        )
+
+        current_interpolation_series = interpolation_sequence[mask]
+        current_interpolation_series -= interpolation_start
+        current_interpolation_series /= (interpolation_end-interpolation_start)
+        interpolated[mask] += value_start[None,:]*(1-current_interpolation_series)[:,None] + value_end[None,:]*current_interpolation_series[:,None]
+
+
+    return interpolated
