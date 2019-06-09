@@ -59,11 +59,11 @@ def move_files_from_to(old_path,new_path,dir_name):
         [shutil.move(i,j) for i,j in zip(files_old_path,files_new_path)]
 
 def clear_export_dir():
-    print('CLEARING EXPORT DIR')
+    print('\tCLEARING EXPORT DIR')
     create_dir_if_necessary(C.PATH_FOLDER_EXPORTS)
     create_dir_if_necessary(C.PATH_FOLDER_DUMP)
     move_files_from_to(
         C.PATH_FOLDER_EXPORTS,
         C.PATH_FOLDER_DUMP,
         str(int(round(time.time() * 1000))))
-    print('DONE CLEARING EXPORT DIR')
+    print('\tDONE CLEARING EXPORT DIR')
