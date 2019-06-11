@@ -331,6 +331,7 @@ def integrate_series(series,n,mean_influence=0):
 
 def interpolate(values,value_influences,interpolation_sequence):
 
+    values = np.array(values)
     if len(values.shape)==1:
         values = values[:,None]
 

@@ -1,5 +1,6 @@
-CONFIG = {
+### SUBMISSION_25
 
+CONFIG = {
 }
 
 def get(key,default):
