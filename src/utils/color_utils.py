@@ -134,19 +134,28 @@ def build_color_repository(s):
 def get_keys_from_palette(palette):
     return [i for i in palette.keys()]
 
-def get_colors_from_palette(palette):
-    return [j for i,(j,_) in palette.items()]
+def get_colors_from_palette(palette,keys=None):
+    if keys is None:
+        return [j for i,(j,_) in palette.items()]
+    else:
+        return [palette[key][0] for key in keys]
 
 
 def palette_2_color_dict(palette):
     return {i:j for i,(j,_) in palette.items()}
 
 
-def get_meta_from_palette(palette,meta_cast_function=None):
-    if meta_cast_function is None:
-        return [j for i,(_,j) in palette.items()]
+def get_meta_from_palette(palette,keys,meta_cast_function=None):
+
+    if keys is None:
+        meta = [j for i,(_,j) in palette.items()]
     else:
-        return [ meta_cast_function(j) for i, (_, j) in palette.items()]
+        meta = [palette[key][1] for key in keys]
+
+    if meta_cast_function is None:
+        return meta
+    else:
+        return [ meta_cast_function(i) for i in meta]
 
 
 def flatten_list_palettes(list_color_palettes):
@@ -180,18 +189,6 @@ def parse_color_state(s):
         meta = ss[2]
     return (key,color,meta)
 
-
-def get_meta_for_each_sample(samples, color_dict, meta_cast_function=None):
-    if meta_cast_function is None:
-        return [
-            color_dict[i][1]
-            for i in samples
-        ]
-    else:
-        return [
-            meta_cast_function(color_dict[i][1])
-            for i in samples
-        ]
 
 def hex_palette_2_rgb_palette(color_dict):
     return {i:hex_2_rgb(j) for i, (j, _) in color_dict.items()}
