@@ -39,6 +39,15 @@ def choice_from(key,*args,**kwargs):
     seed = __random_seed__(key[CHOICE_KEY])
     return np.random.RandomState(seed).choice(*args,**kwargs)
 
+def binomial(*args,**kwargs):
+    return binomial_from(default_generator,*args,**kwargs)
+
+def binomial_from(key,*args,**kwargs):
+    # this is done to make one sampling operation independent from others
+    # and thus allow for more sophisticated effects like animation
+    seed = __random_seed__(key[CHOICE_KEY])
+    return np.random.RandomState(seed).binomial(*args,**kwargs)
+
 
 def reset_key(key):
     return __generate_random_key__(key[SEED_KEY])

@@ -382,3 +382,12 @@ def interpolate(values,value_influences,interpolation_sequence):
 
 
     return interpolated
+
+def prepare_image_for_export(image):
+
+    cp = np.copy(image)
+
+    cp[cp>255] = 255
+    cp[cp<0] = 0
+
+    return cp.astype('uint8')
