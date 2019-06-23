@@ -145,7 +145,7 @@ def palette_2_color_dict(palette):
     return {i:j for i,(j,_) in palette.items()}
 
 
-def get_meta_from_palette(palette,keys,meta_cast_function=None):
+def get_meta_from_palette(palette,keys=None,meta_cast_function=None):
 
     if keys is None:
         meta = [j for i,(_,j) in palette.items()]

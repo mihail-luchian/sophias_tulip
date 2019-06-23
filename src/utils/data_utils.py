@@ -329,13 +329,16 @@ def integrate_series(series,n,mean_influence=0):
         return integrated
 
 
-def interpolate(values,value_influences,interpolation_sequence):
+def interpolate(values,interpolation_sequence,value_influences=None,ease_function = None):
 
     values = np.array(values)
     if len(values.shape)==1:
         values = values[:,None]
 
-    value_influences = np.array(value_influences)
+    if value_influences is None:
+        value_influences = np.ones(values.shape[0])
+    else:
+        value_influences = np.array(value_influences)
 
     interpolation_sequence -= np.min(interpolation_sequence)
     interpolation_sequence /= np.max(interpolation_sequence)
@@ -378,10 +381,15 @@ def interpolate(values,value_influences,interpolation_sequence):
         current_interpolation_series = interpolation_sequence[mask]
         current_interpolation_series -= interpolation_start
         current_interpolation_series /= (interpolation_end-interpolation_start)
+
+        if ease_function is not None:
+            current_interpolation_series = ease_function(current_interpolation_series)
+
         interpolated[mask] += value_start[None,:]*(1-current_interpolation_series)[:,None] + value_end[None,:]*current_interpolation_series[:,None]
 
 
     return interpolated
+
 
 def prepare_image_for_export(image):
 
@@ -391,3 +399,29 @@ def prepare_image_for_export(image):
     cp[cp<0] = 0
 
     return cp.astype('uint8')
+
+
+def concat_signals(signals,amplitudes):
+
+    ls = np.array([ signal.shape[0] for signal in signals] )
+    final_signal = np.zeros( np.sum(ls) )
+
+    start_value = 0
+    start = 0
+    end = 0
+    for i,l in enumerate(ls):
+
+        start = end
+        end += l
+
+        current_signal = signals[i]
+        amplitude = amplitudes[i]
+
+        current_signal -= current_signal[0]
+        current_signal *= amplitude
+        current_signal += start_value
+        start_value = current_signal[-1]
+
+        final_signal[start:end] = current_signal
+
+    return final_signal
