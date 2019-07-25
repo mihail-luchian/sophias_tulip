@@ -1,5 +1,7 @@
 import numpy as np
 import utils.generate_utils as gen
+import itertools
+import utils.data_type_utils as dt
 
 def upscale_nearest(x, ny = 3, nx = None):
     '''
@@ -318,14 +320,21 @@ def str2mat(s):
     return preference_matrix
 
 
-def integrate_series(series,n,mean_influence=0):
+def integrate_series(series,n=1,mean_influences=[0],post_mean=False):
+
+    mean_influences = dt.listify(mean_influences)
+
     if n<=0:
         return series
     else:
+
         integrated = series
-        for i in range(n):
-            integrated = np.cumsum(integrated)
+        for i,mean_influence in itertools.zip_longest(range(n),mean_influences,fillvalue=mean_influences[-1]):
             integrated -= mean_influence*np.mean(integrated)
+            integrated = np.cumsum(integrated)
+
+        if post_mean is True:
+            integrated -= np.mean(integrated)
         return integrated
 
 

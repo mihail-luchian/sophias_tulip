@@ -1,30 +1,7 @@
 import numpy as np
 import constants as c
 import random_manager as r
-
-
-def is_listy(thing):
-    return hasattr(thing, "__len__")
-
-
-def listify_if_not_none(thing):
-    if thing is None:
-        return None
-    else:
-        return listify(thing)
-
-def array_listify_if_not_none(thing,dtype='int32'):
-    l = listify_if_not_none(thing)
-    if l is None:
-        return None
-    else:
-        return np.array(l).astype(dtype)
-
-def listify(thing):
-    return thing if is_listy(thing) else [thing]
-
-def array_listify(thing,dtype='int32'):
-    return np.array(listify(thing)).astype(dtype)
+from utils.data_type_utils import *
 
 def markov_model_is_leaf(values):
     # we examine two cases:
@@ -41,15 +18,18 @@ def markov_model_is_leaf(values):
 
 def simulate_markov_chain(node,length,rkey):
     if node.update_step is None or node.update_fun is None:
-        return simulate_markov_chain_without_update(
+        sample = simulate_markov_chain_without_update(
             transition_matrix=node.transition_matrix,
             start_probs=node.start_probs,
             length=length,
             rkey=rkey)
     else:
-        return simulate_markov_chain_with_update(node,length)
+        sample = simulate_markov_chain_with_update(node,length)
 
-def simulate_markov_chain_without_update(transition_matrix, start_probs, length, rkey):
+    return sample
+
+def simulate_markov_chain_without_update(
+        transition_matrix, start_probs, length, rkey):
 
     num_elems = len(transition_matrix)
     element_range = np.arange(num_elems)
@@ -130,7 +110,8 @@ def simulate_markov_generator(node, length=None, rkey=None):
                 repeats = [ node.lengths[s] for s in simulation  ]
             simulation = np.repeat(simulation,repeats)
         vals = [node.values[i] for i in simulation]
-
+        if node.post_process is not None:
+            vals = node.post_process(vals)
 
         if node.leaf is False:
             child_lens = r.choice_from(loop_key,node.child_lengths,sim_length)
@@ -154,6 +135,10 @@ def simulate_markov_processor(node,length):
         ms += [i]
 
     vals = np.concatenate(ms)
+
+    if node.pre_process is not None:
+        vals = node.pre_process(vals)
+
     total_size = vals.size
     limit = None
     if node.length_limit is not None:
@@ -166,6 +151,10 @@ def simulate_markov_processor(node,length):
         reps = r.choice_from(node.random_key,node.num_tiles)
     if reps is not None:
         vals = np.tile(vals, reps)
+
+    if node.post_process is not None:
+        vals = node.post_process(vals)
+
     yield vals
 
 
@@ -322,7 +311,8 @@ class MarkovModel:
                  self_length=None,
                  update_step=None,
                  update_fun=None,
-                 parent_rkey=None):
+                 parent_rkey=None,
+                 post_process=None):
 
 
         ## checking all the received inputs
@@ -365,6 +355,8 @@ class MarkovModel:
         self.update_step = update_step
         self.update_fun = update_fun
         self.simulated_length = 0
+
+        self.post_process = post_process
 
         #setup the random number generator if it wasn't already setup by someone else
         if not hasattr(self,'random_key'):
@@ -474,12 +466,16 @@ class RandomMarkovModel(MarkovModel):
 
 
 class Processor:
-    def __init__(self, node, num_tiles=None, length_limit=None,parent_rkey=None):
+    def __init__(self, node, num_tiles=None, length_limit=None,parent_rkey=None, pre_process=None, post_process=None):
         self.node = node
 
         self.num_tiles = listify_if_not_none(num_tiles)
         self.length_limit = listify_if_not_none(length_limit)
         self.type = c.TYPE_PROC
+
+        self.pre_process = pre_process
+        self.post_process = post_process
+
         if parent_rkey is not None:
             self.random_key = r.bind_generator_from(parent_rkey)
         else:

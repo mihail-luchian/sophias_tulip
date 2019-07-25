@@ -49,6 +49,19 @@ def binomial_from(key,*args,**kwargs):
     return np.random.RandomState(seed).binomial(*args,**kwargs)
 
 
+def poisson(*args,**kwargs):
+    return poisson_from(default_generator,*args,**kwargs)
+
+
+def poisson_from(key,*args,**kwargs):
+    # this is done to make one sampling operation independent from others
+    # and thus allow for more sophisticated effects like animation
+    seed = __random_seed__(key[CHOICE_KEY])
+    return np.random.RandomState(seed).poisson(*args,**kwargs)
+
+
+
+
 def reset_key(key):
     return __generate_random_key__(key[SEED_KEY])
 
