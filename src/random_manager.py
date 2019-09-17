@@ -1,26 +1,40 @@
+'''
+    The design of the random manager:
+
+    Everything starts with the seed. When init_def_generator (which has to be always called first) is called,
+    a default generator is constructed. This default generator can then be used the generate new generators using the
+    bind_generator function. It is advisable that you do not use the default generator for anything else.
+
+    Each generator is a tuple which contains the seed with which the generator was created (useful when you want to
+    reset the generator) and 2 RandomStates, one for sampling from different distributions and one for creating other
+    generators. Additional RandomStates may be added later.
+
+    The reason the generator was designed like this is to
+    facilitate as many 'independent' random actions as possible, i.e. when working with randomness you do not want the
+    operations in one part of the code, to affect the samples from other parts of the code. This makes development a
+    whole lot easier.
+
+'''
+
+
 import numpy as np
 
 ui32 = np.iinfo(np.uint32)
-
-# the default generator is there to be used by the script itself
-# so that is doesn't have to keep it's own special generator
-KEY_DEFAULT_GENERATOR = 0
-KEY_DEFAULT_BIND_GENERATOR = 1
 default_generator = None
 
-SEED_KEY = 0
-CHOICE_KEY = 1
-BIND_KEY = 2
+SEED_INDEX = 0
+CHOICE_RANDOM_STATE_INDEX = 1
+BIND_RANDOM_STATE_INDEX = 2
 
 # this function must be called first, to properly setup the default random number generator
 # if you call the function again, all the previous generators are discarded
 def init_def_generator(seed):
     global default_generator
     global default_bind_generator
+    default_generator = __make_generator__(seed)
 
-    default_generator = __generate_random_key__(seed)
 
-def __generate_random_key__(seed):
+def __make_generator__(seed):
     intermediate = np.random.RandomState(seed)
 
     return (
@@ -33,19 +47,18 @@ def __generate_random_key__(seed):
 def choice(*args,**kwargs):
     return choice_from(default_generator,*args,**kwargs)
 
-def choice_from(key,*args,**kwargs):
-    # this is done to make one sampling operation independent from others
-    # and thus allow for more sophisticated effects like animation
-    seed = __random_seed__(key[CHOICE_KEY])
+
+def choice_from(generator,*args,**kwargs):
+    seed = __random_seed__(generator[CHOICE_RANDOM_STATE_INDEX])
     return np.random.RandomState(seed).choice(*args,**kwargs)
+
 
 def binomial(*args,**kwargs):
     return binomial_from(default_generator,*args,**kwargs)
 
-def binomial_from(key,*args,**kwargs):
-    # this is done to make one sampling operation independent from others
-    # and thus allow for more sophisticated effects like animation
-    seed = __random_seed__(key[CHOICE_KEY])
+
+def binomial_from(generator,*args,**kwargs):
+    seed = __random_seed__(generator[CHOICE_RANDOM_STATE_INDEX])
     return np.random.RandomState(seed).binomial(*args,**kwargs)
 
 
@@ -53,31 +66,45 @@ def poisson(*args,**kwargs):
     return poisson_from(default_generator,*args,**kwargs)
 
 
-def poisson_from(key,*args,**kwargs):
-    # this is done to make one sampling operation independent from others
-    # and thus allow for more sophisticated effects like animation
-    seed = __random_seed__(key[CHOICE_KEY])
+def poisson_from(generator,*args,**kwargs):
+    seed = __random_seed__(generator[CHOICE_RANDOM_STATE_INDEX])
     return np.random.RandomState(seed).poisson(*args,**kwargs)
 
 
+def shuffle(*args,**kwargs):
+    return shuffle_from(default_generator,*args,**kwargs)
 
 
-def reset_key(key):
-    return __generate_random_key__(key[SEED_KEY])
+def shuffle_from(generator,*args,**kwargs):
+    seed = __random_seed__(generator[CHOICE_RANDOM_STATE_INDEX])
+    return np.random.RandomState(seed).shuffle(*args,**kwargs)
 
-def __random_seed__(generator):
-    return generator.randint(0,ui32.max//2)
+
+def reset_generator(generator):
+    return __make_generator__(generator[SEED_INDEX])
+
+
+def random_seed_from(generator):
+    return __random_seed__(generator[BIND_RANDOM_STATE_INDEX])
+
+
+def __random_seed__(random_state):
+    return random_state.randint(0,ui32.max//2)
+
 
 def bind_generator():
     return bind_generator_from(default_generator)
 
-def bind_generator_from(key):
-    seed = __random_seed__(key[BIND_KEY])
-    return __generate_random_key__(seed)
+
+def bind_generator_from(generator):
+    seed = __random_seed__(generator[BIND_RANDOM_STATE_INDEX])
+    return __make_generator__(seed)
+
 
 def call_and_bind(function,*args,**kwargs):
     return call_and_bind_from(default_generator,function,*args,**kwargs)
 
-def call_and_bind_from(key,function,*args,**kwargs):
-    rkey = bind_generator_from(key)
-    return function(*args,**kwargs,rkey=rkey)
+
+def call_and_bind_from(generator,function,*args,**kwargs):
+    rgen = bind_generator_from(generator)
+    return function(*args,**kwargs,rgen=rgen)

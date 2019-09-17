@@ -51,7 +51,7 @@ def upscale_with_shape( x, shape, bg = 0):
     return new_img
 
 
-def normalize_tensor(t,use_negative = False):
+def normalize_01(t, use_negative = False):
     mn = t.min()
     mx = t.max()
     if mn == mx:

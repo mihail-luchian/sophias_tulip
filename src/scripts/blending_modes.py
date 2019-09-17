@@ -63,7 +63,7 @@ EXPORT_NAME = 'gradient.jpg'
 ### END OF SCRIPT HEADER #################################################
 ##########################################################################
 
-image_bottom = normalize_tensor(load_keukenhof())
+image_bottom = normalize_01(load_keukenhof())
 # image_bottom = normalize_tensor(load_keukenhof())[:,:,0]
 # image_bottom = np.repeat(image_bottom[:,:,0].flatten(),3).reshape(image_bottom.shape)
 # image_bottom = np.ones_like(image_bottom)*0.5

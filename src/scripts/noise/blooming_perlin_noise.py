@@ -78,6 +78,6 @@ for i in range(NOISE_NODES_Y+1):
         f += tf
 
 
-f = normalize_tensor(f)
+f = normalize_01(f)
 print(f.shape)
 export_image(EXPORT_NAME,f)

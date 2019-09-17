@@ -11,6 +11,14 @@ def load_image(path):
 def save_image(path,img,format='jpg',**kwargs):
     imageio.imsave(path+'.'+format,img,format,**kwargs)
 
+
+def import_image(name):
+    files = get_files_in_path(C.PATH_FOLDER_IMPORT)
+    for file in files:
+        if file.startswith(name):
+           return load_image(os.path.join(C.PATH_FOLDER_IMPORT,file))
+
+
 def export_image(file_name,img,format='jpg',**kwargs):
     save_image(
         os.path.join(C.PATH_FOLDER_EXPORTS,file_name),
@@ -38,12 +46,6 @@ def load_keukenhof():
 def load_keukenhof_low():
     return load_image(C.PATH_FILE_KEUKENHOF_LOW)
 
-def get_files(path):
-    return [
-        f for f in os.listdir(path)
-        if os.path.isfile(os.path.join(path, f))
-    ]
-
 
 def create_dir_if_necessary(path):
     if not os.path.exists(path):
@@ -51,19 +53,52 @@ def create_dir_if_necessary(path):
 
 
 def move_files_from_to(old_path,new_path,dir_name):
-    files = get_files(old_path)
+    files = get_files_in_path(old_path)
     if len(files) > 0:
         create_dir_if_necessary(os.path.join(new_path,dir_name))
         files_old_path = [ os.path.join(old_path,file) for file in files ]
         files_new_path = [ os.path.join(new_path,dir_name,file) for file in files ]
         [shutil.move(i,j) for i,j in zip(files_old_path,files_new_path)]
 
-def clear_export_dir():
-    print('\tCLEARING EXPORT DIR')
+
+def check_wip_dirs():
     create_dir_if_necessary(C.PATH_FOLDER_EXPORTS)
     create_dir_if_necessary(C.PATH_FOLDER_DUMP)
+    create_dir_if_necessary(C.PATH_FOLDER_IMPORT)
+    create_dir_if_necessary(C.PATH_FOLDER_LOGS)
+
+
+def clear_logs_folder():
+    clear_contents_in_folder(C.PATH_FOLDER_LOGS)
+
+
+def clear_contents_in_folder(path):
+    files = get_files_in_path(path)
+    folders = get_folders_in_path(path)
+
+    for file in files:
+        os.remove(os.path.join(path,file))
+
+    for folder in folders:
+        shutil.rmtree(os.path.join(path,folder))
+
+
+def clear_export_folder():
     move_files_from_to(
         C.PATH_FOLDER_EXPORTS,
         C.PATH_FOLDER_DUMP,
         str(int(round(time.time() * 1000))))
-    print('\tDONE CLEARING EXPORT DIR')
+
+
+def get_files_in_path(path):
+    return [
+        f for f in os.listdir(path)
+        if os.path.isfile(os.path.join(path, f))
+    ]
+
+
+def get_folders_in_path(path):
+    return [
+        file for file in os.listdir(path)
+        if os.path.isdir(os.path.join(path,file))]
+

@@ -59,7 +59,7 @@ COLOR_STRING = config.get(
 ### SETUP section
 print('SETUP SECTION')
 if DUMP_PREVIOUS_EXPORTS:
-    file.clear_export_dir()
+    file.clear_export_folder()
 
 
 ### FUNCTIONS section
@@ -67,7 +67,7 @@ print('FUNCTIONS SETUP')
 
 def gradient_circle(band_len,ps,rkey):
 
-    lp = len(PS)
+    lp = len(ps)
     template_height = lp*band_len
     gradient_circle = np.zeros((template_height,template_height))
 
@@ -94,20 +94,22 @@ for current_iteration in range(N):
 
         rkey = r.bind_generator()
         lp = len(PS)
-        guard_size = 500
+        guard_size = 450
         image = np.zeros((HEIGHT+guard_size*2,WIDTH+guard_size*2))
 
         # num_circles = r.choice_from(rkey,[5,10,15,20,25])
         # num_circles = r.choice_from(rkey,[30,40,50,60,70,80,90,100])
-        num_circles = r.choice_from(rkey,[80,120,140])
+        # num_circles = r.choice_from(rkey,[80,120,140])
+        # num_circles = r.choice_from(rkey,[200,220,240])
+        num_circles = 10
         ps = r.choice_from(rkey,PS,lp)
         for i in range(num_circles):
 
             loopkey = r.bind_generator_from(rkey)
-            band_size = r.choice_from(loopkey,np.arange(5,40))
+            band_size = r.choice_from(loopkey,[10] + [15])
             circle = gradient_circle(
                 band_size,
-                PS[::-1],
+                PS[::-1] + PS[::2] + PS[1::2],
                 r.bind_generator_from(loopkey)
             )
 

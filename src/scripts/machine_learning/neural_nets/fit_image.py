@@ -73,7 +73,7 @@ def generator(z):
             patch -= np.mean(patch)
             cool_filter[:,:,0,i] = patch
             viz.show_image(patch)
-        cool_filter = data.normalize_tensor(cool_filter)
+        cool_filter = data.normalize_01(cool_filter)
 
 
         lines_size = 25
@@ -81,7 +81,7 @@ def generator(z):
         r = np.random.binomial(1,0.5, size=(prev_layer_depth*lines_prev)).astype('bool')
         lines = np.array(
             [
-                data.normalize_tensor(
+                data.normalize_01(
                     gen.random_cross_line((lines_size,lines_size), seed=i*20+1, horizontal=r[i])*0.2
                     +
                     gen.random_cross_line((lines_size,lines_size), seed=i*30+1, horizontal=r[i])*0.5

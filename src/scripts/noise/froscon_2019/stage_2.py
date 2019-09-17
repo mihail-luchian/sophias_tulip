@@ -53,7 +53,7 @@ COLOR_STRING = config.get(
 ### SETUP section
 print('SETUP SECTION')
 if DUMP_PREVIOUS_EXPORTS:
-    file.clear_export_dir()
+    file.clear_export_folder()
 
 
 ### FUNCTIONS section

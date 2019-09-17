@@ -82,6 +82,6 @@ f = (
     fade_x    *fade_y     * n11 )
 
 
-f = normalize_tensor(f)
+f = normalize_01(f)
 print(f.shape)
 export_image(EXPORT_NAME,f)

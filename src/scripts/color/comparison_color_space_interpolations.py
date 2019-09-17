@@ -28,7 +28,7 @@ END_COLOR = '0000ff'
 ### SETUP section
 print('SETUP SECTION')
 if N>1:
-    file.clear_export_dir()
+    file.clear_export_folder()
 
 
 ### FUNCTIONS section

@@ -29,7 +29,7 @@ COLOR_DICT_2 = color.build_palette_from_state(config.get('string-color-4', c.DEF
 ### SETUP section
 print('SETUP SECTION')
 if N>1:
-    file.clear_export_dir()
+    file.clear_export_folder()
 
 
 ### FUNCTIONS section

@@ -89,7 +89,7 @@ describe_array(suppressed,'SUPPR')
 edges = suppressed.copy()
 t = np.mean(edges[edges>0])*5
 edges[edges > t ] = t
-edges = normalize_tensor(edges)
+edges = normalize_01(edges)
 
 describe_array(edges[edges>0],'EDGES')
 

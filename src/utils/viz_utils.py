@@ -64,10 +64,15 @@ def animate_plots_xy(plots, interval=35, xlim=None, ylim=None):
     plt.show()
 
 
-def show_image(img):
-    if np.max(img) > 1:
-        img = data.normalize_tensor(img)
-    plt.imshow(img)
+def show_images(imgs):
+    for img in imgs:
+        plt.figure()
+        if np.max(img) > 1:
+            img = data.normalize_01(img)
+        if len(img.shape) == 2:
+            plt.imshow(img,cmap='Greys')
+        else:
+            plt.imshow(img)
     plt.show()
 
 def start_image_server(generate_image_function,color_string,seed):

@@ -33,7 +33,7 @@ print(COLOR_DICT)
 
 ### SETUP section
 print('SETUP SECTION')
-file.clear_export_dir()
+file.clear_export_folder()
 
 
 ### FUNCTIONS section

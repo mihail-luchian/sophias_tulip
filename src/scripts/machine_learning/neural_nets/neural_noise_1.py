@@ -36,7 +36,7 @@ with tf.Session() as sess:
                 driver: [[d],[-1*d]]
             }
         )
-        nn_output = normalize_tensor(nn_output[0]).reshape(SIZE,SIZE)
+        nn_output = normalize_01(nn_output[0]).reshape(SIZE, SIZE)
         nn_output = upscale_nearest(nn_output,UPSCALE)
         animation[i] = np.clip(nn_output,0,1)
 
