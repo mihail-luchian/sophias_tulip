@@ -16,6 +16,7 @@ from tensorflow import keras
 # from tensorflow.keras.layers import Input,Dense
 # from keras.models import Model
 from skimage.transform import resize
+from skimage.filters import gaussian
 
 ### DATA/INPUT/SHARED by all runs section
 print('PREPARING DATA SECTION')
@@ -28,17 +29,17 @@ SAVE_IMAGES = False
 
 N = 1
 SEED = config.get('seed',325)
-HEIGHT = 250
-WIDTH  = 250
+HEIGHT = 500
+WIDTH  = 500
+TRAINING_UPSAMPLE = 2
 
 
 ### NEURAL NET CONSTANTS
-INPUT_SIZE = 2
-LEARNING_RATE = 0.00005
-NUM_TRAINING_EPOCHS = 1000
-BATCH_SIZE = 512
+LEARNING_RATE = 0.01
+NUM_TRAINING_EPOCHS = 100
+BATCH_SIZE = 2048
 
-NUM_HIDDEN_LAYERS = 3
+HIDDEN_LAYER_SIZE = [32,32,64,64]
 
 COLOR_STRING = config.get(
     'color-string',
@@ -62,22 +63,33 @@ print('FUNCTIONS SETUP')
 
 def build_network(input,rgen):
 
-    dev = 0.15
-
     # gen_init = lambda seed : keras.initializers.RandomUniform(-dev,dev,seed)
     gen_init = lambda seed : keras.initializers.glorot_uniform(seed)
 
     layer = input
-    for i in range(NUM_HIDDEN_LAYERS):
-
+    list_layers = []
+    for i in range(len(HIDDEN_LAYER_SIZE)):
         layer = keras.layers.Dense(
-            32, activation=keras.activations.tanh,
+            HIDDEN_LAYER_SIZE[i],
+            # activation=None,
+            activation=keras.activations.tanh,
             kernel_initializer = gen_init(r.random_seed_from(rgen)),
             bias_initializer = gen_init(r.random_seed_from(rgen)),
         )(layer)
+        list_layers += [layer]
+        # layer = keras.layers.ReLU()(layer)
+        # layer = keras.layers.PReLU()(layer)
+
+    # layer = keras.layers.concatenate(list_layers)
+
+    # layer = keras.layers.Dense(
+    #     8,activation=keras.activations.tanh,
+    #     kernel_initializer = gen_init(r.random_seed_from(rgen)),
+    #     bias_initializer = gen_init(r.random_seed_from(rgen)),
+    # )(layer)
 
     layer = keras.layers.Dense(
-        4,activation=keras.activations.tanh,
+        8,activation=keras.activations.tanh,
         kernel_initializer = gen_init(r.random_seed_from(rgen)),
         bias_initializer = gen_init(r.random_seed_from(rgen)),
     )(layer)
@@ -89,7 +101,7 @@ def build_network(input,rgen):
     )(layer)
     model = keras.models.Model(inputs=input,outputs=output)
 
-    adam = keras.optimizers.Adam(lr=LEARNING_RATE,beta_1=0.8)
+    adam = keras.optimizers.Adam(lr=LEARNING_RATE)
     model.compile(
         optimizer=adam,
         # loss=keras.losses.mean_squared_error,
@@ -104,24 +116,50 @@ def generate_full_image(color_string,seed):
     r.init_def_generator(seed)
     rgen = r.bind_generator()
 
-    base_image = resize(file.import_image('tulip'),(HEIGHT,WIDTH))
+    training_width = WIDTH*TRAINING_UPSAMPLE
+    training_height = HEIGHT*TRAINING_UPSAMPLE
 
-    input = keras.Input(batch_shape=[None,INPUT_SIZE])
-    model = build_network(input=input,rgen=r.bind_generator_from(rgen))
-    print(model.summary())
+    base_image = file.import_image('tulip_high')
+    base_image = resize(
+        base_image,
+        (training_height,training_width,),
+        order=3)
+    base_image = gaussian(base_image,sigma=4)
 
-    ly1 = np.linspace(-1,1,num=HEIGHT)
-    lx1 = np.linspace(-1,1,num=WIDTH)
+
+    ly1 = np.linspace(-1,1,num=training_height)
+    lx1 = np.linspace(-1,1,num=training_width)
     yy1,xx1 = np.meshgrid(ly1,lx1)
 
-    f = np.c_[
-            yy1.flatten(),
-            xx1.flatten(),
-    ]
+    ly2 = np.linspace(-1,1,num=HEIGHT)
+    lx2 = np.linspace(-1,1,num=WIDTH)
+    yy2,xx2 = np.meshgrid(ly2,lx2)
 
-    labels = base_image[:HEIGHT,:WIDTH,0].reshape(-1,1)
+    def make_fs(xx,yy):
+        return np.c_[
+            yy.flatten(),
+            xx.flatten(),
+            (xx*yy).flatten(),
+            (xx**2 - 0.5).flatten(),
+            (yy**2 - 0.5).flatten(),
+            (yy**2 * xx**2 - 0.5).flatten(),
+            (np.sin(2*np.pi*xx)).flatten(),
+            (np.sin(2*np.pi*yy)).flatten(),
+            (np.sin(2*np.pi*yy)*np.sin(2*np.pi*xx)).flatten(),
+        ]
+
+    f1 = make_fs(xx1,yy1)
+    f2 = make_fs(xx2,yy2)
+
+    training_image = base_image[:,:,0]
+    labels = training_image.reshape(-1,1)
     labels = data.normalize_01(labels)
     labels -= 0.5
+
+    input_size = f1.shape[1]
+    input = keras.Input(batch_shape=[None,input_size])
+    model = build_network(input=input,rgen=r.bind_generator_from(rgen))
+    print(model.summary())
 
     def scheduler(epoch):
         current_learning_rate = LEARNING_RATE*(0.995**epoch)
@@ -134,15 +172,15 @@ def generate_full_image(color_string,seed):
     )
 
     model.fit(
-        x=f,y=labels,
+        x=f1,y=labels,
         batch_size=BATCH_SIZE,epochs=NUM_TRAINING_EPOCHS,
         callbacks=[lr_callback,tb_callback])
 
-    image = model.predict(f)
+    image = model.predict(f2)
     image = image.reshape([HEIGHT,WIDTH])
     print(np.max(image),np.min(image))
     image = np.clip(image+0.5,0,1)
-    return base_image[:HEIGHT,:WIDTH,0],image
+    return training_image,image,image-training_image[::TRAINING_UPSAMPLE,::TRAINING_UPSAMPLE]
 
 
 ### GENERATE SECTION
@@ -165,6 +203,6 @@ for current_iteration in range(N):
                 '%d_%d_%d' % (current_iteration,SEED+current_iteration,int(round(time.time() * 1000))),
                 images.astype('uint8'),format='png')
         elif SHOW_IMAGES is True:
-            viz.show_images(images)
+            viz.show_images_together(images)
 
 

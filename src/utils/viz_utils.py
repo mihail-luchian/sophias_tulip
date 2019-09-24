@@ -75,6 +75,20 @@ def show_images(imgs):
             plt.imshow(img)
     plt.show()
 
+def show_images_together(imgs):
+
+    num_images = len(imgs)
+    f, axarr = plt.subplots(1,num_images)
+    for i,img in enumerate(imgs):
+        ax = axarr[i]
+        if np.max(img) > 1:
+            img = data.normalize_01(img)
+        if len(img.shape) == 2:
+            ax.imshow(img,cmap='Greys')
+        else:
+            ax.imshow(img)
+    plt.show()
+
 def start_image_server(generate_image_function,color_string,seed):
     import utils.ui_utils.image_server as image_server
     image_server.start_server(generate_image_function,color_string,seed)

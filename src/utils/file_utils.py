@@ -62,6 +62,7 @@ def move_files_from_to(old_path,new_path,dir_name):
 
 
 def check_wip_dirs():
+    create_dir_if_necessary(C.PATH_FOLDER_WIP)
     create_dir_if_necessary(C.PATH_FOLDER_EXPORTS)
     create_dir_if_necessary(C.PATH_FOLDER_DUMP)
     create_dir_if_necessary(C.PATH_FOLDER_IMPORT)
