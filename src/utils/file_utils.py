@@ -3,6 +3,9 @@ import imageio
 import os.path
 import shutil
 import time
+import script_config as config
+import random_manager as r
+from tensorflow import keras
 
 
 def load_image(path):
@@ -67,6 +70,7 @@ def check_wip_dirs():
     create_dir_if_necessary(C.PATH_FOLDER_DUMP)
     create_dir_if_necessary(C.PATH_FOLDER_IMPORT)
     create_dir_if_necessary(C.PATH_FOLDER_LOGS)
+    create_dir_if_necessary(C.PATH_FOLDER_NNETS)
 
 
 def clear_logs_folder():
@@ -103,3 +107,19 @@ def get_folders_in_path(path):
         file for file in os.listdir(path)
         if os.path.isdir(os.path.join(path,file))]
 
+def save_nnet(model, rgen, prefix =''):
+    path = os.path.join(
+        C.PATH_FOLDER_NNETS,generate_net_name(rgen,prefix)+'.h5')
+    # print(path)
+    model.save(path)
+
+def load_nnet(rgen,prefix,custom_objects=None):
+    path = os.path.join(
+        C.PATH_FOLDER_NNETS,generate_net_name(rgen,prefix)+'.h5')
+    # print(path)
+    return keras.models.load_model(path,custom_objects=custom_objects)
+
+def generate_net_name(rgen,prefix):
+    submission_num = config.get(C.CONFIG_KEY_SUBMISSION,0)
+    base_seed = r.get_start_seed(rgen)
+    return f'{prefix}_{submission_num}_{base_seed}'

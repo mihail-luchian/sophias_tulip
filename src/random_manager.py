@@ -22,9 +22,9 @@ import numpy as np
 ui32 = np.iinfo(np.uint32)
 default_generator = None
 
-SEED_INDEX = 0
-CHOICE_RANDOM_STATE_INDEX = 1
-BIND_RANDOM_STATE_INDEX = 2
+__INDEX_START_SEED__ = 0
+__INDEX_CHOICE_RANDOM_STATE__ = 1
+__INDEX_BIND_RANDOM_STATE__ = 2
 
 # this function must be called first, to properly setup the default random number generator
 # if you call the function again, all the previous generators are discarded
@@ -49,7 +49,7 @@ def choice(*args,**kwargs):
 
 
 def choice_from(generator,*args,**kwargs):
-    seed = __random_seed__(generator[CHOICE_RANDOM_STATE_INDEX])
+    seed = __random_seed__(generator[__INDEX_CHOICE_RANDOM_STATE__])
     return np.random.RandomState(seed).choice(*args,**kwargs)
 
 
@@ -58,7 +58,7 @@ def binomial(*args,**kwargs):
 
 
 def binomial_from(generator,*args,**kwargs):
-    seed = __random_seed__(generator[CHOICE_RANDOM_STATE_INDEX])
+    seed = __random_seed__(generator[__INDEX_CHOICE_RANDOM_STATE__])
     return np.random.RandomState(seed).binomial(*args,**kwargs)
 
 
@@ -67,8 +67,17 @@ def poisson(*args,**kwargs):
 
 
 def poisson_from(generator,*args,**kwargs):
-    seed = __random_seed__(generator[CHOICE_RANDOM_STATE_INDEX])
+    seed = __random_seed__(generator[__INDEX_CHOICE_RANDOM_STATE__])
     return np.random.RandomState(seed).poisson(*args,**kwargs)
+
+
+def uniform(*args,**kwargs):
+    return uniform_from(default_generator,*args,**kwargs)
+
+
+def uniform_from(generator,*args,**kwargs):
+    seed = __random_seed__(generator[__INDEX_CHOICE_RANDOM_STATE__])
+    return np.random.RandomState(seed).uniform(*args,**kwargs)
 
 
 def shuffle(*args,**kwargs):
@@ -76,16 +85,20 @@ def shuffle(*args,**kwargs):
 
 
 def shuffle_from(generator,*args,**kwargs):
-    seed = __random_seed__(generator[CHOICE_RANDOM_STATE_INDEX])
+    seed = __random_seed__(generator[__INDEX_CHOICE_RANDOM_STATE__])
     return np.random.RandomState(seed).shuffle(*args,**kwargs)
 
 
+def get_start_seed(generator):
+    return generator[__INDEX_START_SEED__]
+
 def reset_generator(generator):
-    return __make_generator__(generator[SEED_INDEX])
+    return __make_generator__(get_start_seed(generator))
 
 
 def random_seed_from(generator):
-    return __random_seed__(generator[BIND_RANDOM_STATE_INDEX])
+    return __random_seed__(generator[__INDEX_BIND_RANDOM_STATE__])
+
 
 
 def __random_seed__(random_state):
@@ -97,7 +110,7 @@ def bind_generator():
 
 
 def bind_generator_from(generator):
-    seed = __random_seed__(generator[BIND_RANDOM_STATE_INDEX])
+    seed = __random_seed__(generator[__INDEX_BIND_RANDOM_STATE__])
     return __make_generator__(seed)
 
 

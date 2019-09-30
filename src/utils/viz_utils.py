@@ -75,12 +75,16 @@ def show_images(imgs):
             plt.imshow(img)
     plt.show()
 
-def show_images_together(imgs):
+def show_images_together(imgs,num_rows = 1):
 
     num_images = len(imgs)
-    f, axarr = plt.subplots(1,num_images)
+    num_columns = num_images//num_rows
+    if num_columns*num_rows != num_images:
+        num_columns += 1
     for i,img in enumerate(imgs):
-        ax = axarr[i]
+        ax = plt.subplot(num_rows,num_columns,i+1)
+        ax.set_xticks([])
+        ax.set_yticks([])
         if np.max(img) > 1:
             img = data.normalize_01(img)
         if len(img.shape) == 2:
