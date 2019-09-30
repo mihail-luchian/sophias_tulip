@@ -110,8 +110,6 @@ def build_network(input_size_base,rgen):
 
     layer = keras.layers.concatenate([layer_base,sin_layer,layer,layer_add])
 
-    # relu_activation = lambda x: keras.activations.relu(
-    #     x,alpha = 0.05, max_value = 1)
     for i in range(len(HIDDEN_LAYER_SIZE)):
         layer = keras.layers.Dense(
             HIDDEN_LAYER_SIZE[i],
@@ -145,6 +143,31 @@ def generate_nnet_input(xx, yy, rgen):
     ]
 
 
+def load_image_data(heigth,width):
+
+    base_image = file.import_image('tulip_high')
+    base_image = resize(
+        base_image,
+        (heigth,width,), order=1)
+    # base_image = gaussian(base_image,sigma=4)
+    # base_image = gaussian(base_image,sigma=10)
+    base_image = gaussian(base_image,sigma=15)
+
+    training_image = base_image[:,:,0]
+    labels = training_image
+    labels = data.normalize_01(labels)
+    labels -= np.mean(labels)
+    # labels_max = labels.max()
+    # labels_min = labels.min()
+
+    # labels[labels>0] /= (labels_max*2)
+    # labels[labels<0] /= (-labels_min*2)
+
+    # labels *= 0.5
+    # labels += 0.25
+
+    return labels
+
 
 def train_network(seed):
 
@@ -154,29 +177,15 @@ def train_network(seed):
     training_width = WIDTH*TRAINING_UPSAMPLE
     training_height = HEIGHT*TRAINING_UPSAMPLE
 
-    base_image = file.import_image('tulip_high')
-    base_image = resize(
-        base_image,
-        (training_height,training_width,),
-        order=3)
-    # base_image = gaussian(base_image,sigma=4)
-    base_image = gaussian(base_image,sigma=10)
-
+    labels = load_image_data(training_height,training_width)
+    labels = labels.reshape(-1,1)
 
     ly1 = np.linspace(-1,1,num=training_height)
     lx1 = np.linspace(-1,1,num=training_width)
     yy1,xx1 = np.meshgrid(ly1,lx1)
 
-
     f = generate_nnet_input(xx1, yy1,r.bind_generator_from(rgen))
 
-    training_image = base_image[:,:,0]
-    labels = training_image.reshape(-1,1)
-    labels = data.normalize_01(labels)
-    labels -= 0.5
-    # labels *= 0.5
-    # labels += 0.25
-    #
     input_size_base = f.shape[1]
     model = build_network(
         input_size_base=input_size_base,
@@ -234,27 +243,39 @@ def train_network(seed):
 
     file.save_nnet(model, rgen, prefix=seed)
 
-    return training_image
 
 def generate_image(color_string,seed):
 
     r.init_def_generator(seed)
     rgen = r.bind_generator()
 
+    training_width = WIDTH*TRAINING_UPSAMPLE
+    training_height = HEIGHT*TRAINING_UPSAMPLE
+    labels = load_image_data(training_height,training_width)
+
     model = file.load_nnet(
-        rgen,prefix=seed,custom_objects={'SinLayer':nn.SinLayer})
+        rgen,prefix=seed,
+        custom_objects={
+            'SinLayer':nn.SinLayer,
+            'CombinatoryMultiplication':nn.CombinatoryMultiplication,
+            'XYCombinations': nn.XYCombinations
+        })
 
     ly = np.linspace(-1,1,num=HEIGHT)
     lx = np.linspace(-1,1,num=WIDTH)
     yy,xx = np.meshgrid(ly,lx)
 
-    nnet_input = generate_nnet_input(xx, yy)
+    nnet_input = generate_nnet_input(xx, yy,r.bind_generator_from(rgen))
+
 
     image = model.predict(nnet_input)
     image = image.reshape([HEIGHT,WIDTH])
     print(np.max(image),np.min(image))
-    image = np.clip(image+0.5,0,1)
-    return image
+    return [
+        labels,
+        image,
+        image-labels[::TRAINING_UPSAMPLE,::TRAINING_UPSAMPLE]
+    ]
 
 def generate_neuron_images(color_string,seed):
 
@@ -320,16 +341,8 @@ for current_iteration in range(N):
             training_image = train_network(SEED+current_iteration)
 
         print('\tGENERATING IMAGE')
-        images = generate_neuron_images(COLOR_STRING, SEED + current_iteration)
-
-        # if TRAIN_NNET is True:
-        #     images = [
-        #         training_image,
-        #         image,
-        #         image-training_image[::TRAINING_UPSAMPLE,::TRAINING_UPSAMPLE]
-        #     ]
-        # else:
-        #     images = [image]
+        # images = generate_neuron_images(COLOR_STRING, SEED + current_iteration)
+        images = generate_image(COLOR_STRING, SEED + current_iteration)
 
         if SAVE_IMAGES is True:
             print('\tSAVING IMAGE')
