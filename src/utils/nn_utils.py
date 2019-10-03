@@ -136,7 +136,7 @@ class XYCombinations(keras.layers.Layer):
         return self.scale*combinations - self.bias
 
     def compute_output_shape(self, input_shape):
-        return input_shape
+        return (input_shape[0],4)
 
     def get_config(self):
 
@@ -145,6 +145,93 @@ class XYCombinations(keras.layers.Layer):
             'seed_bias'  : self.seed_bias
         }
         base_config = super(XYCombinations, self).get_config()
+        my_config.update(base_config)
+        return my_config
+
+
+
+class SparseConnections(keras.layers.Layer):
+
+    def __init__(self,seed,output_size,divisions, **kwargs):
+        self.seed = seed
+        self.rgen = r.make_generator(seed)
+        self.output_size = output_size
+        self.divisions = divisions
+
+        super(SparseConnections, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+
+        input_ranges = np.arange(input_shape[1])
+        self.input_ranges = [
+            input_ranges[i::self.divisions]
+            for i in range(self.divisions)
+        ]
+
+        output_ranges = np.arange(self.output_size)
+        self.output_ranges = [
+            output_ranges[i::self.divisions]
+            for i in range(self.divisions)
+        ]
+
+        rseed = lambda : r.random_seed_from(self.rgen)
+
+        self.biases = []
+        self.kernels = []
+
+        for i in range(len(self.input_ranges)):
+
+            isize = self.input_ranges[i].size
+            osize = self.output_ranges[i].size
+
+            bias_initializer = keras.initializers.glorot_uniform(rseed())
+            kernel_initializer = keras.initializers.glorot_uniform(rseed())
+
+            # Create a trainable weight variable for this layer.
+            self.biases.append(self.add_weight(
+                name='bias_' + str(i),
+                shape=(osize,),
+                initializer=bias_initializer,
+                trainable=True))
+            self.kernels.append(self.add_weight(
+                name='scale_' + str(i),
+                shape=(isize,osize),
+                initializer=kernel_initializer,
+                trainable=True))
+
+        super(SparseConnections, self).build(input_shape)
+
+    def call(self, x):
+
+        tensors = []
+
+        for i in range(len(self.input_ranges)):
+            irange = self.input_ranges[i]
+            orange = self.output_ranges[i]
+            bias = self.biases[i]
+            kernel = self.kernels[i]
+
+            xx = tf.gather(x,irange,axis=1)
+
+            output = keras.backend.dot(xx, kernel)
+            output = keras.backend.bias_add(output, bias, data_format='channels_last')
+            output = keras.activations.tanh(output)
+
+            tensors.append(output)
+
+        return tf.concat(tensors,axis=1)
+
+    def compute_output_shape(self, input_shape):
+        return (input_shape[0],self.output_size)
+
+    def get_config(self):
+
+        my_config = {
+            'seed' : self.seed,
+            'output_size'  : self.output_size,
+            'divisions' : self.divisions
+        }
+        base_config = super(SparseConnections, self).get_config()
         my_config.update(base_config)
         return my_config
 

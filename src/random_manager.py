@@ -31,10 +31,10 @@ __INDEX_BIND_RANDOM_STATE__ = 2
 def init_def_generator(seed):
     global default_generator
     global default_bind_generator
-    default_generator = __make_generator__(seed)
+    default_generator = make_generator(seed)
 
 
-def __make_generator__(seed):
+def make_generator(seed):
     intermediate = np.random.RandomState(seed)
 
     return (
@@ -93,7 +93,7 @@ def get_start_seed(generator):
     return generator[__INDEX_START_SEED__]
 
 def reset_generator(generator):
-    return __make_generator__(get_start_seed(generator))
+    return make_generator(get_start_seed(generator))
 
 
 def random_seed_from(generator):
@@ -111,7 +111,7 @@ def bind_generator():
 
 def bind_generator_from(generator):
     seed = __random_seed__(generator[__INDEX_BIND_RANDOM_STATE__])
-    return __make_generator__(seed)
+    return make_generator(seed)
 
 
 def call_and_bind(function,*args,**kwargs):

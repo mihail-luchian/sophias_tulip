@@ -48,7 +48,7 @@ BATCH_SIZE = 1024
 FIRST_DENSE = 6
 # HIDDEN_LAYER_SIZE = [32,32,64,64]
 
-HIDDEN_LAYER_SIZE = [32,46,24,8]
+HIDDEN_LAYER_SIZE = [64,64,24,8]
 
 COLOR_STRING = config.get(
     'color-string',
@@ -110,16 +110,27 @@ def build_network(input_size_base,rgen):
 
     layer = keras.layers.concatenate([layer_base,sin_layer,layer,layer_add])
 
-    for i in range(len(HIDDEN_LAYER_SIZE)):
-        layer = keras.layers.Dense(
-            HIDDEN_LAYER_SIZE[i],
-            activation=keras.activations.tanh,
-            # activation=None,
-            kernel_initializer = gen_init(rgen),
-            bias_initializer = gen_init(rgen),
+    # layer = nn.SparseConnections(
+    #     r.random_seed_from(rgen), HIDDEN_LAYER_SIZE[0],2)(layer)
+
+    for i in range(len(HIDDEN_LAYER_SIZE)-1):
+        # layer = keras.layers.Dense(
+        #     HIDDEN_LAYER_SIZE[i],
+        #     activation=keras.activations.tanh,
+        #     # activation=None,
+        #     kernel_initializer = gen_init(rgen),
+        #     bias_initializer = gen_init(rgen),
+        # )(layer)
+        layer = nn.SparseConnections(
+            r.random_seed_from(rgen), HIDDEN_LAYER_SIZE[i],2
         )(layer)
-        # layer = keras.layers.BatchNormalization()(layer)
-        # layer = keras.layers.Dropout(rate=0.01)(layer)
+
+    layer = keras.layers.Dense(
+        HIDDEN_LAYER_SIZE[-1],
+        activation=keras.activations.tanh,
+        kernel_initializer = gen_init(rgen),
+        bias_initializer = gen_init(rgen),
+    )(layer)
 
     output = keras.layers.Dense(
         1,
@@ -151,7 +162,7 @@ def load_image_data(heigth,width):
         (heigth,width,), order=1)
     # base_image = gaussian(base_image,sigma=4)
     # base_image = gaussian(base_image,sigma=10)
-    base_image = gaussian(base_image,sigma=15)
+    base_image = gaussian(base_image,sigma=20)
 
     training_image = base_image[:,:,0]
     labels = training_image
@@ -258,7 +269,8 @@ def generate_image(color_string,seed):
         custom_objects={
             'SinLayer':nn.SinLayer,
             'CombinatoryMultiplication':nn.CombinatoryMultiplication,
-            'XYCombinations': nn.XYCombinations
+            'XYCombinations': nn.XYCombinations,
+            'SparseConnections': nn.SparseConnections,
         })
 
     ly = np.linspace(-1,1,num=HEIGHT)
