@@ -1,8 +1,8 @@
 print('IMPORTING MODULES')
 ### Design principles
 ### Max number of params ~ 4.5k
-### best mean-absolute-error - 0.006 - 150 epochs
-
+### best mean-absolute-error - 0.0057 - 150 epochs
+### best tv error -> 0.0094
 import time
 import constants as C
 import script_config as config
@@ -19,7 +19,7 @@ import tensorflow as tf
 from tensorflow import keras
 from skimage.transform import resize
 from skimage.filters import gaussian
-
+from skimage.restoration import denoise_tv_bregman
 ### DATA/INPUT/SHARED by all runs section
 print('PREPARING DATA SECTION')
 
@@ -30,7 +30,7 @@ SHOW_IMAGES = True
 SAVE_IMAGES = False
 TRAIN_NNET = True
 
-EXPLORE_LAYER = 'dense_6'
+EXPLORE_LAYER = 'o_0'
 NUM_VIZ_ROWS = 1
 
 N = 1
@@ -45,10 +45,24 @@ TRAINING_UPSAMPLE = 2
 LEARNING_RATE = 0.005
 NUM_TRAINING_EPOCHS = 150
 BATCH_SIZE = 1024
-FIRST_DENSE = 6
-# HIDDEN_LAYER_SIZE = [32,32,64,64]
+FIRST_DENSE = 5
 
-HIDDEN_LAYER_SIZE = [64,64,24,8]
+HIDDEN_STRUCTURE = [
+    ('sparse',False,32,2,False),
+    ('bottleneck',False,100,16),
+    # ('bottleneck',32,16),
+    ('sparse',False,46,4,False),
+    ('dense',True,8),
+]
+LOSS_WEIGHTS = [1]
+
+CUSTOM_OBJECTS = {
+    'SinLayer':nn.SinLayer,
+    'CombinatoryMultiplication':nn.CombinatoryMultiplication,
+    'XYCombinations': nn.XYCombinations,
+    'SparseConnections': nn.SparseConnections,
+    'GraphicTanh': nn.GraphicTanh,
+}
 
 COLOR_STRING = config.get(
     'color-string',
@@ -72,80 +86,90 @@ print('FUNCTIONS SETUP')
 
 
 
-def build_network(input_size_base,rgen):
+def build_nnet(input_size_base, rgen):
 
     input_base = keras.Input(batch_shape=[None,input_size_base],name='base')
 
     # gen_init = lambda seed : keras.initializers.RandomUniform(-dev,dev,seed)
     gen_init = lambda rgen : \
-        keras.initializers.glorot_uniform(r.random_seed_from(rgen))
+        keras.initializers.glorot_normal(r.random_seed_from(rgen))
 
-    layer_base = keras.layers.Dense(
-        FIRST_DENSE,
-        activation=keras.activations.tanh,
-        # activation=None,
-        kernel_initializer = gen_init(rgen),
-        bias_initializer = gen_init(rgen),
-    )(input_base)
+    dense_layer = lambda output_size,rgen,activation: \
+        keras.layers.Dense(
+            output_size,
+            activation=activation,
+            # activation=None,
+            kernel_initializer = gen_init(rgen),
+            bias_initializer = gen_init(rgen),
+        )
+    custom_tanh = lambda rgen,name=None: \
+        nn.GraphicTanh(r.random_seed_from(rgen),name=name)
 
-    sin_layer = nn.SinLayer(
-        seed_bias=r.random_seed_from(rgen),
-        seed_scale=r.random_seed_from(rgen)
-    )(layer_base)
+    layer_base_1 = dense_layer(FIRST_DENSE,rgen,'tanh')(input_base)
+    layer_base_2 = dense_layer(FIRST_DENSE,rgen,'tanh')(input_base)
 
-    layer = nn.CombinatoryMultiplication(n=FIRST_DENSE)(sin_layer)
+    sin_layer_low = nn.SinLayer(
+        seed=r.random_seed_from(rgen),minf=0.3,maxf=1.5
+    )(layer_base_1)
+
+    layer_low = nn.CombinatoryMultiplication(n=FIRST_DENSE)(sin_layer_low)
+
+    sin_layer_high = nn.SinLayer(
+        seed=r.random_seed_from(rgen),minf=1.5,maxf=3
+    )(layer_base_2)
+
+    layer_high = nn.CombinatoryMultiplication(n=FIRST_DENSE)(sin_layer_high)
 
     layer_add = nn.XYCombinations(
         seed_bias=r.random_seed_from(rgen),
         seed_scale=r.random_seed_from(rgen)
     )(input_base)
+    layer_add = custom_tanh(rgen)(layer_add)
 
-    layer_add =  keras.layers.Dense(
-        16,
-        activation=keras.activations.tanh,
-        # activation=None,
-        kernel_initializer = gen_init(rgen),
-        bias_initializer = gen_init(rgen),
-    )(layer_add)
+    layer_add = dense_layer(16,rgen,None)(layer_add)
+    layer_add = custom_tanh(rgen)(layer_add)
 
-    layer = keras.layers.concatenate([layer_base,sin_layer,layer,layer_add])
+    layer = keras.layers.concatenate(
+        [sin_layer_low,sin_layer_high,layer_low,layer_high,layer_add])
 
-    # layer = nn.SparseConnections(
-    #     r.random_seed_from(rgen), HIDDEN_LAYER_SIZE[0],2)(layer)
+    outputs = []
+    num_outputs = 0
+    for t in HIDDEN_STRUCTURE:
+        type = t[0]
+        is_output = t[1]
+        output_size = t[2]
 
-    for i in range(len(HIDDEN_LAYER_SIZE)-1):
-        # layer = keras.layers.Dense(
-        #     HIDDEN_LAYER_SIZE[i],
-        #     activation=keras.activations.tanh,
-        #     # activation=None,
-        #     kernel_initializer = gen_init(rgen),
-        #     bias_initializer = gen_init(rgen),
-        # )(layer)
-        layer = nn.SparseConnections(
-            r.random_seed_from(rgen), HIDDEN_LAYER_SIZE[i],2
-        )(layer)
+        if type == 'sparse':
+            divisions = t[3]
+            shuffle = t[4]
+            layer = nn.SparseConnections(
+                r.random_seed_from(rgen), output_size,divisions,shuffle
+            )(layer)
+            layer = custom_tanh(rgen)(layer)
+            pass
+        elif type == 'bottleneck':
+            intermediary = t[3]
 
-    layer = keras.layers.Dense(
-        HIDDEN_LAYER_SIZE[-1],
-        activation=keras.activations.tanh,
-        kernel_initializer = gen_init(rgen),
-        bias_initializer = gen_init(rgen),
-    )(layer)
+            layer = dense_layer(intermediary,rgen,None)(layer)
+            layer = custom_tanh(rgen)(layer)
+            layer = dense_layer(output_size,rgen,None)(layer)
+            layer = custom_tanh(rgen)(layer)
 
-    output = keras.layers.Dense(
-        1,
-        # activation=None,
-        activation=keras.activations.tanh,
-        # activation=keras.activations.sigmoid,
-        kernel_initializer = gen_init(rgen),
-        bias_initializer = gen_init(rgen),
-    )(layer)
-    model = keras.models.Model(
+        elif type == 'dense':
+            layer = dense_layer(output_size,rgen,None)(layer)
+            layer = custom_tanh(rgen)(layer)
+
+        if is_output is True:
+            name = 'o_' + str(num_outputs)
+            output = dense_layer(1,rgen,None)(layer)
+            output = custom_tanh(rgen,name=name)(output)
+
+            outputs += [output]
+            num_outputs += 1
+
+    return keras.models.Model(
         inputs=input_base,
-        outputs=output)
-
-
-    return model
+        outputs=outputs)
 
 def generate_nnet_input(xx, yy, rgen):
     return np.c_[
@@ -157,27 +181,25 @@ def generate_nnet_input(xx, yy, rgen):
 def load_image_data(heigth,width):
 
     base_image = file.import_image('tulip_high')
-    base_image = resize(
-        base_image,
-        (heigth,width,), order=1)
-    # base_image = gaussian(base_image,sigma=4)
+    base_image = resize(base_image, (heigth,width,), order=1)
+    base_image_blurred = gaussian(base_image,sigma=4)
+    # base_image_blurred = gaussian(base_image,sigma=15)
+    base_image_tv = denoise_tv_bregman(base_image,weight=10)
     # base_image = gaussian(base_image,sigma=10)
-    base_image = gaussian(base_image,sigma=20)
 
-    training_image = base_image[:,:,0]
-    labels = training_image
-    labels = data.normalize_01(labels)
-    labels -= np.mean(labels)
-    # labels_max = labels.max()
-    # labels_min = labels.min()
+    labels_blurred = base_image_blurred[:,:,0]
+    labels_blurred = data.normalize_01(labels_blurred)
+    # labels -= 0.5
+    m = np.mean(labels_blurred)
+    labels_blurred -= np.mean(labels_blurred)
 
-    # labels[labels>0] /= (labels_max*2)
-    # labels[labels<0] /= (-labels_min*2)
+    labels_tv = base_image_tv[:,:,0]
+    labels_tv = data.normalize_01(labels_tv)
+    labels_tv -= m
 
-    # labels *= 0.5
-    # labels += 0.25
-
-    return labels
+    # return labels_blurred.reshape(-1,1),labels_tv.reshape(-1,1)
+    # return [labels_tv.reshape(-1,1)]
+    return [labels_blurred.reshape(-1,1)]
 
 
 def train_network(seed):
@@ -189,7 +211,6 @@ def train_network(seed):
     training_height = HEIGHT*TRAINING_UPSAMPLE
 
     labels = load_image_data(training_height,training_width)
-    labels = labels.reshape(-1,1)
 
     ly1 = np.linspace(-1,1,num=training_height)
     lx1 = np.linspace(-1,1,num=training_width)
@@ -198,7 +219,7 @@ def train_network(seed):
     f = generate_nnet_input(xx1, yy1,r.bind_generator_from(rgen))
 
     input_size_base = f.shape[1]
-    model = build_network(
+    model = build_nnet(
         input_size_base=input_size_base,
         rgen=r.bind_generator_from(rgen))
 
@@ -211,21 +232,13 @@ def train_network(seed):
         log_dir=C.PATH_FOLDER_LOGS, histogram_freq=1,
         write_grads=True, write_images=True
     )
+    intermediary_progress_callback = nn.SaveIntermediaryResult(
+        f = f, image_width=training_width, image_height=training_height)
+
     def mean_abs_metric(y_true,y_pred):
         return keras.backend.mean(
             keras.backend.abs(2*(y_true-0.25) - 2*(y_pred-0.25)))
 
-    # list_trainable = [
-    #     'dense_1',
-    #     'dense_2',
-    #     'dense_3',
-    #     'dense_4',
-    #     'dense_5',
-    #
-    # ]
-    # for l in list_trainable:
-    #     layer = model.get_layer(l)
-    #     layer.trainable = False
 
     def compile_fit(model):
         optimizer = keras.optimizers.Adam(lr=LEARNING_RATE)
@@ -234,7 +247,8 @@ def train_network(seed):
             optimizer=optimizer,
             # loss=keras.losses.mean_squared_error,
             loss=keras.losses.mean_absolute_error,
-            # metrics = [mean_abs_metric]
+            # metrics = [mean_abs_metric],
+            loss_weights = LOSS_WEIGHTS
         )
 
         print(model.summary())
@@ -242,7 +256,8 @@ def train_network(seed):
             x = f,
             y=labels,
             batch_size=BATCH_SIZE,epochs=NUM_TRAINING_EPOCHS,
-            callbacks=[lr_callback,tb_callback],
+            # callbacks=[lr_callback,tb_callback,intermediary_progress_callback],
+            callbacks=[lr_callback,tb_callback,],
             use_multiprocessing=True)
 
     compile_fit(model)
@@ -266,12 +281,7 @@ def generate_image(color_string,seed):
 
     model = file.load_nnet(
         rgen,prefix=seed,
-        custom_objects={
-            'SinLayer':nn.SinLayer,
-            'CombinatoryMultiplication':nn.CombinatoryMultiplication,
-            'XYCombinations': nn.XYCombinations,
-            'SparseConnections': nn.SparseConnections,
-        })
+        custom_objects=CUSTOM_OBJECTS)
 
     ly = np.linspace(-1,1,num=HEIGHT)
     lx = np.linspace(-1,1,num=WIDTH)
@@ -279,15 +289,22 @@ def generate_image(color_string,seed):
 
     nnet_input = generate_nnet_input(xx, yy,r.bind_generator_from(rgen))
 
+    images_processed = []
 
-    image = model.predict(nnet_input)
-    image = image.reshape([HEIGHT,WIDTH])
-    print(np.max(image),np.min(image))
-    return [
-        labels,
-        image,
-        image-labels[::TRAINING_UPSAMPLE,::TRAINING_UPSAMPLE]
+    images = model.predict(nnet_input)
+    images = [images]
+
+    for image in images:
+        image = image.reshape([HEIGHT,WIDTH])
+        images_processed += [image]
+    for label in labels:
+        label = label.reshape([HEIGHT*TRAINING_UPSAMPLE,WIDTH*TRAINING_UPSAMPLE])
+        images_processed += [label]
+
+    images_processed += [
+        images_processed[0] - images_processed[-1][::TRAINING_UPSAMPLE,::TRAINING_UPSAMPLE]
     ]
+    return images_processed
 
 def generate_neuron_images(color_string,seed):
 
@@ -296,11 +313,7 @@ def generate_neuron_images(color_string,seed):
 
     model = file.load_nnet(
         rgen,prefix=seed,
-        custom_objects={
-            'SinLayer':nn.SinLayer,
-            'CombinatoryMultiplication':nn.CombinatoryMultiplication,
-            'XYCombinations': nn.XYCombinations
-        })
+        custom_objects=CUSTOM_OBJECTS)
     print(model.summary())
 
     ly = np.linspace(-1,1,num=HEIGHT)

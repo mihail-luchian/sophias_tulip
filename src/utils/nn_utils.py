@@ -2,6 +2,8 @@ import tensorflow as tf
 from tensorflow import keras
 import random_manager as r
 import numpy as np
+import utils.data_utils as data
+import utils.file_utils as file
 
 
 def create_variable(shape,name='var',dev=0.01,rgen=None):
@@ -53,20 +55,27 @@ def make_batch_generator(input,labels=None,batch_size=32, rgen=None):
     return batch_generator(),num_batches
 
 
-### Custom layers
+#############################################################
+# Custom layers
+#############################################################
 
 class SinLayer(keras.layers.Layer):
 
-    def __init__(self,seed_bias,seed_scale, **kwargs):
-        self.seed_bias = seed_bias
-        self.seed_scale = seed_scale
+    def __init__(self,seed,minf,maxf, **kwargs):
+        self.seed = seed
+        self.minf = minf
+        self.maxf = maxf
+        self.rgen = r.make_generator(seed)
         super(SinLayer, self).__init__(**kwargs)
 
     def build(self, input_shape):
+
+        rseed = lambda : r.random_seed_from(self.rgen)
+
         bias_initializer = keras.initializers.RandomUniform(
-            minval=-np.pi, maxval=np.pi, seed=self.seed_bias)
+            minval=-np.pi, maxval=np.pi, seed=rseed())
         scale_initializer = keras.initializers.RandomUniform(
-            minval=0.2, maxval=2, seed=self.seed_scale)
+            minval=self.minf, maxval=self.maxf, seed=rseed())
 
         # Create a trainable weight variable for this layer.
         self.bias = self.add_weight(
@@ -82,7 +91,7 @@ class SinLayer(keras.layers.Layer):
         super(SinLayer, self).build(input_shape)
 
     def call(self, x):
-        return keras.backend.cos( self.scale * np.pi * x - self.bias)
+        return keras.backend.sin( self.scale * np.pi * x - self.bias)
 
     def compute_output_shape(self, input_shape):
         return input_shape
@@ -90,8 +99,9 @@ class SinLayer(keras.layers.Layer):
     def get_config(self):
 
         my_config = {
-            'seed_scale' : self.seed_scale,
-            'seed_bias'  : self.seed_bias
+            'seed' : self.seed,
+            'minf'  : self.minf,
+            'maxf'  : self.maxf
         }
         base_config = super(SinLayer, self).get_config()
         my_config.update(base_config)
@@ -152,8 +162,9 @@ class XYCombinations(keras.layers.Layer):
 
 class SparseConnections(keras.layers.Layer):
 
-    def __init__(self,seed,output_size,divisions, **kwargs):
+    def __init__(self,seed,output_size,divisions,shuffle, **kwargs):
         self.seed = seed
+        self.shuffle = shuffle
         self.rgen = r.make_generator(seed)
         self.output_size = output_size
         self.divisions = divisions
@@ -162,7 +173,11 @@ class SparseConnections(keras.layers.Layer):
 
     def build(self, input_shape):
 
-        input_ranges = np.arange(input_shape[1])
+        if self.shuffle is True:
+            input_ranges = r.permutation_from(self.rgen,input_shape[1])
+        else:
+            input_ranges = np.arange(input_shape[1])
+
         self.input_ranges = [
             input_ranges[i::self.divisions]
             for i in range(self.divisions)
@@ -215,7 +230,9 @@ class SparseConnections(keras.layers.Layer):
 
             output = keras.backend.dot(xx, kernel)
             output = keras.backend.bias_add(output, bias, data_format='channels_last')
-            output = keras.activations.tanh(output)
+
+            # output = keras.activations.tanh(output)
+            # output = custom_tanh(output)
 
             tensors.append(output)
 
@@ -229,7 +246,8 @@ class SparseConnections(keras.layers.Layer):
         my_config = {
             'seed' : self.seed,
             'output_size'  : self.output_size,
-            'divisions' : self.divisions
+            'divisions' : self.divisions,
+            'shuffle' : self.shuffle
         }
         base_config = super(SparseConnections, self).get_config()
         my_config.update(base_config)
@@ -265,12 +283,78 @@ class CombinatoryMultiplication(keras.layers.Layer):
 
         my_config = {
             'n' : self.n,
-            # 'xx_indices' : self.xx_indices,
-            # 'yy_indices' : self.yy_indices
         }
         base_config = super(CombinatoryMultiplication, self).get_config()
         my_config.update(base_config)
         return my_config
 
+def custom_tanh(x):
+    # return 0.5 * keras.backend.tanh(2*x)*keras.backend.log(2*keras.backend.abs(x)+4)
+    return 0.5*keras.backend.tanh(x)*keras.backend.log(keras.backend.abs(x)+10)
 
 
+class GraphicTanh(keras.layers.Layer):
+
+    def __init__(self,seed, **kwargs):
+        self.rgen = r.make_generator(seed)
+        self.seed = seed
+        super(GraphicTanh, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+
+        rseed = lambda : r.random_seed_from(self.rgen)
+
+        d_initializer = keras.initializers.RandomUniform(
+            minval=0.5, maxval=2, seed=rseed())
+        b_initializer = keras.initializers.RandomUniform(
+            minval=0.5, maxval=3.5, seed=rseed())
+
+        self.d = self.add_weight(
+            name='d',
+            shape=(1,),
+            initializer=d_initializer,
+            trainable=True)
+        self.b = self.add_weight(
+            name='b',
+            shape=(1,),
+            initializer=b_initializer,
+            trainable=True)
+
+        super(GraphicTanh, self).build(input_shape)
+
+    def call(self, x):
+        return self.d*(1 - 2 / (keras.backend.exp(self.b*x) + 1))
+        # return keras.backend.tanh(x)*(1+0.01*keras.backend.relu(keras.backend.abs(x))**2)
+        # return keras.backend.tanh(x)*keras.backend.log(
+        #     keras.backend.abs(x)+10)
+
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
+
+    def get_config(self):
+
+        my_config = {
+            'seed' : self.seed,
+        }
+        base_config = super(GraphicTanh, self).get_config()
+        my_config.update(base_config)
+        return my_config
+
+#############################################################
+# Custom callbacks
+#############################################################
+
+class SaveIntermediaryResult(keras.callbacks.Callback):
+
+    def __init__(self, f, image_height, image_width):
+        self.f = f
+        self.image_height = image_height
+        self.image_width = image_width
+        super(SaveIntermediaryResult, self).__init__()
+
+    def on_epoch_end(self, epoch, logs={}):
+        image = self.model.predict(self.f)
+        image = 255*data.normalize_01(image.reshape(self.image_height, self.image_width))
+        file.export_image(
+            '%d' % (epoch), image.astype('uint8'),format='jpg')

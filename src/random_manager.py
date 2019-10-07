@@ -71,6 +71,16 @@ def poisson_from(generator,*args,**kwargs):
     return np.random.RandomState(seed).poisson(*args,**kwargs)
 
 
+def permutation(*args,**kwargs):
+    return permutation_from(default_generator)
+
+
+def permutation_from(generator,*args,**kwargs):
+    seed = __random_seed__(generator[__INDEX_CHOICE_RANDOM_STATE__])
+    return np.random.RandomState(seed).permutation(*args,**kwargs)
+
+
+
 def uniform(*args,**kwargs):
     return uniform_from(default_generator,*args,**kwargs)
 
