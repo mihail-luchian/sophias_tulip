@@ -4,6 +4,7 @@ import random_manager as r
 import numpy as np
 import utils.data_utils as data
 import utils.file_utils as file
+import constants as C
 
 
 def create_variable(shape,name='var',dev=0.01,rgen=None):
@@ -353,8 +354,59 @@ class SaveIntermediaryResult(keras.callbacks.Callback):
         self.image_width = image_width
         super(SaveIntermediaryResult, self).__init__()
 
-    def on_epoch_end(self, epoch, logs={}):
+    def on_batch_end(self, epoch, logs={}):
         image = self.model.predict(self.f)
         image = 255*data.normalize_01(image.reshape(self.image_height, self.image_width))
         file.export_image(
             '%d' % (epoch), image.astype('uint8'),format='jpg')
+
+
+class LogGradients(keras.callbacks.Callback):
+
+    def __init__(self,logdir,inputs,outputs):
+        self.file_writer = tf.summary.create_file_writer(logdir)
+        self.inputs = inputs
+        self.outputs = outputs
+        super(LogGradients, self).__init__()
+
+
+    def set_model(self, model):
+        self.model = model
+        self.grads = self.model.optimizer.get_gradients(
+            self.model.total_loss, self.model.trainable_weights)
+        self.f = keras.backend.function(
+            [self.model._feed_inputs,self.model._feed_targets], self.grads)
+
+    def on_epoch_end(self,epoch,logs={}):
+
+
+        output_grad = self.f([self.inputs,self.outputs])
+        # print(output_grad)
+
+        # for layer in self.model.layers:
+        #     for weight in layer.trainable_weights:
+        #         mapped_weight_name = weight.name.replace(':', '_')
+        #         grads = self.model.optimizer.get_gradients(
+        #             self.model.total_loss, weight)
+        #
+        #         def is_indexed_slices(grad):
+        #             return type(grad).__name__ == 'IndexedSlices'
+        #
+        #         grads = [
+        #             grad.values if is_indexed_slices(grad) else grad
+        #             for grad in grads]
+        #
+        #         print(grads)
+                # with self.file_writer.as_default():
+                #     print(mapped_weight_name)
+                #     print(grads)
+                #     tf.summary.histogram(
+                #         mapped_weight_name, np.arange(10),step=epoch)
+
+                    # grads = [
+                    #     grad.values if is_indexed_slices(grad) else grad
+                    #     for grad in grads]
+        #
+
+        # print()
+        # print(self.model.updates)

@@ -43,13 +43,13 @@ TRAINING_UPSAMPLE = 2
 
 ### NEURAL NET CONSTANTS
 LEARNING_RATE = 0.005
-NUM_TRAINING_EPOCHS = 150
+NUM_TRAINING_EPOCHS = 110
 BATCH_SIZE = 1024
 FIRST_DENSE = 5
 
 HIDDEN_STRUCTURE = [
     ('sparse',False,32,2,False),
-    ('bottleneck',False,100,16),
+    ('bottleneck',False,128,16),
     # ('bottleneck',32,16),
     ('sparse',False,46,4,False),
     ('dense',True,8),
@@ -235,6 +235,10 @@ def train_network(seed):
     intermediary_progress_callback = nn.SaveIntermediaryResult(
         f = f, image_width=training_width, image_height=training_height)
 
+    log_gradients_callback = nn.LogGradients(C.PATH_FOLDER_LOGS,f,labels)
+
+
+
     def mean_abs_metric(y_true,y_pred):
         return keras.backend.mean(
             keras.backend.abs(2*(y_true-0.25) - 2*(y_pred-0.25)))
@@ -257,7 +261,7 @@ def train_network(seed):
             y=labels,
             batch_size=BATCH_SIZE,epochs=NUM_TRAINING_EPOCHS,
             # callbacks=[lr_callback,tb_callback,intermediary_progress_callback],
-            callbacks=[lr_callback,tb_callback,],
+            callbacks=[lr_callback,tb_callback,log_gradients_callback],
             use_multiprocessing=True)
 
     compile_fit(model)
