@@ -27,8 +27,11 @@ DUMP_PREVIOUS_EXPORTS = False
 SHOW_DEBUG_DATA = False
 START_SERVER = False
 SHOW_IMAGES = True
-SAVE_IMAGES = False
+SAVE_IMAGES = True
+
 TRAIN_NNET = True
+CONTINUE_TRAINING = False
+SAVE_INTERMEDIARY = False
 
 EXPLORE_LAYER = 'o_0'
 NUM_VIZ_ROWS = 1
@@ -43,15 +46,15 @@ TRAINING_UPSAMPLE = 2
 
 ### NEURAL NET CONSTANTS
 LEARNING_RATE = 0.005
-NUM_TRAINING_EPOCHS = 110
+NUM_TRAINING_EPOCHS = 150
 BATCH_SIZE = 1024
 FIRST_DENSE = 5
 
 HIDDEN_STRUCTURE = [
     ('sparse',False,32,2,False),
-    ('bottleneck',False,128,16),
+    ('bottleneck',False,200,16),
     # ('bottleneck',32,16),
-    ('sparse',False,46,4,False),
+    ('sparse',False,44,4,False),
     ('dense',True,8),
 ]
 LOSS_WEIGHTS = [1]
@@ -180,7 +183,7 @@ def generate_nnet_input(xx, yy, rgen):
 
 def load_image_data(heigth,width):
 
-    base_image = file.import_image('tulip_high')
+    base_image = file.import_image('lightning')
     base_image = resize(base_image, (heigth,width,), order=1)
     base_image_blurred = gaussian(base_image,sigma=4)
     # base_image_blurred = gaussian(base_image,sigma=15)
@@ -191,7 +194,7 @@ def load_image_data(heigth,width):
     labels_blurred = data.normalize_01(labels_blurred)
     # labels -= 0.5
     m = np.mean(labels_blurred)
-    labels_blurred -= np.mean(labels_blurred)
+    labels_blurred -= m
 
     labels_tv = base_image_tv[:,:,0]
     labels_tv = data.normalize_01(labels_tv)
@@ -202,10 +205,11 @@ def load_image_data(heigth,width):
     return [labels_blurred.reshape(-1,1)]
 
 
-def train_network(seed):
+def train_nnet(seed):
 
     r.init_def_generator(seed)
     rgen = r.bind_generator()
+    rgen_save = r.bind_generator_from(rgen)
 
     training_width = WIDTH*TRAINING_UPSAMPLE
     training_height = HEIGHT*TRAINING_UPSAMPLE
@@ -219,9 +223,24 @@ def train_network(seed):
     f = generate_nnet_input(xx1, yy1,r.bind_generator_from(rgen))
 
     input_size_base = f.shape[1]
-    model = build_nnet(
-        input_size_base=input_size_base,
-        rgen=r.bind_generator_from(rgen))
+
+
+    if CONTINUE_TRAINING is True:
+        model = file.load_nnet(
+            rgen_save,prefix=seed,
+            custom_objects=CUSTOM_OBJECTS)
+        rgen_save = r.reset_generator(rgen_save)
+
+    else:
+        model = build_nnet(
+            input_size_base=input_size_base,
+            rgen=r.bind_generator_from(rgen))
+
+    data_generator = nn.ImageDataGenerator(
+        x = f, y = labels, shuffle=True,
+        batch_size=BATCH_SIZE,rgen=r.bind_generator_from(rgen)
+    )
+
 
     def scheduler(epoch):
         current_learning_rate = LEARNING_RATE*(0.996**epoch)
@@ -232,11 +251,25 @@ def train_network(seed):
         log_dir=C.PATH_FOLDER_LOGS, histogram_freq=1,
         write_grads=True, write_images=True
     )
-    intermediary_progress_callback = nn.SaveIntermediaryResult(
+    intermediary_output_callback = nn.SaveIntermediaryOutput(
         f = f, image_width=training_width, image_height=training_height)
 
-    log_gradients_callback = nn.LogGradients(C.PATH_FOLDER_LOGS,f,labels)
+    log_gradients_callback = nn.LogGradients(
+        C.PATH_FOLDER_LOGS,data_generator)
 
+    terminate_nan_callback = keras.callbacks.TerminateOnNaN()
+
+    monitor_weights_callback = nn.MonitorWeights(
+        C.PATH_FOLDER_LOGS,
+        [
+            'dense_5',
+            'graphic_tanh_5',
+            'sparse_connections_1',
+            'graphic_tanh_4',
+            'dense_4',
+            'graphic_tanh_3',
+        ],
+        0,data_generator)
 
 
     def mean_abs_metric(y_true,y_pred):
@@ -245,7 +278,8 @@ def train_network(seed):
 
 
     def compile_fit(model):
-        optimizer = keras.optimizers.Adam(lr=LEARNING_RATE)
+        optimizer = keras.optimizers.Adam(
+            lr=LEARNING_RATE)
         # optimizer = keras.optimizers.Adamax(lr=LEARNING_RATE)
         model.compile(
             optimizer=optimizer,
@@ -255,23 +289,38 @@ def train_network(seed):
             loss_weights = LOSS_WEIGHTS
         )
 
+        model_callbacks = [
+            lr_callback,
+            tb_callback,
+            # log_gradients_callback,
+            # monitor_weights_callback,
+            terminate_nan_callback
+        ]
+        if SAVE_INTERMEDIARY is True:
+            model_callbacks.append(nn.SaveIntermediaryNNet(
+                rgen_save, prefix=seed))
+
         print(model.summary())
-        model.fit(
-            x = f,
-            y=labels,
-            batch_size=BATCH_SIZE,epochs=NUM_TRAINING_EPOCHS,
-            # callbacks=[lr_callback,tb_callback,intermediary_progress_callback],
-            callbacks=[lr_callback,tb_callback,log_gradients_callback],
-            use_multiprocessing=True)
+
+        for i in range(NUM_TRAINING_EPOCHS):
+            print("TRAINING EPOCH",i)
+            # x,y = data_generator.generate_shuffled_data()
+            model.fit(
+                x=data_generator,
+                callbacks=model_callbacks,
+                shuffle=False,
+                validation_data = (f,labels[0]),
+                epochs=1,
+                workers=0,
+            )
+            data_generator.on_epoch_end()
 
     compile_fit(model)
+    rgen_save = r.reset_generator(rgen_save)
 
-    # for l in model.layers:
-    #     l.trainable = True
-    #
-    # compile_fit(model)
+    file.save_nnet(model, rgen_save, prefix=seed)
+    rgen_save = r.reset_generator(rgen_save)
 
-    file.save_nnet(model, rgen, prefix=seed)
 
 
 def generate_image(color_string,seed):
@@ -286,6 +335,7 @@ def generate_image(color_string,seed):
     model = file.load_nnet(
         rgen,prefix=seed,
         custom_objects=CUSTOM_OBJECTS)
+    print(model.summary())
 
     ly = np.linspace(-1,1,num=HEIGHT)
     lx = np.linspace(-1,1,num=WIDTH)
@@ -367,7 +417,7 @@ for current_iteration in range(N):
 
         if TRAIN_NNET is True:
             print('\tTRAINING NNET')
-            training_image = train_network(SEED+current_iteration)
+            training_image = train_nnet(SEED + current_iteration)
 
         print('\tGENERATING IMAGE')
         # images = generate_neuron_images(COLOR_STRING, SEED + current_iteration)

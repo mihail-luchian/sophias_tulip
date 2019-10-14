@@ -108,18 +108,21 @@ def get_folders_in_path(path):
         if os.path.isdir(os.path.join(path,file))]
 
 def save_nnet(model, rgen, prefix =''):
-    path = os.path.join(
-        C.PATH_FOLDER_NNETS,generate_net_name(rgen,prefix)+'.h5')
+    path = generate_nnet_path(rgen,prefix)
     # print(path)
     model.save(path)
 
 def load_nnet(rgen,prefix,custom_objects=None):
     path = os.path.join(
-        C.PATH_FOLDER_NNETS,generate_net_name(rgen,prefix)+'.h5')
+        C.PATH_FOLDER_NNETS, generate_nnet_name(rgen, prefix) + '.h5')
     # print(path)
     return keras.models.load_model(path,custom_objects=custom_objects)
 
-def generate_net_name(rgen,prefix):
+def generate_nnet_name(rgen, prefix):
     submission_num = config.get(C.CONFIG_KEY_SUBMISSION,0)
     base_seed = r.get_start_seed(rgen)
     return f'{prefix}_{submission_num}_{base_seed}'
+
+def generate_nnet_path(rgen,prefix=''):
+    return os.path.join(
+        C.PATH_FOLDER_NNETS, generate_nnet_name(rgen, prefix) + '.h5')

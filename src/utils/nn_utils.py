@@ -3,6 +3,7 @@ from tensorflow import keras
 import random_manager as r
 import numpy as np
 import utils.data_utils as data
+import utils.data_type_utils as data_type
 import utils.file_utils as file
 import constants as C
 
@@ -190,6 +191,15 @@ class SparseConnections(keras.layers.Layer):
             for i in range(self.divisions)
         ]
 
+        # print('input')
+        # for i in self.input_ranges:
+        #     print(i)
+        #
+        # print('output')
+        # for i in self.output_ranges:
+        #     print(i)
+
+
         rseed = lambda : r.random_seed_from(self.rgen)
 
         self.biases = []
@@ -319,6 +329,8 @@ class GraphicTanh(keras.layers.Layer):
             name='b',
             shape=(1,),
             initializer=b_initializer,
+            constraint=keras.constraints.MinMaxNorm(
+                min_value=2, max_value=2),
             trainable=True)
 
         super(GraphicTanh, self).build(input_shape)
@@ -346,13 +358,13 @@ class GraphicTanh(keras.layers.Layer):
 # Custom callbacks
 #############################################################
 
-class SaveIntermediaryResult(keras.callbacks.Callback):
+class SaveIntermediaryOutput(keras.callbacks.Callback):
 
     def __init__(self, f, image_height, image_width):
         self.f = f
         self.image_height = image_height
         self.image_width = image_width
-        super(SaveIntermediaryResult, self).__init__()
+        super(SaveIntermediaryOutput, self).__init__()
 
     def on_batch_end(self, epoch, logs={}):
         image = self.model.predict(self.f)
@@ -363,50 +375,146 @@ class SaveIntermediaryResult(keras.callbacks.Callback):
 
 class LogGradients(keras.callbacks.Callback):
 
-    def __init__(self,logdir,inputs,outputs):
+    def __init__(self,logdir,data_generator,log_epoch=False):
+        self.data_generator = data_generator
         self.file_writer = tf.summary.create_file_writer(logdir)
-        self.inputs = inputs
-        self.outputs = outputs
+        self.inputs = self.data_generator.inputs()
+        self.outputs = self.data_generator.outputs()
+        self.log_epoch = log_epoch
+        self.batch_num = 0
         super(LogGradients, self).__init__()
 
 
     def set_model(self, model):
         self.model = model
+        self.weights = self.model.trainable_weights
         self.grads = self.model.optimizer.get_gradients(
             self.model.total_loss, self.model.trainable_weights)
         self.f = keras.backend.function(
             [self.model._feed_inputs,self.model._feed_targets], self.grads)
 
+
+    def on_batch_begin(self,batch,logs={}):
+        x,y = self.data_generator[batch]
+        output_grad = self.f([x,y])
+
+        with self.file_writer.as_default():
+            for w,g in zip(self.weights,output_grad):
+                if np.isnan(np.sum(g)):
+                    print("FOUND A NAN IN GRADIENTS:BATCH",batch,w.name)
+                tf.summary.histogram(
+                    w.name+"_batch_grad",g,step=self.batch_num)
+
+        self.batch_num += 1
+
     def on_epoch_end(self,epoch,logs={}):
+        if self.log_epoch is True:
+            output_grad = self.f([self.inputs,self.outputs])
+
+            with self.file_writer.as_default():
+                for w,g in zip(self.weights,output_grad):
+                    tf.summary.histogram(
+                        w.name+"_grad", g,step=epoch)
 
 
-        output_grad = self.f([self.inputs,self.outputs])
-        # print(output_grad)
 
-        # for layer in self.model.layers:
-        #     for weight in layer.trainable_weights:
-        #         mapped_weight_name = weight.name.replace(':', '_')
-        #         grads = self.model.optimizer.get_gradients(
-        #             self.model.total_loss, weight)
-        #
-        #         def is_indexed_slices(grad):
-        #             return type(grad).__name__ == 'IndexedSlices'
-        #
-        #         grads = [
-        #             grad.values if is_indexed_slices(grad) else grad
-        #             for grad in grads]
-        #
-        #         print(grads)
-                # with self.file_writer.as_default():
-                #     print(mapped_weight_name)
-                #     print(grads)
-                #     tf.summary.histogram(
-                #         mapped_weight_name, np.arange(10),step=epoch)
+class MonitorWeights(keras.callbacks.Callback):
 
-                    # grads = [
-                    #     grad.values if is_indexed_slices(grad) else grad
-                    #     for grad in grads]
-        #
+    def __init__(self,logdir,layernames,weight_index,data_generator):
+        self.step = 0
+        self.layernames = data_type.listify(layernames)
+        self.weight_index = weight_index
+        self.file_writer = tf.summary.create_file_writer(logdir)
+        self.data_generator = data_generator
+        super(MonitorWeights, self).__init__()
 
-        # print()
-        # print(self.model.updates)
+
+    def set_model(self, model):
+        self.model = model
+        self.weights = [ self.model.get_layer(layername).trainable_weights
+             for layername in self.layernames
+         ]
+
+    def on_batch_end(self,batch,logs={}):
+        self.step += 1
+
+        # with self.file_writer.as_default():
+        #     tf.summary.histogram(
+        #             self.layername + "_monitor", self.weights,step=self.step)
+        print()
+        print('NEW BATCH',batch)
+
+        # if self.data_generator is not None:
+        #     print( self.data_generator[batch])
+
+        if self.data_generator is not None:
+            print()
+
+        for i,j in zip(self.layernames,self.weights):
+            for k in j:
+                print(i,np.max(k.numpy()),np.min(k.numpy()))
+
+
+class SaveIntermediaryNNet(keras.callbacks.Callback):
+
+    def __init__(self,rgen,prefix=''):
+        self.path = file.generate_nnet_path(rgen,prefix)
+        super(SaveIntermediaryNNet, self).__init__()
+
+    def set_model(self, model):
+        self.model = model
+
+    def on_epoch_end(self,epoch,logs={}):
+        self.model.save(self.path)
+
+
+#############################################################
+# Custom callbacks
+#############################################################
+
+class ImageDataGenerator(keras.utils.Sequence):
+
+    def __init__(self, x, y, batch_size, rgen = None, shuffle = False):
+        self.x, self.y = x, y
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.rgen = rgen
+        if self.shuffle is True:
+            self.shuffled = r.permutation_from(
+                self.rgen,self.x.shape[0]).astype('int32')
+        else:
+            self.shuffled = np.arange(self.x.shape[0])
+
+        self.reshuffled_x = self.x[self.shuffled]
+        self.reshuffled_y = self.y[0][self.shuffled]
+
+    def inputs(self):
+        return self.x
+
+    def outputs(self):
+        return self.y
+
+    def __len__(self):
+        return int(self.x.shape[0] // self.batch_size)
+
+    def generate_shuffled_data(self):
+        if self.shuffle is True:
+            self.shuffled = r.permutation_from(
+                self.rgen,self.x.shape[0]).astype('int32')
+
+        return self.x[self.shuffled],self.y[0][self.shuffled]
+
+    def __getitem__(self, idx):
+
+        batch_x = self.reshuffled_x[idx * self.batch_size:(idx + 1) * self.batch_size]
+        batch_y = self.reshuffled_y[idx * self.batch_size:(idx + 1) * self.batch_size]
+
+        return batch_x,batch_y
+
+    def on_epoch_end(self):
+        if self.shuffle is True:
+            self.shuffled = r.permutation_from(
+                self.rgen,self.x.shape[0]).astype('int32')
+
+            self.reshuffled_x = self.x[self.shuffled]
+            self.reshuffled_y = self.y[0][self.shuffled]
